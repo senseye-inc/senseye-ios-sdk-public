@@ -1,3 +1,8 @@
+import Foundation
+
+#if !os(macOS)
+import UIKit
+
 struct senseye_ios_sdk {
     var text = "Hello, World!"
 }
@@ -13,4 +18,11 @@ public class SenseyeSDK {
     public func retreiveResult() -> String {
         return result
     }
+    
+    public func taskController() -> UIViewController {
+        let singleTaskViewController = SingleTaskViewController(nibName: "SingleTaskViewController", bundle: nil)
+        return singleTaskViewController
+    }
 }
+
+#endif

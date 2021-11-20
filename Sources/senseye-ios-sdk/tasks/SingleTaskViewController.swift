@@ -22,23 +22,34 @@ class SingleTaskViewController: UIViewController {
     }
     
     @IBOutlet weak var dotView: UIView!
+    @IBOutlet weak var startSessionButton: UIButton!
     
-    private var calibrationPath = PathType(path: [(75, 710), (200, 500), (75, 200), (300, 710), (75, 710), (150, 200), (200, 500), (250, 200), (250, 710)])
+    private var calibrationPath = PathType(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)])
     private var smoothPursuitPath = PathType(path: [(50, 50), (20, 20), (10, 10), (15, 15)])
     private var completedPaths = 0
     private var canProceedToNextAnimation = true
+    var pathType: PathType?
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         dotView.backgroundColor = .red
-        beginDotMovementForPathType(type: calibrationPath)
+        if let dotStartingPoint = calibrationPath.path.first {
+            let originalFrame = self.dotView.frame
+            let initialPositionFrame = CGRect(x: CGFloat(dotStartingPoint.0), y: CGFloat(dotStartingPoint.1), width: originalFrame.width, height: originalFrame.height)
+            dotView.frame = initialPositionFrame
+            completedPaths+=1
+        }
+        pathType = calibrationPath
+        startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
     }
     
-    func beginDotMovementForPathType(type: PathType) {
+    @objc func beginDotMovementForPathType() {
+        startSessionButton.isHidden = true
         //recursively animate all points
-        self.animateForPathCurrentPoint(type: type)
-        
+        if let path = pathType {
+            self.animateForPathCurrentPoint(type: path)
+        }
     }
     
     private func animateForPathCurrentPoint(type: PathType) {
@@ -55,6 +66,8 @@ class SingleTaskViewController: UIViewController {
                 self.completedPaths+=1
                 self.animateForPathCurrentPoint(type: type)
             })
+        } else {
+            startSessionButton.isHidden = true
         }
     }
     

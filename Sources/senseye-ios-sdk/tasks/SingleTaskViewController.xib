@@ -11,6 +11,7 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SingleTaskViewController" customModule="Senseye_Demo" customModuleProvider="target">
             <connections>
                 <outlet property="dotView" destination="5VI-rk-yf6" id="qKE-Vl-3Ws"/>
+                <outlet property="startSessionButton" destination="HI0-UL-OGu" id="rVn-KE-PLG"/>
                 <outlet property="view" destination="iN0-l3-epB" id="GMb-ni-1M1"/>
             </connections>
         </placeholder>
@@ -20,7 +21,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5VI-rk-yf6">
-                    <rect key="frame" x="100" y="200" width="30" height="30"/>
+                    <rect key="frame" x="300" y="200" width="30" height="30"/>
                     <color key="backgroundColor" systemColor="systemGreenColor"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="30" id="jDJ-Pc-YTT"/>
@@ -32,12 +33,18 @@
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
                 </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HI0-UL-OGu">
+                    <rect key="frame" x="178" y="680" width="34" height="30"/>
+                    <state key="normal" title="Start"/>
+                </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
+                <constraint firstItem="HI0-UL-OGu" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="0QJ-1m-OXv"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="HI0-UL-OGu" secondAttribute="bottom" constant="100" id="3eO-nM-iti"/>
+                <constraint firstItem="5VI-rk-yf6" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="300" id="5Mx-Zw-F0h"/>
                 <constraint firstItem="5VI-rk-yf6" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" constant="156" id="Fft-dL-KrB"/>
-                <constraint firstItem="5VI-rk-yf6" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="100" id="hYc-hi-Wg4"/>
             </constraints>
             <point key="canvasLocation" x="137.68115942028987" y="108.48214285714285"/>
         </view>

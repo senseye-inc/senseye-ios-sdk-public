@@ -11,64 +11,107 @@ import Foundation
 
 import UIKit
 
-class SingleTaskViewController: UIViewController {
-    
-    struct PathType {
-        let path: [(Int,Int)]
-        
-        init(path: [(Int,Int)]) {
-            self.path = path
-        }
-    }
+class SingleTaskViewController: UIViewController, CAAnimationDelegate {
     
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
+    @IBOutlet weak var xMarkView: UIImageView!
+    @IBOutlet weak var dotViewInitialXConstraint: NSLayoutConstraint!
+    @IBOutlet weak var dotViewInitialYConstraint: NSLayoutConstraint!
+    @IBOutlet weak var currentPathTitle: UILabel!
     
-    private var calibrationPath = PathType(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)])
-    private var smoothPursuitPath = PathType(path: [(50, 50), (20, 20), (10, 10), (15, 15)])
+    private var taskConfig = TaskConfig()
     private var completedPaths = 0
     private var canProceedToNextAnimation = true
-    var pathType: PathType?
+    private var pathTypes: [PathOption] = []
+    private var currentPath: PathOption?
+    private var currentTasksIndex = 0
+    private var isPathOngoing: Bool = false
+    var taskIdsToComplete: [String] = []
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         dotView.backgroundColor = .red
-        if let dotStartingPoint = calibrationPath.path.first {
-            let originalFrame = self.dotView.frame
-            let initialPositionFrame = CGRect(x: CGFloat(dotStartingPoint.0), y: CGFloat(dotStartingPoint.1), width: originalFrame.width, height: originalFrame.height)
-            dotView.frame = initialPositionFrame
+        pathTypes = taskConfig.pathOptionsForTaskIds(ids: taskIdsToComplete)
+        currentPath = pathTypes[currentTasksIndex]
+        currentPathTitle.text = currentPath?.title
+        if let dotStartingPoint = currentPath?.path.first {
+            let xCoordinate = CGFloat(dotStartingPoint.0)
+            let yCoordinate = CGFloat(dotStartingPoint.1)
+            dotViewInitialXConstraint.constant = xCoordinate
+            dotViewInitialYConstraint.constant = yCoordinate
             completedPaths+=1
         }
-        pathType = calibrationPath
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
     }
     
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        if let path = pathType {
+        if !isPathOngoing, let path = currentPath {
+            let shouldHideXMark = (path.type != .smoothPursuit)
+            xMarkView.isHidden = shouldHideXMark
+            self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
         }
     }
     
-    private func animateForPathCurrentPoint(type: PathType) {
+    private func animateForPathCurrentPoint(type: PathOption) {
         let currentPathIndex = completedPaths
         print(currentPathIndex)
-        if (currentPathIndex < type.path.count) {
-            let xCoordinate = CGFloat(type.path[currentPathIndex].0)
-            let yCoordinate = CGFloat(type.path[currentPathIndex].1)
-            UIView.animate(withDuration: 2, delay: 3.0, options: .curveLinear, animations: {
-                let originalFrame = self.dotView.frame
-                let newFrame = CGRect(x: xCoordinate, y: yCoordinate, width: originalFrame.width, height: originalFrame.height)
-                self.dotView.frame = newFrame
-            }, completion: { finished in
-                self.completedPaths+=1
-                self.animateForPathCurrentPoint(type: type)
-            })
+        if (type.type == .smoothPursuit) {
+            let circularPath = UIBezierPath(arcCenter: xMarkView.center, radius: taskConfig.smoothPursuitCircleRadius, startAngle: .pi*2, endAngle: 0, clockwise: false)
+            
+            let animationGroup = CAAnimationGroup()
+            animationGroup.duration = 5
+            animationGroup.repeatCount = 3
+            animationGroup.delegate = self
+            
+            let circleAnimation = CAKeyframeAnimation(keyPath: #keyPath(CALayer.position))
+            circleAnimation.duration = taskConfig.smoothPursuitDuration
+            circleAnimation.repeatCount = taskConfig.smoothPursuitRepeatCount
+            circleAnimation.speed = taskConfig.smoothPuruitAnimationSpeed
+            circleAnimation.path = circularPath.cgPath
+            
+            animationGroup.animations = [circleAnimation]
+            
+            dotView.layer.add(animationGroup, forKey: nil)
         } else {
-            startSessionButton.isHidden = true
+            if (currentPathIndex < type.path.count) {
+                let xCoordinate = CGFloat(type.path[currentPathIndex].0)
+                let yCoordinate = CGFloat(type.path[currentPathIndex].1)
+                UIView.animate(withDuration: 2, delay: 3.0, options: .curveLinear, animations: {
+                    let originalFrame = self.dotView.frame
+                    let newFrame = CGRect(x: xCoordinate, y: yCoordinate, width: originalFrame.width, height: originalFrame.height)
+                    self.dotView.frame = newFrame
+                }, completion: { finished in
+                    self.completedPaths+=1
+                    self.animateForPathCurrentPoint(type: type)
+                })
+            } else {
+                isPathOngoing = false
+                startSessionButton.isHidden = false
+                self.currentTasksIndex+=1
+                self.completedPaths = 0
+                currentPath = pathTypes[currentTasksIndex]
+                currentPathTitle.text = currentPath?.title
+            }
         }
+    }
+    
+    func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+        isPathOngoing = false
+        startSessionButton.isHidden = false
+        currentTasksIndex+=1
+        self.completedPaths = 0
+        if (currentTasksIndex != -1 && currentTasksIndex < pathTypes.count) {
+            currentPath = pathTypes[currentTasksIndex]
+        } else {
+            currentPath = nil
+            currentTasksIndex = -1
+        }
+        currentPathTitle.text = currentPath?.title
     }
     
 }

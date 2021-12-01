@@ -21,10 +21,10 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
     @IBOutlet weak var currentPathTitle: UILabel!
     
     private var taskConfig = TaskConfig()
-    private var completedPaths = 0
+    private var completedPathsForCurrentTask = 0
     private var canProceedToNextAnimation = true
-    private var pathTypes: [PathOption] = []
-    private var currentPath: PathOption?
+    private var pathTypes: [TaskOption] = []
+    private var currentTask: TaskOption?
     private var currentTasksIndex = 0
     private var isPathOngoing: Bool = false
     var taskIdsToComplete: [String] = []
@@ -34,14 +34,14 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
         super.viewDidLoad()
         dotView.backgroundColor = .red
         pathTypes = taskConfig.pathOptionsForTaskIds(ids: taskIdsToComplete)
-        currentPath = pathTypes[currentTasksIndex]
-        currentPathTitle.text = currentPath?.title
-        if let dotStartingPoint = currentPath?.path.first {
+        currentTask = pathTypes[currentTasksIndex]
+        currentPathTitle.text = currentTask?.title
+        if let dotStartingPoint = currentTask?.path.first {
             let xCoordinate = CGFloat(dotStartingPoint.0)
             let yCoordinate = CGFloat(dotStartingPoint.1)
             dotViewInitialXConstraint.constant = xCoordinate
             dotViewInitialYConstraint.constant = yCoordinate
-            completedPaths+=1
+            completedPathsForCurrentTask+=1
         }
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
     }
@@ -49,7 +49,7 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        if !isPathOngoing, let path = currentPath {
+        if !isPathOngoing, let path = currentTask {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true
@@ -57,8 +57,8 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
         }
     }
     
-    private func animateForPathCurrentPoint(type: PathOption) {
-        let currentPathIndex = completedPaths
+    private func animateForPathCurrentPoint(type: TaskOption) {
+        let currentPathIndex = completedPathsForCurrentTask
         print(currentPathIndex)
         if (type.type == .smoothPursuit) {
             let circularPath = UIBezierPath(arcCenter: xMarkView.center, radius: taskConfig.smoothPursuitCircleRadius, startAngle: .pi*2, endAngle: 0, clockwise: false)
@@ -86,16 +86,16 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
                     let newFrame = CGRect(x: xCoordinate, y: yCoordinate, width: originalFrame.width, height: originalFrame.height)
                     self.dotView.frame = newFrame
                 }, completion: { finished in
-                    self.completedPaths+=1
+                    self.completedPathsForCurrentTask+=1
                     self.animateForPathCurrentPoint(type: type)
                 })
             } else {
                 isPathOngoing = false
                 startSessionButton.isHidden = false
                 self.currentTasksIndex+=1
-                self.completedPaths = 0
-                currentPath = pathTypes[currentTasksIndex]
-                currentPathTitle.text = currentPath?.title
+                self.completedPathsForCurrentTask = 0
+                currentTask = pathTypes[currentTasksIndex]
+                currentPathTitle.text = currentTask?.title
             }
         }
     }
@@ -104,14 +104,14 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
         isPathOngoing = false
         startSessionButton.isHidden = false
         currentTasksIndex+=1
-        self.completedPaths = 0
+        self.completedPathsForCurrentTask = 0
         if (currentTasksIndex != -1 && currentTasksIndex < pathTypes.count) {
-            currentPath = pathTypes[currentTasksIndex]
+            currentTask = pathTypes[currentTasksIndex]
         } else {
-            currentPath = nil
+            currentTask = nil
             currentTasksIndex = -1
         }
-        currentPathTitle.text = currentPath?.title
+        currentPathTitle.text = currentTask?.title
     }
     
 }

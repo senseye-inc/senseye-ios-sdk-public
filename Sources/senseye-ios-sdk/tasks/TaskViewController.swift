@@ -11,7 +11,7 @@ import Foundation
 
 import UIKit
 
-class SingleTaskViewController: UIViewController, CAAnimationDelegate {
+class TaskViewController: UIViewController, CAAnimationDelegate {
     
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
@@ -71,7 +71,7 @@ class SingleTaskViewController: UIViewController, CAAnimationDelegate {
             let circleAnimation = CAKeyframeAnimation(keyPath: #keyPath(CALayer.position))
             circleAnimation.duration = taskConfig.smoothPursuitDuration
             circleAnimation.repeatCount = taskConfig.smoothPursuitRepeatCount
-            circleAnimation.speed = taskConfig.smoothPuruitAnimationSpeed
+            circleAnimation.speed = taskConfig.smoothPursuitAnimationSpeed
             circleAnimation.path = circularPath.cgPath
             
             animationGroup.animations = [circleAnimation]

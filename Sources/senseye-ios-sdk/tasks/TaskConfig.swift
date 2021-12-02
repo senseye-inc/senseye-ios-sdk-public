@@ -32,7 +32,7 @@ class TaskConfig {
     var smoothPursuitPath = TaskOption(path: [(330, 320)], type: .smoothPursuit, title: "Smooth Pursuit")
     let smoothPursuitRepeatCount: Float = 3.0
     let smoothPursuitDuration: Double = 1.0
-    let smoothPuruitAnimationSpeed: Float = 0.2
+    let smoothPursuitAnimationSpeed: Float = 0.2
     let smoothPursuitCircleRadius: CGFloat = 150
     
     private var availablePathOptions: [TaskOption]

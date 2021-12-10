@@ -10,8 +10,10 @@ import Foundation
 #if !os(macOS)
 
 import UIKit
+import AVFoundation
 
-class TaskViewController: UIViewController, CAAnimationDelegate {
+@available(iOS 10.0, *)
+class TaskViewController: UIViewController  {
     
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
@@ -27,8 +29,15 @@ class TaskViewController: UIViewController, CAAnimationDelegate {
     private var currentTask: TaskOption?
     private var currentTasksIndex = 0
     private var isPathOngoing: Bool = false
-    var taskIdsToComplete: [String] = []
     
+    private var captureSession = AVCaptureSession()
+    private var captureOutput = AVCaptureVideoDataOutput()
+    private var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
+    
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first?.appendingPathComponent("senseye_demo_video")
+    
+    var taskIdsToComplete: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,16 +53,36 @@ class TaskViewController: UIViewController, CAAnimationDelegate {
             completedPathsForCurrentTask+=1
         }
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let videoDeviceInput = try? AVCaptureDeviceInput(device: self.frontCameraDevice!) else {
+                print("videoDeviceInput error")
+                return
+            }
+            self.captureSession.addInput(videoDeviceInput)
+            self.captureSession.sessionPreset = AVCaptureSession.Preset.high
+            self.captureSession.addOutput(self.captureOutput)
+            self.captureSession.addOutput(self.captureMovieFileOutput)
+            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
+            self.captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+            self.captureSession.beginConfiguration()
+            self.captureSession.commitConfiguration()
+        }
     }
     
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        if !isPathOngoing, let path = currentTask {
+        if !isPathOngoing, let path = currentTask, let fileUrl = fileDestUrl {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.captureSession.startRunning()
+                self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+                print("started capture session")
+            }
         }
     }
     
@@ -90,6 +119,10 @@ class TaskViewController: UIViewController, CAAnimationDelegate {
                     self.animateForPathCurrentPoint(type: type)
                 })
             } else {
+                DispatchQueue.global(qos: .userInitiated).async { [self] in
+                    self.captureSession.stopRunning()
+                    self.captureMovieFileOutput.stopRecording()
+                }
                 isPathOngoing = false
                 startSessionButton.isHidden = false
                 self.currentTasksIndex+=1
@@ -99,6 +132,13 @@ class TaskViewController: UIViewController, CAAnimationDelegate {
             }
         }
     }
+    
+    
+    
+}
+
+@available(iOS 10.0, *)
+extension TaskViewController: CAAnimationDelegate {
     
     func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         isPathOngoing = false
@@ -112,6 +152,26 @@ class TaskViewController: UIViewController, CAAnimationDelegate {
             currentTasksIndex = -1
         }
         currentPathTitle.text = currentTask?.title
+    }
+    
+}
+
+@available(iOS 10.0, *)
+extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
+    
+    //Frame-by-Frame output
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        print("video frame")
+    }
+    
+    //Full recording output
+    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        print("video output start")
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        print("video output finish")
+        print(error.debugDescription)
     }
     
 }

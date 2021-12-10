@@ -20,6 +20,7 @@ public class SenseyeSDK {
         return result
     }
     
+    @available(iOS 10.0, *)
     public func taskControllerForTasks() -> UIViewController {
         let singleTaskViewController = TaskViewController(nibName: "SingleTaskViewController", bundle: nil)
         singleTaskViewController.taskIdsToComplete = tasks

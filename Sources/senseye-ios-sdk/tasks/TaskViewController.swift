@@ -35,7 +35,7 @@ class TaskViewController: UIViewController  {
     private var captureMovieFileOutput = AVCaptureMovieFileOutput()
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
-    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first?.appendingPathComponent("senseye_demo_video")
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
     var taskIdsToComplete: [String] = []
     
@@ -73,7 +73,10 @@ class TaskViewController: UIViewController  {
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        if !isPathOngoing, let path = currentTask, let fileUrl = fileDestUrl {
+        //.appendingPathComponent("senseye_demo_video")
+        if !isPathOngoing, let path = currentTask,
+            let taskTitle = currentTask?.title,
+            let fileUrl = fileDestUrl?.appendingPathComponent("task_\(taskTitle)") {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true

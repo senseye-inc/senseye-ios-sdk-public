@@ -2,6 +2,7 @@ import Foundation
 
 #if !os(macOS)
 import UIKit
+import Amplify
 
 struct senseye_ios_sdk {
     var text = "Hello, World!"
@@ -14,6 +15,12 @@ public class SenseyeSDK {
     
     public init() {
         result = "Post-init result!"
+        do {
+            try Amplify.configure()
+            print("Amplify configured with storage plugin")
+        } catch {
+            print("Failed to initialize Amplify with \(error)")
+        }
     }
     
     public func retreiveResult() -> String {

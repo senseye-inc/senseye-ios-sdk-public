@@ -10,20 +10,30 @@ import Amplify
 
 class FileUploadService {
     
-    func uploadData() {
-        let dataString = "Example file contents"
-        let data = dataString.data(using: .utf8)!
-        Amplify.Storage.uploadData(key: "ExampleKey", data: data,
+    func uploadData(fileUrl: URL) {
+        let dataString = fileUrl.lastPathComponent
+        let fileNameKey = "\(fileUrl.lastPathComponent).mp4"
+        let filename = fileUrl
+        do {
+            try dataString.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
+        } catch {
+            print("Failed to write to file \(error)")
+        }
+
+        let storageOperation = Amplify.Storage.uploadFile(
+            key: fileNameKey,
+            local: filename,
             progressListener: { progress in
                 print("Progress: \(progress)")
-            }, resultListener: { (event) in
+            }, resultListener: { event in
                 switch event {
-                case .success(let data):
+                case let .success(data):
                     print("Completed: \(data)")
-                case .failure(let storageError):
+                case let .failure(storageError):
                     print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
             }
-        })
+        )
     }
     
 }

@@ -36,6 +36,7 @@ class TaskViewController: UIViewController  {
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    private let fileUploadService: FileUploadService = FileUploadService()
     
     var taskIdsToComplete: [String] = []
     
@@ -76,7 +77,7 @@ class TaskViewController: UIViewController  {
         //.appendingPathComponent("senseye_demo_video")
         if !isPathOngoing, let path = currentTask,
             let taskTitle = currentTask?.title,
-            let fileUrl = fileDestUrl?.appendingPathComponent("task_\(taskTitle)") {
+            let fileUrl = fileDestUrl?.appendingPathComponent("task_ios_\(taskTitle)") {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true
@@ -175,6 +176,7 @@ extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         print("video output finish")
         print(error.debugDescription)
+        fileUploadService.uploadData(fileUrl: outputFileURL)
     }
     
 }

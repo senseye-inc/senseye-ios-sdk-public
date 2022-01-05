@@ -19,9 +19,10 @@ public class SenseyeSDK {
             guard let configurationURL = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
                 return
             }
-            try Amplify.add(plugin: AWSS3StoragePlugin())
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
+            try Amplify.add(plugin: AWSS3StoragePlugin())
             try Amplify.configure(AmplifyConfiguration.init(configurationFile: configurationURL))
+            
             print("Amplify configured with storage plugin")
         } catch {
             print("Failed to initialize Amplify with \(error)")

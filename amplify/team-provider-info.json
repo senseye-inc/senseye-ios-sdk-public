@@ -1,0 +1,26 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-senseyeiossdk-dev-111246-authRole",
+      "UnauthRoleArn": "arn:aws:iam::555897601062:role/amplify-senseyeiossdk-dev-111246-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::555897601062:role/amplify-senseyeiossdk-dev-111246-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-senseyeiossdk-dev-111246-deployment",
+      "UnauthRoleName": "amplify-senseyeiossdk-dev-111246-unauthRole",
+      "StackName": "amplify-senseyeiossdk-dev-111246",
+      "StackId": "arn:aws:cloudformation:us-east-1:555897601062:stack/amplify-senseyeiossdk-dev-111246/4ec09720-6d92-11ec-ab6f-0a22874d4adf",
+      "AmplifyAppId": "d2562dwuxsktqh"
+    },
+    "categories": {
+      "auth": {
+        "senseyeiossdk80ebbb81": {}
+      },
+      "storage": {
+        "senseyeiossdkf07435c2": {
+          "bucketName": "amplify-senseyeiossdk-dev-111246-deployment",
+          "region": "us-east-1"
+        }
+      }
+    }
+  }
+}

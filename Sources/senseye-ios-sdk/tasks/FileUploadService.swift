@@ -14,14 +14,8 @@ class FileUploadService {
     let testAccountPassword = "senseyeTesterIos"
     
     func uploadData(fileUrl: URL) {
-        let dataString = fileUrl.lastPathComponent
         let fileNameKey = "\(fileUrl.lastPathComponent).mp4"
         let filename = fileUrl
-        do {
-            try dataString.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
-        } catch {
-            print("Failed to write to file \(error)")
-        }
         if (Amplify.Auth.getCurrentUser() == nil) {
             signIn(username: testAccountUsername, password: testAccountPassword, filenameKey: fileNameKey, filename: filename)
         } else {

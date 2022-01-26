@@ -11,6 +11,7 @@ import Foundation
 
 import UIKit
 import AVFoundation
+import AVKit
 
 @available(iOS 10.0, *)
 class TaskViewController: UIViewController  {
@@ -36,6 +37,7 @@ class TaskViewController: UIViewController  {
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    private let fileUploadService: FileUploadService = FileUploadService()
     
     var taskIdsToComplete: [String] = []
     
@@ -74,9 +76,10 @@ class TaskViewController: UIViewController  {
         startSessionButton.isHidden = true
         //recursively animate all points
         //.appendingPathComponent("senseye_demo_video")
+        let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
-            let taskTitle = currentTask?.title,
-            let fileUrl = fileDestUrl?.appendingPathComponent("task_\(taskTitle)") {
+            let taskNameId = currentTask?.taskId,
+            let fileUrl = fileDestUrl?.appendingPathComponent("task_ios_\(taskNameId)_\(currentTimeStamp).mp4") {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true
@@ -136,6 +139,16 @@ class TaskViewController: UIViewController  {
         }
     }
     
+    //TODO! Remove once testing is complete, will leave it in for now for convenient local testing
+    private func playVideo(videoURL: URL) {
+        let player = AVPlayer(url: videoURL)
+        let playerController = AVPlayerViewController()
+        playerController.player = player
+        present(playerController, animated: true) {
+            player.play()
+       }
+    }
+    
     
     
 }
@@ -153,6 +166,10 @@ extension TaskViewController: CAAnimationDelegate {
         } else {
             currentTask = nil
             currentTasksIndex = -1
+            DispatchQueue.global(qos: .userInitiated).async { [self] in
+                self.captureSession.stopRunning()
+                self.captureMovieFileOutput.stopRecording()
+            }
         }
         currentPathTitle.text = currentTask?.title
     }
@@ -175,6 +192,8 @@ extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         print("video output finish")
         print(error.debugDescription)
+        print(outputFileURL.absoluteString)
+        fileUploadService.uploadData(fileUrl: outputFileURL)
     }
     
 }

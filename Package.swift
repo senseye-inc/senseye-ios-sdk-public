@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "senseye-ios-sdk",
+    platforms: [.iOS(.v11)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
@@ -12,15 +13,23 @@ let package = Package(
             targets: ["senseye-ios-sdk"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
+        .package(name: "Amplify", url: "https://github.com/aws-amplify/amplify-ios", from: "1.17.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "senseye-ios-sdk",
-            dependencies: []),
+            dependencies: [
+                .product(name: "Amplify", package: "Amplify", condition: nil),
+                .product(name: "AWSPluginsCore", package: "Amplify", condition: nil),
+                .product(name: "AWSDataStorePlugin", package: "Amplify", condition: nil),
+                .product(name: "AWSS3StoragePlugin", package: "Amplify", condition: nil),
+                .product(name: "AWSCognitoAuthPlugin", package: "Amplify", condition: nil)
+            ],
+            resources: [
+                .process("Resources")
+            ]),
         .testTarget(
             name: "senseye-ios-sdkTests",
             dependencies: ["senseye-ios-sdk"]),

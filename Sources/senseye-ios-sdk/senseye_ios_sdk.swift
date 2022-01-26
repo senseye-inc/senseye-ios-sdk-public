@@ -2,22 +2,31 @@ import Foundation
 
 #if !os(macOS)
 import UIKit
-
-struct senseye_ios_sdk {
-    var text = "Hello, World!"
-}
+import Amplify
+import AWSS3StoragePlugin
+import AWSCognitoAuthPlugin
 
 public class SenseyeSDK {
     
-    private var result = "Initial result!"
     var tasks: [String] = ["calibration", "smoothPursuit"]
     
     public init() {
-        result = "Post-init result!"
+        print("SDK Object created!")
     }
     
-    public func retreiveResult() -> String {
-        return result
+    public func initializeSDK() {
+        do {
+            guard let configurationURL = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
+                return
+            }
+            try Amplify.add(plugin: AWSCognitoAuthPlugin())
+            try Amplify.add(plugin: AWSS3StoragePlugin())
+            try Amplify.configure(AmplifyConfiguration.init(configurationFile: configurationURL))
+            
+            print("Amplify configured with storage plugin")
+        } catch {
+            print("Failed to initialize Amplify with \(error)")
+        }
     }
     
     @available(iOS 10.0, *)

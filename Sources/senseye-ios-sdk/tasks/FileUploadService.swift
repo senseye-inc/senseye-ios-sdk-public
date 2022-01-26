@@ -14,7 +14,7 @@ class FileUploadService {
     let testAccountPassword = "senseyeTesterIos"
     
     func uploadData(fileUrl: URL) {
-        let fileNameKey = "\(fileUrl.lastPathComponent).mp4"
+        let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl
         if (Amplify.Auth.getCurrentUser() == nil) {
             signIn(username: testAccountUsername, password: testAccountPassword, filenameKey: fileNameKey, filename: filename)

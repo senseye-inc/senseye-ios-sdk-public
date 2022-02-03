@@ -19,8 +19,9 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 class FileUploadAndPredictionService {
     
     private struct PredictRequestParameters: Encodable {
-        var videoS3URLs: [String]
+        var video_urls: [String]
         var threshold: Double
+        var json_metadata_url: String
     }
     private struct SubmitPredictionJobResponseCodable: Decodable {
         var id: String
@@ -32,7 +33,7 @@ class FileUploadAndPredictionService {
     
     private let testAccountUsername = "tfl"
     private let testAccountPassword = "senseyeTesterIos"
-    private let hostApi =  "https://api.senseye.co"
+    private let hostApi =  "https://apeye.senseye.co/"
     private let hostApiKey = "41rO4VfH448fn0DXcofZR35IcST0nqnx1maQctLJ"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
@@ -81,33 +82,43 @@ class FileUploadAndPredictionService {
         for localFileNameKey in currentSessionUploadFileKeys {
             uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
             print("\(s3HostBucketUrl+localFileNameKey)")
-            //TODO! Figure out how the file key works for s3 URI
-//            Amplify.Storage.getURL(key: localFileNameKey) { event in
-//                switch event {
-//                    case let .success(url):
-//                        uploadS3URLs.append(url)
-//                        print("Completed: \(url)")
-//                    case let .failure(storageError):
-//                        print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-//                    }
-//            }
         }
-        let params = PredictRequestParameters(videoS3URLs: uploadS3URLs, threshold: 0.5)
-        let headers: HTTPHeaders = [
-            "x-api-key": hostApiKey,
-            "Accept": "application/json"
-        ]
-
-        AF.request(hostApi+"/predict", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: SubmitPredictionJobResponseCodable.self) { response in
-            switch response.result {
-            case let .success(predictionJobResponse):
-                print("Prediction request success \(predictionJobResponse)")
-                self.currentSessionPredictionId = predictionJobResponse.id
-                self.delegate?.didFinishPredictionRequest()
-            case let .failure(failure):
-                print("Prediction request failure \(failure)")
+        
+        let inputJson = "{\"tasks\": \"\",\"versionName\": \"0.0.0\",\"versionCode]\": 0}"
+        let inputJsonDataFile = inputJson.data(using: .utf8)!
+        let currentTimeStamp = Date().currentTimeMillis()
+        let jsonFileName = "\(currentTimeStamp)_ios_input.json"
+        let s3JsonFileName = "\(s3HostBucketUrl)\(jsonFileName)"
+        Amplify.Storage.uploadData(
+            key: jsonFileName,
+            data: inputJsonDataFile,
+            progressListener: { progress in
+            print("Progress: \(progress)")
+            }, resultListener: { event in
+                switch event {
+                case let .success(data):
+                    let params = PredictRequestParameters(video_urls: uploadS3URLs, threshold: 0.5, json_metadata_url: s3JsonFileName)
+                    let headers: HTTPHeaders = [
+                        "x-api-key": self.hostApiKey,
+                        "Accept": "application/json"
+                    ]
+                    AF.request(self.hostApi+"/predict", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: SubmitPredictionJobResponseCodable.self) { response in
+                        switch response.result {
+                        case let .success(predictionJobResponse):
+                            print("Prediction request success \(predictionJobResponse)")
+                            self.currentSessionPredictionId = predictionJobResponse.id
+                            self.delegate?.didFinishPredictionRequest()
+                        case let .failure(failure):
+                            print("Prediction request failure \(failure)")
+                        }
+                    }
+                case let .failure(storageError):
+                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
             }
-        }
+        )
+        
+        
     }
     
     func startPeriodicUpdatesOnPredictionId() {

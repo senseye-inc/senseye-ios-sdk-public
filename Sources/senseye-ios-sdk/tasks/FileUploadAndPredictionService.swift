@@ -33,7 +33,7 @@ class FileUploadAndPredictionService {
     
     private let testAccountUsername = "tfl"
     private let testAccountPassword = "senseyeTesterIos"
-    private let hostApi =  "https://apeye.senseye.co/"
+    private let hostApi =  "https://api.senseye.co"
     private let hostApiKey = "41rO4VfH448fn0DXcofZR35IcST0nqnx1maQctLJ"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     

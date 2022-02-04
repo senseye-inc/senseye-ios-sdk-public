@@ -77,7 +77,6 @@ class TaskViewController: UIViewController  {
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        //.appendingPathComponent("senseye_demo_video")
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
             let taskNameId = currentTask?.taskId,
@@ -102,12 +101,11 @@ class TaskViewController: UIViewController  {
             
             let animationGroup = CAAnimationGroup()
             animationGroup.duration = 5
-            animationGroup.repeatCount = 3
+            animationGroup.repeatCount = taskConfig.smoothPursuitRepeatCount
             animationGroup.delegate = self
             
             let circleAnimation = CAKeyframeAnimation(keyPath: #keyPath(CALayer.position))
             circleAnimation.duration = taskConfig.smoothPursuitDuration
-            circleAnimation.repeatCount = taskConfig.smoothPursuitRepeatCount
             circleAnimation.speed = taskConfig.smoothPursuitAnimationSpeed
             circleAnimation.path = circularPath.cgPath
             

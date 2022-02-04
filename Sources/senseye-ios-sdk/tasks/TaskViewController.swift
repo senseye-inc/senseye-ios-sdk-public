@@ -29,6 +29,7 @@ class TaskViewController: UIViewController  {
     private var pathTypes: [TaskOption] = []
     private var currentTask: TaskOption?
     private var currentTasksIndex = 0
+    private var finishedAllTasks: Bool = false
     private var isPathOngoing: Bool = false
     
     private var captureSession = AVCaptureSession()
@@ -37,12 +38,13 @@ class TaskViewController: UIViewController  {
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-    private let fileUploadService: FileUploadService = FileUploadService()
+    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
     var taskIdsToComplete: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        fileUploadService.delegate = self
         dotView.backgroundColor = .red
         pathTypes = taskConfig.pathOptionsForTaskIds(ids: taskIdsToComplete)
         currentTask = pathTypes[currentTasksIndex]
@@ -75,11 +77,10 @@ class TaskViewController: UIViewController  {
     @objc func beginDotMovementForPathType() {
         startSessionButton.isHidden = true
         //recursively animate all points
-        //.appendingPathComponent("senseye_demo_video")
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
             let taskNameId = currentTask?.taskId,
-            let fileUrl = fileDestUrl?.appendingPathComponent("task_ios_\(taskNameId)_\(currentTimeStamp).mp4") {
+            let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
             let shouldHideXMark = (path.type != .smoothPursuit)
             xMarkView.isHidden = shouldHideXMark
             self.isPathOngoing = true
@@ -100,12 +101,11 @@ class TaskViewController: UIViewController  {
             
             let animationGroup = CAAnimationGroup()
             animationGroup.duration = 5
-            animationGroup.repeatCount = 3
+            animationGroup.repeatCount = taskConfig.smoothPursuitRepeatCount
             animationGroup.delegate = self
             
             let circleAnimation = CAKeyframeAnimation(keyPath: #keyPath(CALayer.position))
             circleAnimation.duration = taskConfig.smoothPursuitDuration
-            circleAnimation.repeatCount = taskConfig.smoothPursuitRepeatCount
             circleAnimation.speed = taskConfig.smoothPursuitAnimationSpeed
             circleAnimation.path = circularPath.cgPath
             
@@ -163,7 +163,13 @@ extension TaskViewController: CAAnimationDelegate {
         self.completedPathsForCurrentTask = 0
         if (currentTasksIndex != -1 && currentTasksIndex < pathTypes.count) {
             currentTask = pathTypes[currentTasksIndex]
+            self.finishedAllTasks = false
         } else {
+            if (currentTasksIndex == pathTypes.count) {
+                self.finishedAllTasks = true
+            } else {
+                self.finishedAllTasks = false
+            }
             currentTask = nil
             currentTasksIndex = -1
             DispatchQueue.global(qos: .userInitiated).async { [self] in
@@ -171,7 +177,12 @@ extension TaskViewController: CAAnimationDelegate {
                 self.captureMovieFileOutput.stopRecording()
             }
         }
-        currentPathTitle.text = currentTask?.title
+        
+        if (finishedAllTasks == true) {
+            currentPathTitle.text = "Task Complete! Uploading..."
+        } else {
+            currentPathTitle.text = currentTask?.title
+        }
     }
     
 }
@@ -194,6 +205,32 @@ extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
         print(error.debugDescription)
         print(outputFileURL.absoluteString)
         fileUploadService.uploadData(fileUrl: outputFileURL)
+    }
+    
+}
+
+extension TaskViewController: FileUploadAndPredictionServiceDelegate {
+    
+    func didFinishUpload() {
+        if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
+            fileUploadService.startPredictionForCurrentSessionUploads()
+            DispatchQueue.main.async {
+                self.currentPathTitle.text = "Starting predictions..."
+            }
+        }
+    }
+    
+    func didFinishPredictionRequest() {
+        fileUploadService.startPeriodicUpdatesOnPredictionId()
+        DispatchQueue.main.async {
+            self.currentPathTitle.text = "Starting periodic predictions..."
+        }
+    }
+    
+    func didReturnResultForPrediction(status: String) {
+        DispatchQueue.main.async {
+            self.currentPathTitle.text = "Returned a result for prediction... \(status)"
+        }
     }
     
 }

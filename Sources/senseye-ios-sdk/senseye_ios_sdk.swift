@@ -6,9 +6,15 @@ import Amplify
 import AWSS3StoragePlugin
 import AWSCognitoAuthPlugin
 
+
+protocol SenseyeTaskCompletionDelegate: AnyObject {
+    func didCompleteTasksAndReturnResult(result: String)
+}
+
 public class SenseyeSDK {
     
     var tasks: [String] = ["calibration", "smoothPursuit"]
+    weak var delegate: SenseyeTaskCompletionDelegate?
     
     public init() {
         print("SDK Object created!")

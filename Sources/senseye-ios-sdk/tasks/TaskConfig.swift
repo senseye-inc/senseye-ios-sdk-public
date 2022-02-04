@@ -29,10 +29,10 @@ struct TaskOption {
 
 class TaskConfig {
     
-    var calibrationPath = TaskOption(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)], type: .calibration, title: "Calibration", taskId: "calibration")
+    var calibrationPath = TaskOption(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)], type: .calibration, title: "Calibration", taskId: "ios_calibration")
     
-    var smoothPursuitPath = TaskOption(path: [(330, 320)], type: .smoothPursuit, title: "Smooth Pursuit", taskId: "smooth_pursuit")
-    let smoothPursuitRepeatCount: Float = 3.0
+    var smoothPursuitPath = TaskOption(path: [(330, 320)], type: .smoothPursuit, title: "Smooth Pursuit", taskId: "ios_smooth_pursuit")
+    let smoothPursuitRepeatCount: Float = 9.0
     let smoothPursuitDuration: Double = 1.0
     let smoothPursuitAnimationSpeed: Float = 0.2
     let smoothPursuitCircleRadius: CGFloat = 150

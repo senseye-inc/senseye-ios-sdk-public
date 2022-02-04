@@ -1,0 +1,201 @@
+//
+//  FileUploadService.swift
+//  
+//
+//  Created by Deepak Kumar on 12/15/21.
+//
+
+import Foundation
+import Amplify
+import Alamofire
+import SwiftyJSON
+
+protocol FileUploadAndPredictionServiceDelegate: AnyObject {
+    func didFinishUpload()
+    func didFinishPredictionRequest()
+    func didReturnResultForPrediction(status: String)
+}
+
+class FileUploadAndPredictionService {
+    
+    private struct PredictRequestParameters: Encodable {
+        var video_urls: [String]
+        var threshold: Double
+        var json_metadata_url: String
+    }
+    private struct SubmitPredictionJobResponseCodable: Decodable {
+        var id: String
+    }
+    private struct PredictionJobStatusAndResultCodable: Decodable {
+        var id: String
+        var status: String
+    }
+    
+    private let testAccountUsername = "tfl"
+    private let testAccountPassword = "senseyeTesterIos"
+    private let hostApi =  "https://api.senseye.co"
+    private let hostApiKey = "41rO4VfH448fn0DXcofZR35IcST0nqnx1maQctLJ"
+    private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
+    
+    
+    private var currentSessionUploadFileKeys: [String] = []
+    private var currentSessionPredictionId: String = ""
+    
+    var isUploadOngoing: Bool = false
+    weak var delegate: FileUploadAndPredictionServiceDelegate?
+    
+    func uploadData(fileUrl: URL) {
+        let fileNameKey = fileUrl.lastPathComponent
+        let filename = fileUrl
+        if (Amplify.Auth.getCurrentUser() == nil) {
+            signIn(username: testAccountUsername, password: testAccountPassword, filenameKey: fileNameKey, filename: filename)
+        } else {
+            uploadFile(fileNameKey: fileNameKey, filename: filename)
+        }
+        
+    }
+    
+    private func uploadFile(fileNameKey: String, filename: URL) {
+         isUploadOngoing = true
+         Amplify.Storage.uploadFile(
+            key: fileNameKey,
+            local: filename,
+            progressListener: { progress in
+                print("Progress: \(progress)")
+            }, resultListener: { event in
+                switch event {
+                case let .success(data):
+                    print("Completed: \(data)")
+                    self.currentSessionUploadFileKeys.append(fileNameKey)
+                    self.isUploadOngoing = false
+                    self.delegate?.didFinishUpload()
+                case let .failure(storageError):
+                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    self.isUploadOngoing = false
+                }
+            }
+        )
+    }
+    
+    func startPredictionForCurrentSessionUploads() {
+        var uploadS3URLs: [String] = []
+        for localFileNameKey in currentSessionUploadFileKeys {
+            uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
+            print("\(s3HostBucketUrl+localFileNameKey)")
+        }
+        
+        let inputJson = "{\"tasks\": \"\",\"versionName\": \"0.0.0\",\"versionCode]\": 0}"
+        let inputJsonDataFile = inputJson.data(using: .utf8)!
+        let currentTimeStamp = Date().currentTimeMillis()
+        let jsonFileName = "\(currentTimeStamp)_ios_input.json"
+        let s3JsonFileName = "\(s3HostBucketUrl)\(jsonFileName)"
+        Amplify.Storage.uploadData(
+            key: jsonFileName,
+            data: inputJsonDataFile,
+            progressListener: { progress in
+            print("Progress: \(progress)")
+            }, resultListener: { event in
+                switch event {
+                case let .success(data):
+                    let params = PredictRequestParameters(video_urls: uploadS3URLs, threshold: 0.5, json_metadata_url: s3JsonFileName)
+                    let headers: HTTPHeaders = [
+                        "x-api-key": self.hostApiKey,
+                        "Accept": "application/json"
+                    ]
+                    AF.request(self.hostApi+"/predict", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: SubmitPredictionJobResponseCodable.self) { response in
+                        switch response.result {
+                        case let .success(predictionJobResponse):
+                            print("Prediction request success \(predictionJobResponse)")
+                            self.currentSessionPredictionId = predictionJobResponse.id
+                            self.delegate?.didFinishPredictionRequest()
+                        case let .failure(failure):
+                            print("Prediction request failure \(failure)")
+                        }
+                    }
+                case let .failure(storageError):
+                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
+            }
+        )
+        
+        
+    }
+    
+    func startPeriodicUpdatesOnPredictionId() {
+        let headers: HTTPHeaders = [
+            "x-api-key": hostApiKey,
+            "Accept": "application/json"
+        ]
+        let params: PredictRequestParameters? = nil
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [self] timer in
+            AF.request(self.hostApi+"/predict/"+self.currentSessionPredictionId, method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: PredictionJobStatusAndResultCodable.self) { response in
+                switch response.result {
+                case let .success(jobStatusAndResultResponse):
+                    if (jobStatusAndResultResponse.status == "completed" || jobStatusAndResultResponse.status == "failed") {
+                        print("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
+                        self.delegate?.didReturnResultForPrediction(status: jobStatusAndResultResponse.status)
+                        timer.invalidate()
+                    } else {
+                        print("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
+                    }
+                case let .failure(failure):
+                    print("Prediction periodic request failure \(failure)")
+                    timer.invalidate()
+                }
+            }
+        }
+    }
+    
+    private func signIn(username: String, password: String, filenameKey: String, filename: URL) {
+        Amplify.Auth.signIn(username: username, password: password) { result in
+            do {
+                    let signinResult = try result.get()
+                    switch signinResult.nextStep {
+                    case .confirmSignInWithSMSMFACode(let deliveryDetails, let info):
+                        print("SMS code send to \(deliveryDetails.destination)")
+                        print("Additional info \(info)")
+                        // Prompt the user to enter the SMSMFA code they received
+                        // Then invoke `confirmSignIn` api with the code
+                    case .confirmSignInWithCustomChallenge(let info):
+                        print("Custom challenge, additional info \(info)")
+                        // Prompt the user to enter custom challenge answer
+                        // Then invoke `confirmSignIn` api with the answer
+                    case .confirmSignInWithNewPassword(let info):
+                        print("New password additional info \(info)")
+                        Amplify.Auth.confirmSignIn(challengeResponse: self.testAccountPassword, options: nil) { confirmSignInResult in
+                            switch confirmSignInResult {
+                            case .success(let confirmedResult):
+                                print("signed in after password change")
+                                self.uploadFile(fileNameKey: filenameKey, filename: filename)
+                            case .failure(let error):
+                                print("Sign in failed \(error)")
+                            }
+                        }
+                        // Prompt the user to enter a new password
+                        // Then invoke `confirmSignIn` api with new password
+                    case .resetPassword(let info):
+                        print("Reset password additional info \(info)")
+                        // User needs to reset their password.
+                        // Invoke `resetPassword` api to start the reset password
+                        // flow, and once reset password flow completes, invoke
+                        // `signIn` api to trigger signin flow again.
+                    case .confirmSignUp(let info):
+                        print("Confirm signup additional info \(info)")
+                        // User was not confirmed during the signup process.
+                        // Invoke `confirmSignUp` api to confirm the user if
+                        // they have the confirmation code. If they do not have the
+                        // confirmation code, invoke `resendSignUpCode` to send the
+                        // code again.
+                        // After the user is confirmed, invoke the `signIn` api again.
+                    case .done:
+                        // Use has successfully signed in to the app
+                        self.uploadFile(fileNameKey: filenameKey, filename: filename)
+                        print("Signin complete")
+                    }
+                } catch {
+                    print ("Sign in failed \(error)")
+                }
+        }
+    }
+    
+}

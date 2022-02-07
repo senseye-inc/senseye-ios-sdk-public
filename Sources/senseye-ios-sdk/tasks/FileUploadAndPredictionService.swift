@@ -34,7 +34,7 @@ class FileUploadAndPredictionService {
     private let testAccountUsername = "tfl"
     private let testAccountPassword = "senseyeTesterIos"
     private let hostApi =  "https://api.senseye.co"
-    private let hostApiKey = "41rO4VfH448fn0DXcofZR35IcST0nqnx1maQctLJ"
+    private var hostApiKey: String? = nil
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
     
@@ -47,12 +47,31 @@ class FileUploadAndPredictionService {
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl
-        if (Amplify.Auth.getCurrentUser() == nil) {
-            signIn(username: testAccountUsername, password: testAccountPassword, filenameKey: fileNameKey, filename: filename)
-        } else {
-            uploadFile(fileNameKey: fileNameKey, filename: filename)
+        Amplify.Auth.fetchAuthSession { result in
+            switch result {
+            case .success(let session):
+                print("Is user signed in - \(session.isSignedIn)")
+                if (!session.isSignedIn) {
+                    self.signIn(username: self.testAccountUsername, password: self.testAccountPassword, filenameKey: fileNameKey, filename: filename)
+                } else {
+                    if (self.hostApiKey == nil) {
+                        Amplify.Auth.fetchUserAttributes() { result in
+                            switch result {
+                            case .success(let attributes):
+                                self.setUserApiKey(attributes: attributes)
+                                self.uploadFile(fileNameKey: fileNameKey, filename: filename)
+                            case .failure(let error):
+                                print("Fetching user attributes failed with error \(error)")
+                            }
+                        }
+                    } else {
+                        self.uploadFile(fileNameKey: fileNameKey, filename: filename)
+                    }
+                }
+            case .failure(let error):
+                print("Fetch session failed with error \(error)")
+            }
         }
-        
     }
     
     private func uploadFile(fileNameKey: String, filename: URL) {
@@ -77,6 +96,15 @@ class FileUploadAndPredictionService {
         )
     }
     
+    private func setUserApiKey(attributes: Array<AuthUserAttribute>) {
+        for attribute in attributes {
+            if (attribute.key == AuthUserAttributeKey.custom("senseye_api_token")) {
+                self.hostApiKey = attribute.value
+                print("Set the api key " + attribute.value)
+            }
+        }
+    }
+    
     func startPredictionForCurrentSessionUploads() {
         var uploadS3URLs: [String] = []
         for localFileNameKey in currentSessionUploadFileKeys {
@@ -98,8 +126,11 @@ class FileUploadAndPredictionService {
                 switch event {
                 case let .success(data):
                     let params = PredictRequestParameters(video_urls: uploadS3URLs, threshold: 0.5, json_metadata_url: s3JsonFileName)
+                    guard let apiKey = self.hostApiKey else {
+                        return
+                    }
                     let headers: HTTPHeaders = [
-                        "x-api-key": self.hostApiKey,
+                        "x-api-key": apiKey,
                         "Accept": "application/json"
                     ]
                     AF.request(self.hostApi+"/predict", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: SubmitPredictionJobResponseCodable.self) { response in
@@ -122,8 +153,13 @@ class FileUploadAndPredictionService {
     }
     
     func startPeriodicUpdatesOnPredictionId() {
+        
+        guard let apiKey = hostApiKey else {
+            return
+        }
+        
         let headers: HTTPHeaders = [
-            "x-api-key": hostApiKey,
+            "x-api-key": apiKey,
             "Accept": "application/json"
         ]
         let params: PredictRequestParameters? = nil

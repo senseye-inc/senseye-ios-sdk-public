@@ -14,6 +14,7 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
     func didFinishUpload()
     func didFinishPredictionRequest()
     func didReturnResultForPrediction(status: String)
+    func didJustSignUpAndChangePassword()
 }
 
 class FileUploadAndPredictionService {
@@ -29,20 +30,33 @@ class FileUploadAndPredictionService {
     private struct PredictionJobStatusAndResultCodable: Decodable {
         var id: String
         var status: String
+        var prediction: PreditionJobStatusPredictionCodable
     }
     
-    private let testAccountUsername = "tfl"
-    private let testAccountPassword = "senseyeTesterIos"
+    private struct PreditionJobStatusPredictionCodable: Decodable {
+        var fatigue: String?
+        var intoxication: String?
+        var state: Int
+    }
+    
+    private var accountUsername: String? = ""
+    private var accountPassword: String? = ""
+    private var temporaryPassword: String? = ""
     private let hostApi =  "https://api.senseye.co"
     private var hostApiKey: String? = nil
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
-    
     
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
     
     var isUploadOngoing: Bool = false
     weak var delegate: FileUploadAndPredictionServiceDelegate?
+    
+    func setGroupIdAndUniqueId(groupId: String, uniqueId: String, temporaryPassword: String) {
+        self.accountUsername = groupId
+        self.accountPassword = uniqueId
+        self.temporaryPassword = temporaryPassword
+    }
     
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
@@ -51,8 +65,21 @@ class FileUploadAndPredictionService {
             switch result {
             case .success(let session):
                 print("Is user signed in - \(session.isSignedIn)")
-                if (!session.isSignedIn) {
-                    self.signIn(username: self.testAccountUsername, password: self.testAccountPassword, filenameKey: fileNameKey, filename: filename)
+                
+                guard let userName = self.accountUsername, let password = self.accountPassword else {
+                    return
+                }
+                let currentlyAuthenticatedAmplifyUser = Amplify.Auth.getCurrentUser()
+                let doesUserMatchCurrentSignIn = currentlyAuthenticatedAmplifyUser?.username == userName
+                if (!session.isSignedIn || !doesUserMatchCurrentSignIn) {
+                    Amplify.Auth.signOut { result in
+                        switch result {
+                        case .success():
+                            self.signIn(username: userName, password: password, filenameKey: fileNameKey, filename: filename, temporaryPassword: self.temporaryPassword)
+                        case .failure(let error):
+                            print("Amplify auth sign out failed \(error)")
+                        }
+                    }
                 } else {
                     if (self.hostApiKey == nil) {
                         Amplify.Auth.fetchUserAttributes() { result in
@@ -182,8 +209,14 @@ class FileUploadAndPredictionService {
         }
     }
     
-    private func signIn(username: String, password: String, filenameKey: String, filename: URL) {
-        Amplify.Auth.signIn(username: username, password: password) { result in
+    private func signIn(username: String, password: String, filenameKey: String, filename: URL, temporaryPassword: String?) {
+        var signInPassword = ""
+        if (temporaryPassword != nil || temporaryPassword != "") {
+            signInPassword = temporaryPassword!
+        } else {
+            signInPassword = password
+        }
+        Amplify.Auth.signIn(username: username, password: signInPassword) { result in
             do {
                     let signinResult = try result.get()
                     switch signinResult.nextStep {
@@ -198,10 +231,11 @@ class FileUploadAndPredictionService {
                         // Then invoke `confirmSignIn` api with the answer
                     case .confirmSignInWithNewPassword(let info):
                         print("New password additional info \(info)")
-                        Amplify.Auth.confirmSignIn(challengeResponse: self.testAccountPassword, options: nil) { confirmSignInResult in
+                        Amplify.Auth.confirmSignIn(challengeResponse: password, options: nil) { confirmSignInResult in
                             switch confirmSignInResult {
                             case .success(let confirmedResult):
                                 print("signed in after password change")
+                                self.delegate?.didJustSignUpAndChangePassword()
                                 self.uploadFile(fileNameKey: filenameKey, filename: filename)
                             case .failure(let error):
                                 print("Sign in failed \(error)")

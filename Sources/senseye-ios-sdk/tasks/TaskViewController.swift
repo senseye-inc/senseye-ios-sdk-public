@@ -16,6 +16,9 @@ import AVKit
 @available(iOS 10.0, *)
 class TaskViewController: UIViewController  {
     
+    @IBOutlet weak var groupId: UITextField!
+    @IBOutlet weak var uniqueId: UITextField!
+    @IBOutlet weak var tempUniqueId: UITextField!
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
     @IBOutlet weak var xMarkView: UIImageView!
@@ -46,6 +49,8 @@ class TaskViewController: UIViewController  {
         super.viewDidLoad()
         fileUploadService.delegate = self
         dotView.backgroundColor = .red
+        dotView.isHidden = true
+        xMarkView.isHidden = true
         pathTypes = taskConfig.pathOptionsForTaskIds(ids: taskIdsToComplete)
         currentTask = pathTypes[currentTasksIndex]
         currentPathTitle.text = currentTask?.title
@@ -57,6 +62,10 @@ class TaskViewController: UIViewController  {
             completedPathsForCurrentTask+=1
         }
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
+        currentPathTitle.text = "Please enter the Group ID and Unique ID provided by your organization."
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
+        self.view.addGestureRecognizer(tapGesture)
         
         DispatchQueue.global(qos: .userInitiated).async {
             guard let videoDeviceInput = try? AVCaptureDeviceInput(device: self.frontCameraDevice!) else {
@@ -75,8 +84,19 @@ class TaskViewController: UIViewController  {
     }
     
     @objc func beginDotMovementForPathType() {
+        
+        guard let enteredGroupId = groupId.text, let enteredUniqueId = uniqueId.text, let temporaryUniqueId = tempUniqueId.text else {
+            currentPathTitle.text = "Please enter a valid login!"
+            return
+        }
+        fileUploadService.setGroupIdAndUniqueId(groupId: enteredGroupId, uniqueId: enteredUniqueId, temporaryPassword: temporaryUniqueId)
+        groupId.isHidden = true
+        uniqueId.isHidden = true
+        tempUniqueId.isHidden = true
         startSessionButton.isHidden = true
+        dotView.isHidden = false
         //recursively animate all points
+        currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
             let taskNameId = currentTask?.taskId,
@@ -91,6 +111,12 @@ class TaskViewController: UIViewController  {
                 print("started capture session")
             }
         }
+    }
+    
+    @objc func dismissKeyboard (_ sender: UITapGestureRecognizer) {
+        groupId.resignFirstResponder()
+        uniqueId.resignFirstResponder()
+        tempUniqueId.resignFirstResponder()
     }
     
     private func animateForPathCurrentPoint(type: TaskOption) {
@@ -230,6 +256,12 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     func didReturnResultForPrediction(status: String) {
         DispatchQueue.main.async {
             self.currentPathTitle.text = "Returned a result for prediction... \(status)"
+        }
+    }
+    
+    func didJustSignUpAndChangePassword() {
+        DispatchQueue.main.async {
+            self.currentPathTitle.text = "New password was set! Starting upload..."
         }
     }
     

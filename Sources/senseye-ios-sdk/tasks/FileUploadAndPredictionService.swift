@@ -30,7 +30,7 @@ class FileUploadAndPredictionService {
     private struct PredictionJobStatusAndResultCodable: Decodable {
         var id: String
         var status: String
-        var result: PredictionJobStatusResultCodable
+        var result: PredictionJobStatusResultCodable?
     }
     
     private struct PredictionJobStatusResultCodable: Decodable {

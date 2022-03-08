@@ -37,9 +37,9 @@ public class SenseyeSDK {
     
     @available(iOS 10.0, *)
     public func taskControllerForTasks() -> UIViewController {
-        let singleTaskViewController = TaskViewController(nibName: "SingleTaskViewController", bundle: nil)
-        singleTaskViewController.taskIdsToComplete = tasks
-        return singleTaskViewController
+        let surveyViewController = SurveyViewController(nibName: "SurveyViewController", bundle: nil)
+        surveyViewController.taskIdsToComplete = tasks
+        return surveyViewController
     }
 }
 

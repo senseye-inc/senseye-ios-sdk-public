@@ -44,6 +44,7 @@ class TaskViewController: UIViewController  {
     private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
     var taskIdsToComplete: [String] = []
+    var surveyInput: [String: String] = [:]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -176,7 +177,6 @@ class TaskViewController: UIViewController  {
     }
     
     
-    
 }
 
 @available(iOS 10.0, *)
@@ -206,6 +206,7 @@ extension TaskViewController: CAAnimationDelegate {
         
         if (finishedAllTasks == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
+            fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
         } else {
             currentPathTitle.text = currentTask?.title
         }

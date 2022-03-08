@@ -11,6 +11,7 @@ import UIKit
 public enum PathType: String {
     case calibration
     case smoothPursuit
+    case plr
 }
 
 struct TaskOption {
@@ -36,6 +37,10 @@ class TaskConfig {
     let smoothPursuitDuration: Double = 1.0
     let smoothPursuitAnimationSpeed: Float = 0.2
     let smoothPursuitCircleRadius: CGFloat = 150
+    
+    var plrPath = TaskOption(path: [], type: .plr, title: "PLR", taskId: "plr")
+    let plrBackgroundColorAndTiming : [(time: Int, backgroundColor: UIColor)] = [(0, .white), (5, .black), (10, .white), (15, .black)]
+    let plrTaskLengthInSec = 20
     
     private var availablePathOptions: [TaskOption]
     

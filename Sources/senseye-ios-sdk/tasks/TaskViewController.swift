@@ -139,6 +139,11 @@ class TaskViewController: UIViewController  {
             animationGroup.animations = [circleAnimation]
             
             dotView.layer.add(animationGroup, forKey: nil)
+        } else if (type.type == .plr) {
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                timer.
+                let 
+            }
         } else {
             if (currentPathIndex < type.path.count) {
                 let xCoordinate = CGFloat(type.path[currentPathIndex].0)
@@ -206,7 +211,7 @@ extension TaskViewController: CAAnimationDelegate {
         
         if (finishedAllTasks == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
-            fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
+            fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: taskIdsToComplete)
         } else {
             currentPathTitle.text = currentTask?.title
         }

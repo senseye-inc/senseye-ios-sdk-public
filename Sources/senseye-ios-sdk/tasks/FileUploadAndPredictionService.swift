@@ -139,7 +139,7 @@ class FileUploadAndPredictionService {
     
     func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String]) {
         var sessionInputJson = JSON()
-        sessionInputJson["tasks"].string = tasks
+        sessionInputJson["tasks"].string = tasks.joined(separator: ",")
         sessionInputJson["versionName"].string = "0.0.0"
         sessionInputJson["versionCode"].string = "0"
         for inputItem in surveyInput {

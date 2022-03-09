@@ -13,7 +13,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 
 public class SenseyeSDK {
     
-    var tasks: [String] = ["calibration", "smoothPursuit"]
+    var tasks: [String] = ["plr", "calibration", "smoothPursuit"]
     weak var delegate: SenseyeTaskCompletionDelegate?
     
     public init() {

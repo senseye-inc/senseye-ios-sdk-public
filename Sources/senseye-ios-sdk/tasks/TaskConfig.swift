@@ -19,33 +19,35 @@ struct TaskOption {
     let type: PathType
     let title: String
     let taskId: String
+    let shouldShowX: Bool
     
-    init(path: [(Int,Int)], type: PathType, title: String, taskId: String) {
+    init(path: [(Int,Int)], type: PathType, title: String, taskId: String, shouldShowX: Bool) {
         self.path = path
         self.type = type
         self.title = title
         self.taskId = taskId
+        self.shouldShowX = shouldShowX
     }
 }
 
 class TaskConfig {
     
-    var calibrationPath = TaskOption(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)], type: .calibration, title: "Calibration", taskId: "ios_calibration")
+    var calibrationPath = TaskOption(path: [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)], type: .calibration, title: "Calibration", taskId: "ios_calibration", shouldShowX: false)
     
-    var smoothPursuitPath = TaskOption(path: [(330, 320)], type: .smoothPursuit, title: "Smooth Pursuit", taskId: "ios_smooth_pursuit")
+    var smoothPursuitPath = TaskOption(path: [(330, 320)], type: .smoothPursuit, title: "Smooth Pursuit", taskId: "ios_smooth_pursuit", shouldShowX: true)
     let smoothPursuitRepeatCount: Float = 9.0
     let smoothPursuitDuration: Double = 1.0
     let smoothPursuitAnimationSpeed: Float = 0.2
     let smoothPursuitCircleRadius: CGFloat = 150
     
-    var plrPath = TaskOption(path: [], type: .plr, title: "PLR", taskId: "plr")
-    let plrBackgroundColorAndTiming : [(time: Int, backgroundColor: UIColor)] = [(0, .white), (5, .black), (10, .white), (15, .black)]
+    var plrPath = TaskOption(path: [], type: .plr, title: "PLR", taskId: "ios_plr", shouldShowX: true)
+    let plrBackgroundColorAndTiming: [Int: UIColor] = [0: .white, 5: .black, 10: .white, 15: .black]
     let plrTaskLengthInSec = 20
     
     private var availablePathOptions: [TaskOption]
     
     init() {
-        availablePathOptions = [calibrationPath, smoothPursuitPath]
+        availablePathOptions = [plrPath, calibrationPath, smoothPursuitPath]
     }
     
     func pathOptionsForTaskIds(ids: [String]) -> [TaskOption] {
@@ -56,6 +58,14 @@ class TaskConfig {
             }
         }
         return optionsToReturn
+    }
+    
+    func xMarkColorForBackground(backgroundColor: UIColor) -> UIColor {
+        if (backgroundColor == .black) {
+            return UIColor.white
+        } else {
+            return UIColor.black
+        }
     }
     
 }

@@ -102,8 +102,7 @@ class TaskViewController: UIViewController  {
         if !isPathOngoing, let path = currentTask,
             let taskNameId = currentTask?.taskId,
             let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
-            let shouldHideXMark = (path.type != .smoothPursuit)
-            xMarkView.isHidden = shouldHideXMark
+            xMarkView.isHidden = path.shouldShowX
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
             DispatchQueue.global(qos: .userInitiated).async {
@@ -140,9 +139,34 @@ class TaskViewController: UIViewController  {
             
             dotView.layer.add(animationGroup, forKey: nil)
         } else if (type.type == .plr) {
+            var currentInterval = 0
             Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-                timer.
-                let 
+                if (currentInterval == 20) {
+                    timer.invalidate()
+                    DispatchQueue.global(qos: .userInitiated).async { [self] in
+                        self.captureSession.stopRunning()
+                        self.captureMovieFileOutput.stopRecording()
+                    }
+                    self.isPathOngoing = false
+                    self.startSessionButton.isHidden = false
+                    self.currentTasksIndex+=1
+                    self.completedPathsForCurrentTask = 0
+                    self.currentTask = self.pathTypes[self.currentTasksIndex]
+                    self.currentPathTitle.text = self.currentTask?.title
+                    self.view.backgroundColor = UIColor.white
+                    self.xMarkView.tintColor = UIColor.black
+                }
+                self.xMarkView.isHidden = false
+                self.dotView.isHidden = true
+                let colorForCurrentTimeInterval: UIColor? = self.taskConfig.plrBackgroundColorAndTiming[currentInterval]
+                if let colorUpdate = colorForCurrentTimeInterval {
+                    let xMarkBackgroundColor = self.taskConfig.xMarkColorForBackground(backgroundColor: colorUpdate)
+                    DispatchQueue.main.async {
+                        self.view.backgroundColor = colorUpdate
+                        self.xMarkView.tintColor = xMarkBackgroundColor
+                    }
+                }
+                currentInterval+=1
             }
         } else {
             if (currentPathIndex < type.path.count) {

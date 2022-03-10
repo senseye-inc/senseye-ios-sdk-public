@@ -63,6 +63,10 @@ class FileUploadAndPredictionService {
         self.temporaryPassword = temporaryPassword
     }
     
+    func hasLoginInfo() -> Bool {
+        return self.accountUsername != nil && !(self.accountUsername?.isEmpty ?? true)
+    }
+    
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl

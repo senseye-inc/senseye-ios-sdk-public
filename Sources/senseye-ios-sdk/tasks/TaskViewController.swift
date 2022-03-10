@@ -19,12 +19,14 @@ class TaskViewController: UIViewController  {
     @IBOutlet weak var groupId: UITextField!
     @IBOutlet weak var uniqueId: UITextField!
     @IBOutlet weak var tempUniqueId: UITextField!
+    @IBOutlet weak var cameraPreview: UIView!
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
     @IBOutlet weak var xMarkView: UIImageView!
     @IBOutlet weak var dotViewInitialXConstraint: NSLayoutConstraint!
     @IBOutlet weak var dotViewInitialYConstraint: NSLayoutConstraint!
     @IBOutlet weak var currentPathTitle: UILabel!
+    var videoPreviewLayer: AVCaptureVideoPreviewLayer!
     
     private var taskConfig = TaskConfig()
     private var completedPathsForCurrentTask = 0
@@ -52,6 +54,7 @@ class TaskViewController: UIViewController  {
         dotView.backgroundColor = .red
         dotView.isHidden = true
         xMarkView.isHidden = true
+        cameraPreview.isHidden = true
         pathTypes = taskConfig.pathOptionsForTaskIds(ids: taskIdsToComplete)
         currentTask = pathTypes[currentTasksIndex]
         currentPathTitle.text = currentTask?.title
@@ -62,13 +65,14 @@ class TaskViewController: UIViewController  {
             dotViewInitialYConstraint.constant = yCoordinate
             completedPathsForCurrentTask+=1
         }
+        startSessionButton.titleLabel?.text = "Sign In"
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
         currentPathTitle.text = "Please enter the Group ID and Unique ID provided by your organization."
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
             guard let videoDeviceInput = try? AVCaptureDeviceInput(device: self.frontCameraDevice!) else {
                 print("videoDeviceInput error")
                 return
@@ -84,13 +88,31 @@ class TaskViewController: UIViewController  {
         }
     }
     
+    
     @objc func beginDotMovementForPathType() {
         
         guard let enteredGroupId = groupId.text, let enteredUniqueId = uniqueId.text, let temporaryUniqueId = tempUniqueId.text else {
             currentPathTitle.text = "Please enter a valid login!"
             return
         }
-        fileUploadService.setGroupIdAndUniqueId(groupId: enteredGroupId, uniqueId: enteredUniqueId, temporaryPassword: temporaryUniqueId)
+        if (!fileUploadService.hasLoginInfo()) {
+            fileUploadService.setGroupIdAndUniqueId(groupId: enteredGroupId, uniqueId: enteredUniqueId, temporaryPassword: temporaryUniqueId)
+            startSessionButton.titleLabel?.text = "Start"
+            groupId.isHidden = true
+            uniqueId.isHidden = true
+            tempUniqueId.isHidden = true
+            cameraPreview.isHidden = false
+        
+            videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
+            videoPreviewLayer.connection?.videoOrientation = .portrait
+            videoPreviewLayer.frame.size =  cameraPreview.frame.size
+            videoPreviewLayer.videoGravity = .resizeAspectFill
+            videoPreviewLayer.connection?.videoOrientation = .portrait
+            cameraPreview.layer.addSublayer(videoPreviewLayer)
+            captureSession.startRunning()
+            return
+        }
+        
         groupId.isHidden = true
         uniqueId.isHidden = true
         tempUniqueId.isHidden = true
@@ -106,8 +128,8 @@ class TaskViewController: UIViewController  {
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
             DispatchQueue.global(qos: .userInitiated).async {
-                self.captureSession.startRunning()
                 self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+                self.toggleCameraPreviewVisibility(isHidden: true)
                 print("started capture session")
             }
         }
@@ -143,10 +165,6 @@ class TaskViewController: UIViewController  {
             Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
                 if (currentInterval == 20) {
                     timer.invalidate()
-                    DispatchQueue.global(qos: .userInitiated).async { [self] in
-                        self.captureSession.stopRunning()
-                        self.captureMovieFileOutput.stopRecording()
-                    }
                     self.isPathOngoing = false
                     self.startSessionButton.isHidden = false
                     self.currentTasksIndex+=1
@@ -155,6 +173,8 @@ class TaskViewController: UIViewController  {
                     self.currentPathTitle.text = self.currentTask?.title
                     self.view.backgroundColor = UIColor.white
                     self.xMarkView.tintColor = UIColor.black
+                    self.captureMovieFileOutput.stopRecording()
+                    self.toggleCameraPreviewVisibility(isHidden: false)
                 }
                 self.xMarkView.isHidden = false
                 self.dotView.isHidden = true
@@ -181,16 +201,13 @@ class TaskViewController: UIViewController  {
                     self.animateForPathCurrentPoint(type: type)
                 })
             } else {
-                DispatchQueue.global(qos: .userInitiated).async { [self] in
-                    self.captureSession.stopRunning()
-                    self.captureMovieFileOutput.stopRecording()
-                }
                 isPathOngoing = false
                 startSessionButton.isHidden = false
                 self.currentTasksIndex+=1
                 self.completedPathsForCurrentTask = 0
                 currentTask = pathTypes[currentTasksIndex]
                 currentPathTitle.text = currentTask?.title
+                self.toggleCameraPreviewVisibility(isHidden: false)
             }
         }
     }
@@ -205,6 +222,11 @@ class TaskViewController: UIViewController  {
        }
     }
     
+    private func toggleCameraPreviewVisibility(isHidden: Bool) {
+        DispatchQueue.main.async {
+            self.cameraPreview.isHidden = isHidden
+        }
+    }
     
 }
 
@@ -222,19 +244,21 @@ extension TaskViewController: CAAnimationDelegate {
         } else {
             if (currentTasksIndex == pathTypes.count) {
                 self.finishedAllTasks = true
+                DispatchQueue.global(qos: .userInitiated).async { [self] in
+                    self.captureMovieFileOutput.stopRecording()
+                    toggleCameraPreviewVisibility(isHidden: true)
+                }
             } else {
                 self.finishedAllTasks = false
             }
             currentTask = nil
             currentTasksIndex = -1
-            DispatchQueue.global(qos: .userInitiated).async { [self] in
-                self.captureSession.stopRunning()
-                self.captureMovieFileOutput.stopRecording()
-            }
         }
         
         if (finishedAllTasks == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
+            toggleCameraPreviewVisibility(isHidden: true)
+            self.captureSession.stopRunning()
             fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: taskIdsToComplete)
         } else {
             currentPathTitle.text = currentTask?.title

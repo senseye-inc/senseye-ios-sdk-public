@@ -30,6 +30,10 @@ class FileUploadAndPredictionService {
     private struct PredictionJobStatusAndResultCodable: Decodable {
         var id: String
         var status: String
+        var result: PredictionJobStatusResultCodable?
+    }
+    
+    private struct PredictionJobStatusResultCodable: Decodable {
         var prediction: PreditionJobStatusPredictionCodable
     }
     
@@ -48,6 +52,7 @@ class FileUploadAndPredictionService {
     
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
+    private var currentSessionJsonInputFile: Data? = nil
     
     var isUploadOngoing: Bool = false
     weak var delegate: FileUploadAndPredictionServiceDelegate?
@@ -56,6 +61,10 @@ class FileUploadAndPredictionService {
         self.accountUsername = groupId
         self.accountPassword = uniqueId
         self.temporaryPassword = temporaryPassword
+    }
+    
+    func hasLoginInfo() -> Bool {
+        return self.accountUsername != nil && !(self.accountUsername?.isEmpty ?? true)
     }
     
     func uploadData(fileUrl: URL) {
@@ -132,21 +141,41 @@ class FileUploadAndPredictionService {
         }
     }
     
+    func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String]) {
+        var sessionInputJson = JSON()
+        sessionInputJson["tasks"].string = tasks.joined(separator: ",")
+        sessionInputJson["versionName"].string = "0.0.0"
+        sessionInputJson["versionCode"].string = "0"
+        for inputItem in surveyInput {
+            sessionInputJson[inputItem.key].string = inputItem.value
+        }
+        
+        do {
+            try self.currentSessionJsonInputFile = sessionInputJson.rawData()
+        } catch {
+            print("Error in json parsing for input file")
+        }
+        
+    }
+    
     func startPredictionForCurrentSessionUploads() {
+        
+        guard let sessionJsonFile = currentSessionJsonInputFile else {
+            return
+        }
+        
         var uploadS3URLs: [String] = []
         for localFileNameKey in currentSessionUploadFileKeys {
             uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
             print("\(s3HostBucketUrl+localFileNameKey)")
         }
         
-        let inputJson = "{\"tasks\": \"\",\"versionName\": \"0.0.0\",\"versionCode]\": 0}"
-        let inputJsonDataFile = inputJson.data(using: .utf8)!
         let currentTimeStamp = Date().currentTimeMillis()
         let jsonFileName = "\(currentTimeStamp)_ios_input.json"
         let s3JsonFileName = "\(s3HostBucketUrl)\(jsonFileName)"
         Amplify.Storage.uploadData(
             key: jsonFileName,
-            data: inputJsonDataFile,
+            data: sessionJsonFile,
             progressListener: { progress in
             print("Progress: \(progress)")
             }, resultListener: { event in

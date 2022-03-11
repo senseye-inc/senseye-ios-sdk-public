@@ -13,7 +13,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 
 public class SenseyeSDK {
     
-    var tasks: [String] = ["calibration", "smoothPursuit"]
+    var tasks: [String] = ["plr", "calibration", "smoothPursuit"]
     weak var delegate: SenseyeTaskCompletionDelegate?
     
     public init() {
@@ -37,9 +37,9 @@ public class SenseyeSDK {
     
     @available(iOS 10.0, *)
     public func taskControllerForTasks() -> UIViewController {
-        let singleTaskViewController = TaskViewController(nibName: "SingleTaskViewController", bundle: nil)
-        singleTaskViewController.taskIdsToComplete = tasks
-        return singleTaskViewController
+        let surveyViewController = SurveyViewController(nibName: "SurveyViewController", bundle: nil)
+        surveyViewController.taskIdsToComplete = tasks
+        return surveyViewController
     }
 }
 

@@ -31,13 +31,19 @@ class AuthorizationService {
     // TODO: put in build env or fetchable AWS env
     private let hostBucketUrl: String? = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
 
-    // TODO: make a better mapping function
+    /**
+        Maps group id, unique id to account username and password. Group id and unique id are
+        holdovers from the old "login" flow and will be deprecated.
+    */
     func setGroupIdAndUniqueId(groupId: String, uniqueId: String, temporaryPassword: String) {
         self.accountUsername = groupId
         self.accountPassword = uniqueId
         self.temporaryPassword = temporaryPassword
     }
 
+    /**
+        Authorizes the user session and fetches api key to allow for uploading and processing files.
+    */
     func authorizeSession() {
         Amplify.Auth.fetchAuthSession { result in
             switch result {
@@ -51,13 +57,6 @@ class AuthorizationService {
         }
     }
     
-    
-    /**
-     Signs into session with user credentials, or ensures current signed in session matches user entry at login.
-
-     - Parameters:
-        - currentSession: Current session that may be signed in
-     */
     private func synchronize(currentSession: AuthSession) {
         guard let username = self.accountUsername, let password = self.accountPassword else {
             print("Need accountUsername or accountPassword")

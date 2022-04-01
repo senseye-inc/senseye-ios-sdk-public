@@ -57,6 +57,10 @@ class FileUploadAndPredictionService {
     var isUploadOngoing: Bool = false
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
+    /**
+        Maps group id, unique id to account username and password. Group id and unique id are
+        holdovers from the old "login" flow, and they will be deprecated.
+    */
     func setGroupIdAndUniqueId(groupId: String, uniqueId: String, temporaryPassword: String) {
         self.accountUsername = groupId
         self.accountPassword = uniqueId
@@ -66,7 +70,14 @@ class FileUploadAndPredictionService {
     func hasLoginInfo() -> Bool {
         return self.accountUsername != nil && !(self.accountUsername?.isEmpty ?? true)
     }
-    
+
+     /**
+        Uploads a video file to the server after ensuring signed in session matches user entry at login,
+        authenticating the session, and fetching host api key.
+     
+        - Parameters:
+            - fileUrl: URL of the video file to upload
+     */   
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl
@@ -141,6 +152,14 @@ class FileUploadAndPredictionService {
         }
     }
     
+
+    /**
+        Generate session json file from survey responses and experiment session tasks.
+
+        - Parameters:
+            - surveyInput: Array of responses from demographic survey
+            - tasks: Array of experiment tasks that are performed during the session
+    */
     func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String]) {
         var sessionInputJson = JSON()
         sessionInputJson["tasks"].string = tasks.joined(separator: ",")
@@ -158,6 +177,10 @@ class FileUploadAndPredictionService {
         
     }
     
+    /**
+        Submits a prediction job to the server by making a post request with
+        parameters: video urls, prediction threshold, and json metadata. 
+     */
     func startPredictionForCurrentSessionUploads() {
         
         guard let sessionJsonFile = currentSessionJsonInputFile else {
@@ -208,6 +231,10 @@ class FileUploadAndPredictionService {
         
     }
     
+    /**
+        Periodically checks the prediction job id's status from the server until a result is available. Lets the delegate 
+        handle a completed status.
+     */
     func startPeriodicUpdatesOnPredictionId() {
         
         guard let apiKey = hostApiKey else {

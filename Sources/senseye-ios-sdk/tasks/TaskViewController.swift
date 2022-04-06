@@ -34,7 +34,7 @@ class TaskViewController: UIViewController  {
     private var pathTypes: [TaskOption] = []
     private var currentTask: TaskOption?
     private var currentTasksIndex = 0
-    private var finishedAllTasks: Bool = false
+    private var finishedAllTasksTest: Bool = false
     private var isPathOngoing: Bool = false
     
     private var captureSession = AVCaptureSession()

@@ -12,8 +12,10 @@ import Foundation
 import UIKit
 import AVFoundation
 import AVKit
+import SwiftUI
+import Alamofire
 
-@available(iOS 10.0, *)
+@available(iOS 13.0, *)
 class TaskViewController: UIViewController  {
     
     @IBOutlet weak var groupId: UITextField!
@@ -34,7 +36,7 @@ class TaskViewController: UIViewController  {
     private var pathTypes: [TaskOption] = []
     private var currentTask: TaskOption?
     private var currentTasksIndex = 0
-    private var finishedAllTasksTest: Bool = false
+    private var finishedAllTasks: Bool = false
     private var isPathOngoing: Bool = false
     
     private var captureSession = AVCaptureSession()
@@ -47,9 +49,16 @@ class TaskViewController: UIViewController  {
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
+    var predictionResult: PredictionResult?
+    let resultsViewModel = ResultsViewModel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // For testing
+        self.groupId.text = "ios_tester_account_1"
+        self.uniqueId.text = "050297"
+        
         fileUploadService.delegate = self
         dotView.backgroundColor = .red
         dotView.isHidden = true
@@ -88,7 +97,6 @@ class TaskViewController: UIViewController  {
         }
     }
     
-    
     @objc func beginDotMovementForPathType() {
         
         guard let enteredGroupId = groupId.text, let enteredUniqueId = uniqueId.text, let temporaryUniqueId = tempUniqueId.text else {
@@ -102,7 +110,7 @@ class TaskViewController: UIViewController  {
             uniqueId.isHidden = true
             tempUniqueId.isHidden = true
             cameraPreview.isHidden = false
-        
+            
             videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
             videoPreviewLayer.connection?.videoOrientation = .portrait
             videoPreviewLayer.frame.size =  cameraPreview.frame.size
@@ -122,8 +130,8 @@ class TaskViewController: UIViewController  {
         currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
-            let taskNameId = currentTask?.taskId,
-            let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
+           let taskNameId = currentTask?.taskId,
+           let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
             xMarkView.isHidden = path.shouldShowX
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
@@ -143,7 +151,7 @@ class TaskViewController: UIViewController  {
     
     private func animateForPathCurrentPoint(type: TaskOption) {
         let currentPathIndex = completedPathsForCurrentTask
-        print(currentPathIndex)
+        print(type.type.rawValue + " index " + String(currentPathIndex))
         if (type.type == .smoothPursuit) {
             let circularPath = UIBezierPath(arcCenter: xMarkView.center, radius: taskConfig.smoothPursuitCircleRadius, startAngle: .pi*2, endAngle: 0, clockwise: false)
             
@@ -165,16 +173,16 @@ class TaskViewController: UIViewController  {
             Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
                 if (currentInterval == 20) {
                     timer.invalidate()
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        self.captureMovieFileOutput.stopRecording()
+                    }
                     self.isPathOngoing = false
-                    self.startSessionButton.isHidden = false
                     self.currentTasksIndex+=1
                     self.completedPathsForCurrentTask = 0
                     self.currentTask = self.pathTypes[self.currentTasksIndex]
                     self.currentPathTitle.text = self.currentTask?.title
                     self.view.backgroundColor = UIColor.white
                     self.xMarkView.tintColor = UIColor.black
-                    self.captureMovieFileOutput.stopRecording()
-                    self.toggleCameraPreviewVisibility(isHidden: false)
                 }
                 self.xMarkView.isHidden = false
                 self.dotView.isHidden = true
@@ -201,13 +209,14 @@ class TaskViewController: UIViewController  {
                     self.animateForPathCurrentPoint(type: type)
                 })
             } else {
+                DispatchQueue.global(qos: .userInitiated).async {
+                    self.captureMovieFileOutput.stopRecording()
+                }
                 isPathOngoing = false
-                startSessionButton.isHidden = false
                 self.currentTasksIndex+=1
                 self.completedPathsForCurrentTask = 0
                 currentTask = pathTypes[currentTasksIndex]
                 currentPathTitle.text = currentTask?.title
-                self.toggleCameraPreviewVisibility(isHidden: false)
             }
         }
     }
@@ -219,7 +228,7 @@ class TaskViewController: UIViewController  {
         playerController.player = player
         present(playerController, animated: true) {
             player.play()
-       }
+        }
     }
     
     private func toggleCameraPreviewVisibility(isHidden: Bool) {
@@ -230,7 +239,7 @@ class TaskViewController: UIViewController  {
     
 }
 
-@available(iOS 10.0, *)
+@available(iOS 13.0, *)
 extension TaskViewController: CAAnimationDelegate {
     
     func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
@@ -267,7 +276,7 @@ extension TaskViewController: CAAnimationDelegate {
     
 }
 
-@available(iOS 10.0, *)
+@available(iOS 13.0, *)
 extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
     
     //Frame-by-Frame output
@@ -285,17 +294,25 @@ extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
         print(error.debugDescription)
         print(outputFileURL.absoluteString)
         fileUploadService.uploadData(fileUrl: outputFileURL)
+        self.startSessionButton.isHidden = false
+        self.toggleCameraPreviewVisibility(isHidden: false)
     }
     
 }
 
+@available(iOS 14.0, *)
 extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     
     func didFinishUpload() {
         if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
             fileUploadService.startPredictionForCurrentSessionUploads()
             DispatchQueue.main.async {
-                self.currentPathTitle.text = "Starting predictions..."
+                let newPrediction = PredictionResult(resultStatus: "Starting predictions...")
+                self.resultsViewModel.predictionResult = newPrediction
+                // show results view
+                let resultsView = ResultsView(resultsViewModel: self.resultsViewModel)
+                let resultsVC = UIHostingController(rootView: resultsView)
+                self.present(resultsVC, animated: true)
             }
         }
     }
@@ -303,19 +320,22 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     func didFinishPredictionRequest() {
         fileUploadService.startPeriodicUpdatesOnPredictionId()
         DispatchQueue.main.async {
-            self.currentPathTitle.text = "Starting periodic predictions..."
+            let newPrediction = PredictionResult(resultStatus: "Starting periodic predictions...")
+            self.resultsViewModel.predictionResult = newPrediction
         }
     }
     
     func didReturnResultForPrediction(status: String) {
         DispatchQueue.main.async {
-            self.currentPathTitle.text = "Returned a result for prediction... \(status)"
+            let newPrediction = PredictionResult(resultStatus: "Returned a result for prediction... \(status)")
+            self.resultsViewModel.predictionResult = newPrediction
         }
     }
     
     func didJustSignUpAndChangePassword() {
         DispatchQueue.main.async {
-            self.currentPathTitle.text = "New password was set! Starting upload..."
+            let newPrediction = PredictionResult(resultStatus: "New password was set! Starting upload...")
+            self.resultsViewModel.predictionResult = newPrediction
         }
     }
     

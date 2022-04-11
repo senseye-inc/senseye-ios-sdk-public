@@ -1,5 +1,5 @@
 import Foundation
-
+import SwiftUI
 #if !os(macOS)
 import UIKit
 import Amplify
@@ -11,6 +11,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
     func didCompleteTasksAndReturnResult(result: String)
 }
 
+@available(iOS 14.0, *)
 public class SenseyeSDK {
     
     var tasks: [String] = ["plr", "calibration", "smoothPursuit"]
@@ -35,12 +36,18 @@ public class SenseyeSDK {
         }
     }
     
-    @available(iOS 13.0, *)
     public func taskControllerForTasks() -> UIViewController {
         let surveyViewController = SurveyViewController(nibName: "SurveyViewController", bundle: nil)
         surveyViewController.taskIdsToComplete = tasks
         return surveyViewController
     }
+    
+    // ReusltsView UI Testing
+    
+    public func getResultsView() -> some View {
+            let resultsView = ResultsView(taskViewController: TaskViewController())
+            return resultsView
+        }
 }
 
 #endif

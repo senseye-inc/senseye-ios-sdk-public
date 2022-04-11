@@ -16,7 +16,7 @@ import SwiftUI
 import Alamofire
 
 @available(iOS 13.0, *)
-class TaskViewController: UIViewController  {
+class TaskViewController: UIViewController, ObservableObject {
     
     @IBOutlet weak var groupId: UITextField!
     @IBOutlet weak var uniqueId: UITextField!
@@ -49,8 +49,7 @@ class TaskViewController: UIViewController  {
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
-    var predictionResult: PredictionResult?
-    let resultsViewModel = ResultsViewModel()
+    @Published var predictionResult: PredictionResult?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -308,9 +307,9 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
             fileUploadService.startPredictionForCurrentSessionUploads()
             DispatchQueue.main.async {
                 let newPrediction = PredictionResult(resultStatus: "Starting predictions...")
-                self.resultsViewModel.predictionResult = newPrediction
+                self.predictionResult = newPrediction
                 // show results view
-                let resultsView = ResultsView(resultsViewModel: self.resultsViewModel)
+                let resultsView = ResultsView(taskViewController: self)
                 let resultsVC = UIHostingController(rootView: resultsView)
                 self.present(resultsVC, animated: true)
             }
@@ -321,21 +320,21 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
         fileUploadService.startPeriodicUpdatesOnPredictionId()
         DispatchQueue.main.async {
             let newPrediction = PredictionResult(resultStatus: "Starting periodic predictions...")
-            self.resultsViewModel.predictionResult = newPrediction
+            self.predictionResult = newPrediction
         }
     }
     
     func didReturnResultForPrediction(status: String) {
         DispatchQueue.main.async {
             let newPrediction = PredictionResult(resultStatus: "Returned a result for prediction... \(status)")
-            self.resultsViewModel.predictionResult = newPrediction
+            self.predictionResult = newPrediction
         }
     }
     
     func didJustSignUpAndChangePassword() {
         DispatchQueue.main.async {
             let newPrediction = PredictionResult(resultStatus: "New password was set! Starting upload...")
-            self.resultsViewModel.predictionResult = newPrediction
+            self.predictionResult = newPrediction
         }
     }
     

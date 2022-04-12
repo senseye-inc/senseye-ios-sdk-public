@@ -45,9 +45,8 @@ public class SenseyeSDK {
     // ReusltsView UI Testing
     
     public func getResultsView() -> some View {
-            let resultsView = ResultsView(taskViewController: TaskViewController())
-            return resultsView
-        }
+            let resultsView = ResultsView()
+        return resultsView
+    }
 }
-
 #endif

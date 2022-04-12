@@ -16,7 +16,7 @@ import SwiftUI
 import Alamofire
 
 @available(iOS 13.0, *)
-class TaskViewController: UIViewController, ObservableObject {
+class TaskViewController: UIViewController {
     
     @IBOutlet weak var groupId: UITextField!
     @IBOutlet weak var uniqueId: UITextField!
@@ -45,11 +45,10 @@ class TaskViewController: UIViewController, ObservableObject {
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
+    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService.shared
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
-    @Published var predictionResult: PredictionResult?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -304,37 +303,35 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     
     func didFinishUpload() {
         if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
-            fileUploadService.startPredictionForCurrentSessionUploads()
             DispatchQueue.main.async {
-                let newPrediction = PredictionResult(resultStatus: "Starting predictions...")
-                self.predictionResult = newPrediction
-                // show results view
-                let resultsView = ResultsView(taskViewController: self)
-                let resultsVC = UIHostingController(rootView: resultsView)
-                self.present(resultsVC, animated: true)
+                self.fileUploadService.startPredictionForCurrentSessionUploads { result in
+                    print("Result from TaskVC didFinishUpload: \(result)")
+                }
+                let resultsView = ResultsView()
+                self.present(UIHostingController(rootView: resultsView), animated: true)
+                self.currentPathTitle.text = "Starting predictions..."
             }
         }
     }
     
     func didFinishPredictionRequest() {
-        fileUploadService.startPeriodicUpdatesOnPredictionId()
-        DispatchQueue.main.async {
-            let newPrediction = PredictionResult(resultStatus: "Starting periodic predictions...")
-            self.predictionResult = newPrediction
+        fileUploadService.startPeriodicUpdatesOnPredictionId { result in
+            DispatchQueue.main.async {
+                print("Result From TaskVC didFinishPredictionRequest: \(result)")
+                self.currentPathTitle.text = "Starting periodic predictions..."
+            }
         }
     }
     
     func didReturnResultForPrediction(status: String) {
         DispatchQueue.main.async {
-            let newPrediction = PredictionResult(resultStatus: "Returned a result for prediction... \(status)")
-            self.predictionResult = newPrediction
+            self.currentPathTitle.text = "Returned a result for prediction... \(status)"
         }
     }
     
     func didJustSignUpAndChangePassword() {
         DispatchQueue.main.async {
-            let newPrediction = PredictionResult(resultStatus: "New password was set! Starting upload...")
-            self.predictionResult = newPrediction
+            self.currentPathTitle.text = "New password was set! Starting upload..."
         }
     }
     

@@ -11,7 +11,6 @@ import SwiftUI
 struct ResultsView: View {
     
     @StateObject var resultsViewModel: ResultsViewModel = ResultsViewModel()
-    @ObservedObject var taskViewController: TaskViewController
     
     var body: some View {
         ZStack {
@@ -39,6 +38,11 @@ struct ResultsView: View {
                 }
                 
                 Spacer()
+                if resultsViewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .senseyeSecondary))
+                        .scaleEffect(3)
+                }
                 
                 Button {
                     print("Button Tapped")
@@ -58,11 +62,15 @@ struct ResultsView: View {
 
                 Spacer()
                 
-                Text("Status: \(taskViewController.predictionResult?.resultStatus ?? "Error no predictionResult")")
+                Text("Status: \(resultsViewModel.predictionStatus)")
                     .foregroundColor(.senseyeTextColor)
                 
                 Spacer()
             }
+        }
+        .onAppear {
+            print("Calling on appear")
+            resultsViewModel.startPredictions()
         }
     }
 }
@@ -70,7 +78,7 @@ struct ResultsView: View {
 @available(iOS 14.0, *)
 struct SwiftUIView_Previews: PreviewProvider {
     static var previews: some View {
-        ResultsView(taskViewController: TaskViewController())
+        ResultsView()
     }
 }
 

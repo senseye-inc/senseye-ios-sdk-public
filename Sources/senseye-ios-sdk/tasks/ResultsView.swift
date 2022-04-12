@@ -14,15 +14,15 @@ struct ResultsView: View {
     
     var body: some View {
         ZStack {
+            
+            if resultsViewModel.isLoading {
+                ProcessingScreen()
+            }
+            
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
             VStack(alignment: .center) {
-                VStack(alignment: .trailing) {
-                    Image("whiteLogo")
-                    Text("Fitness for duty".uppercased())
-                        .font(.title2)
-                        .foregroundColor(.senseyeSecondary)
-                }
+                HeaderView()
                 Image(systemName: "checkmark.circle.fill")
                     .resizable()
                     .frame(width: 91, height: 91)
@@ -38,11 +38,7 @@ struct ResultsView: View {
                 }
                 
                 Spacer()
-                if resultsViewModel.isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .senseyeSecondary))
-                        .scaleEffect(3)
-                }
+                
                 
                 Button {
                     print("Button Tapped")

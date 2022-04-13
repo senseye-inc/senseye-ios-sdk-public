@@ -14,11 +14,6 @@ struct ResultsView: View {
     
     var body: some View {
         ZStack {
-            
-            if resultsViewModel.isLoading {
-                ProcessingScreen()
-            }
-            
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
             VStack(alignment: .center) {
@@ -28,32 +23,21 @@ struct ResultsView: View {
                     .frame(width: 91, height: 91)
                     .foregroundColor(.senseyeSecondary)
                     .padding()
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 10) {
                     ResultNameAndImageStack(resultName: "General Impairment", resultPassed: true, resultDescription: nil)
                     ResultNameAndImageStack(resultName: "General Intoxication", resultPassed: false, resultDescription: nil)
                         .padding(.bottom, 35)
-                    ResultNameAndImageStack(resultName: "Alcohol", resultPassed: true, resultDescription: "0.2")
+                    ResultNameAndImageStack(resultName: "Alcohol", resultPassed: true, resultDescription: "bac 0.2")
                     ResultNameAndImageStack(resultName: "Fatigue", resultPassed: true, resultDescription: nil)
                     ResultNameAndImageStack(resultName: "Marijuana", resultPassed: true, resultDescription: nil)
                 }
                 
                 Spacer()
                 
-                
                 Button {
                     print("Button Tapped")
                 } label: {
-                    Text("Home".uppercased())
-                        .foregroundColor(.senseyePrimary)
-                        .padding()
-                        .frame(width: 147, height: 52)
-                        .background(
-                            RoundedRectangle(
-                                cornerRadius: 34,
-                                style: .continuous
-                            )
-                            .fill(Color.senseyeSecondary)
-                        )
+                    SenseyeButton(text: "Home")
                 }
 
                 Spacer()
@@ -63,18 +47,15 @@ struct ResultsView: View {
                 
                 Spacer()
             }
+            
+            if resultsViewModel.isLoading {
+                ProcessingScreen()
+            }
+            
         }
         .onAppear {
-            print("Calling on appear")
-            resultsViewModel.startPredictions()
+//            resultsViewModel.startPredictions()
         }
-    }
-}
-
-@available(iOS 14.0, *)
-struct SwiftUIView_Previews: PreviewProvider {
-    static var previews: some View {
-        ResultsView()
     }
 }
 
@@ -87,10 +68,34 @@ struct ResultNameAndImageStack: View {
     
     var body: some View {
         HStack {
-            Text(resultName.uppercased())
-                .foregroundColor(.senseyeTextColor)
+            HStack {
+                Text(resultName.uppercased())
+                Text(resultDescription?.uppercased() ?? "")
+            }
+            .foregroundColor(.senseyeTextColor)
+            Spacer()
             Image(systemName: resultPassed ? "checkmark.circle.fill" : "x.circle.fill")
                 .foregroundColor(resultPassed ? .senseyeSecondary : .senseyeRed)
         }
+        .frame(maxWidth: 250)
+    }
+}
+
+struct SenseyeButton: View {
+    
+    let text: String
+    
+    var body: some View {
+        Text(text.uppercased())
+            .foregroundColor(.senseyePrimary)
+            .padding()
+            .frame(width: 147, height: 52)
+            .background(
+                RoundedRectangle(
+                    cornerRadius: 34,
+                    style: .continuous
+                )
+                .fill(Color.senseyeSecondary)
+            )
     }
 }

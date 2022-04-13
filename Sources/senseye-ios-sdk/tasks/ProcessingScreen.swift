@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-@available(iOS 13.0.0, *)
+@available(iOS 13.0, *)
 struct ProcessingScreen: View {
     var body: some View {
         ZStack {
@@ -34,7 +34,7 @@ struct ProcessingScreen: View {
 }
 
 
-@available(iOS 13.0.0, *)
+@available(iOS 13.0, *)
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ProcessingScreen()

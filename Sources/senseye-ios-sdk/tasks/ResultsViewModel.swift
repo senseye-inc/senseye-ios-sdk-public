@@ -8,11 +8,6 @@
 import Foundation
 
 
-@available(iOS 13.0, *)
-struct PredictionResult {
-    var resultStatus: String
-}
-
 enum ResultLoadingStatus {
     case notStarted, requestMade, requestRecived, predictionReceived
 }
@@ -22,7 +17,6 @@ class ResultsViewModel: ObservableObject {
     
     let fileUploadService = FileUploadAndPredictionService.shared
     
-    @Published var predictionResult: PredictionResult?
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
     @Published var loadingStatus: ResultLoadingStatus = .notStarted

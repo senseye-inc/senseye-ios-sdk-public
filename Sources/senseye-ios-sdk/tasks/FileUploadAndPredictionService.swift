@@ -19,8 +19,6 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 
 class FileUploadAndPredictionService {
     
-    static var shared = FileUploadAndPredictionService()
-    
     private struct PredictRequestParameters: Encodable {
         var video_urls: [String]
         var threshold: Double
@@ -223,10 +221,14 @@ class FileUploadAndPredictionService {
                             completed(.success(predictionJobResponse.id))
                         case let .failure(failure):
                             print("Prediction request failure \(failure)")
+                            
+                            // Network related error
+                            completed(.failure(failure))
                         }
                     }
                 case let .failure(storageError):
                     print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    completed(.failure(storageError))
                 }
             }
         )
@@ -264,6 +266,9 @@ class FileUploadAndPredictionService {
                     }
                 case let .failure(failure):
                     print("Prediction periodic request failure \(failure)")
+                    
+                    // Failure to return a prediction
+                    completed(.failure(failure))
                     timer.invalidate()
                 }
             }

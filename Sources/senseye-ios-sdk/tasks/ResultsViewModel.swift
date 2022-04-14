@@ -15,7 +15,11 @@ enum ResultLoadingStatus {
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
-    let fileUploadService = FileUploadAndPredictionService.shared
+    init(fileUploadService: FileUploadAndPredictionService) {
+        self.fileUploadService = fileUploadService
+    }
+    
+    let fileUploadService: FileUploadAndPredictionService
     
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
@@ -37,7 +41,7 @@ class ResultsViewModel: ObservableObject {
                 switch result {
                 case .success(let predictionJobResponse):
                     print("Prediction Job Response: \(predictionJobResponse)")
-                    self.predictionStatus = "Starting periodic predictions..."
+                    self.predictionStatus = "Prediction API request sent..."
                 case .failure(let error):
                     print("Error !! \(error.localizedDescription)")
                 }

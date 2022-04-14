@@ -10,7 +10,11 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct ResultsView: View {
     
-    @StateObject var resultsViewModel: ResultsViewModel = ResultsViewModel()
+    @StateObject var resultsViewModel: ResultsViewModel
+    
+    init(fileUploadService: FileUploadAndPredictionService) {
+        _resultsViewModel = StateObject(wrappedValue: ResultsViewModel(fileUploadService: fileUploadService))
+    }
     
     var body: some View {
         ZStack {

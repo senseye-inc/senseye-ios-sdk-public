@@ -13,7 +13,6 @@ import UIKit
 import AVFoundation
 import AVKit
 import SwiftUI
-import Alamofire
 
 @available(iOS 13.0, *)
 class TaskViewController: UIViewController {
@@ -45,17 +44,13 @@ class TaskViewController: UIViewController {
     private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService.shared
+    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // For testing
-        self.groupId.text = "ios_tester_account_1"
-        self.uniqueId.text = "050297"
         
         fileUploadService.delegate = self
         dotView.backgroundColor = .red
@@ -305,9 +300,9 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
         if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
             DispatchQueue.main.async {
                 self.fileUploadService.startPredictionForCurrentSessionUploads { result in
-                    print("Result from TaskVC didFinishUpload: \(result)")
+                    print("Result from TaskVC \(#function): \(result)")
                 }
-                let resultsView = ResultsView()
+                let resultsView = ResultsView(fileUploadService: self.fileUploadService)
                 self.present(UIHostingController(rootView: resultsView), animated: true)
                 self.currentPathTitle.text = "Starting predictions..."
             }
@@ -317,8 +312,8 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     func didFinishPredictionRequest() {
         fileUploadService.startPeriodicUpdatesOnPredictionId { result in
             DispatchQueue.main.async {
-                print("Result From TaskVC didFinishPredictionRequest: \(result)")
-                self.currentPathTitle.text = "Starting periodic predictions..."
+                print("Result From TaskVC \(#function): \(result)")
+                self.currentPathTitle.text = "Prediction API request sent..."
             }
         }
     }

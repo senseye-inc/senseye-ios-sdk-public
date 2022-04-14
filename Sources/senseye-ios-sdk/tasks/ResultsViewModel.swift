@@ -9,7 +9,7 @@ import Foundation
 
 
 enum ResultLoadingStatus {
-    case notStarted, requestMade, requestRecived, predictionReceived
+    case notStarted, requestMade, requestReceived, predictionReceived
 }
 
 @available(iOS 13.0, *)

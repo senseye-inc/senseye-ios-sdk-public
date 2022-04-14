@@ -81,10 +81,11 @@ struct ResultNameAndImageStack: View {
     }
 }
 
+@available(iOS 13.0.0, *)
 struct SenseyeButton: View {
     
     let text: String
-    
+
     var body: some View {
         Text(text.uppercased())
             .foregroundColor(.senseyePrimary)

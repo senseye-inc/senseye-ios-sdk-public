@@ -181,7 +181,7 @@ class FileUploadAndPredictionService {
         Submits a prediction job to the server by making a post request with
         parameters: video urls, prediction threshold, and json metadata. 
      */
-    func startPredictionForCurrentSessionUploads() {
+    func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         
         guard let sessionJsonFile = currentSessionJsonInputFile else {
             return
@@ -218,12 +218,17 @@ class FileUploadAndPredictionService {
                             print("Prediction request success \(predictionJobResponse)")
                             self.currentSessionPredictionId = predictionJobResponse.id
                             self.delegate?.didFinishPredictionRequest()
+                            completed(.success(predictionJobResponse.id))
                         case let .failure(failure):
                             print("Prediction request failure \(failure)")
+                            
+                            // Network related error
+                            completed(.failure(failure))
                         }
                     }
                 case let .failure(storageError):
                     print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    completed(.failure(storageError))
                 }
             }
         )
@@ -235,7 +240,7 @@ class FileUploadAndPredictionService {
         Periodically checks the prediction job id's status from the server until a result is available. Lets the delegate 
         handle a completed status.
      */
-    func startPeriodicUpdatesOnPredictionId() {
+    func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
         
         guard let apiKey = hostApiKey else {
             return
@@ -252,13 +257,18 @@ class FileUploadAndPredictionService {
                 case let .success(jobStatusAndResultResponse):
                     if (jobStatusAndResultResponse.status == "completed" || jobStatusAndResultResponse.status == "failed") {
                         print("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
+                        completed(.success(jobStatusAndResultResponse.status))
                         self.delegate?.didReturnResultForPrediction(status: jobStatusAndResultResponse.status)
+                        
                         timer.invalidate()
                     } else {
                         print("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
                     }
                 case let .failure(failure):
                     print("Prediction periodic request failure \(failure)")
+                    
+                    // Failure to return a prediction
+                    completed(.failure(failure))
                     timer.invalidate()
                 }
             }

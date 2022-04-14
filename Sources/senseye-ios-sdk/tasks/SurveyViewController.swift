@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+@available(iOS 13.0, *)
 class SurveyViewController: UIViewController {
     
     @IBOutlet weak var ageLabel: UILabel!
@@ -114,6 +115,7 @@ class SurveyViewController: UIViewController {
     
 }
 
+@available(iOS 13.0, *)
 extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
 
     func numberOfComponents(in pickerView: UIPickerView) -> Int {

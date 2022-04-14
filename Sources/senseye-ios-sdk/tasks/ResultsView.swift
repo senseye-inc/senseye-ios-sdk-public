@@ -54,7 +54,7 @@ struct ResultsView: View {
             
         }
         .onAppear {
-//            resultsViewModel.startPredictions()
+            resultsViewModel.startPredictions()
         }
     }
 }

@@ -26,7 +26,7 @@ class AuthorizationService {
     private var temporaryPassword: String? = nil
         
     // TODO: feature flag?
-    private let hostApiUrl: String? =  "https://api.senseye.co"
+    private let hostApiUrl: String? =  "https://apeye.senseye.co"
     private var hostApiKey: String? = nil
     // TODO: put in build env or fetchable AWS env
     private let hostBucketUrl: String? = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"

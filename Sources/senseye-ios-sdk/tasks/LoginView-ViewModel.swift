@@ -1,0 +1,85 @@
+//
+//  LoginView-ViewModel.swift
+//  senseye-ios-sdk-app
+//
+//  Created by Bobby Srisan on 4/3/22.
+//
+
+import Foundation
+import Amplify
+import UIKit
+import SwiftUI
+
+@available(iOS 15.0.0, *)
+extension LoginView {
+    class ViewModel: ObservableObject {
+        @Published var username: String = ""
+        @Published var password: String = ""
+        @Published var newPassword: String = ""
+        @Published var temporaryPassword: String = ""
+        @Published var isNewAccount = false
+        @Published var isUserSignedIn = false
+        @Published var isShowingPasswordAlert = false
+
+        private let authenticationService: AuthenticationService
+
+        init(authenticationService: AuthenticationService) {
+            self.authenticationService = authenticationService
+        }
+        
+        func login() {
+            if (self.isNewAccount && !self.isValidNewPasswordSubmission()) {
+                isShowingPasswordAlert = true
+                return
+            } else {
+                self.newPassword = ""
+                self.temporaryPassword = ""
+            }
+            
+            self.authenticationService.authenticateSession(
+                accountUsername: self.username,
+                accountPassword: self.password,
+                temporaryPassword: self.temporaryPassword
+            )
+        }
+
+        /**
+         On any  view load, any current user is signed out.
+         */
+        func onAppear() {
+            authenticationService.delegate = self
+            if (self.isUserSignedIn) {
+                self.authenticationService.signOut()
+            }
+            print("Login view appears! isSignedIn is \(self.isUserSignedIn)")
+        }
+        
+        func isMatchingNewPassword() -> Bool { self.password == self.newPassword }
+                
+        func isValidNewPasswordSubmission() -> Bool {
+            isMatchingNewPassword() && !temporaryPassword.isEmpty
+        }
+    }
+
+
+}
+@available(iOS 15.0.0, *)
+extension LoginView.ViewModel: AuthenticationServiceDelegate {
+    func didConfirmSignInWithNewPassword() {
+        print("New account password set.")
+    }
+    
+    func didSuccessfullySignIn() {
+        print("Successful sign in")
+        DispatchQueue.main.async {
+            self.isUserSignedIn = true
+        }
+    }
+ 
+    func didSuccessfullySignOut() {
+        print("Successful signed out")
+        DispatchQueue.main.async {
+            self.isUserSignedIn = false
+        }
+    }
+}

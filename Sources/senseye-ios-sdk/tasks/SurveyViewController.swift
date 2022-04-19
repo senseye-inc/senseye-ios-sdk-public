@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import SwiftUI
 import UIKit
 
-@available(iOS 13.0, *)
+@available(iOS 15.0, *)
 class SurveyViewController: UIViewController {
     
     @IBOutlet weak var ageLabel: UILabel!
@@ -25,7 +26,7 @@ class SurveyViewController: UIViewController {
     private var ageInputs = ["20","21","22"]
     private var genderInputs = ["Male", "Female", "Other"]
     private var eyeColorInputs = ["Blue", "Green", "Brown", "Black"]
-    
+        
     var taskIdsToComplete: [String] = []
     
     override func viewDidLoad() {
@@ -115,7 +116,7 @@ class SurveyViewController: UIViewController {
     
 }
 
-@available(iOS 13.0, *)
+@available(iOS 15.0, *)
 extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
 
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -165,4 +166,27 @@ extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
         }
     }
     
+}
+
+
+/**
+Compatibility for SwiftUI representable View
+ */
+@available(iOS 15.0, *)
+struct SurveyView: UIViewControllerRepresentable {    
+    typealias UIViewControllerType = SurveyViewController
+    
+    func makeUIViewController(context: Context) -> SurveyViewController {
+        // TODO: tasks defined here as an adhoc hack. We want to rearrange it so that tasks are defined and used and passed in through SenseyeSDK
+        let tasks: [String] = ["plr", "calibration", "smoothPursuit"]
+        let surveyViewController = SurveyViewController(
+            nibName: "SurveyViewController",
+            bundle: nil
+        )
+        surveyViewController.taskIdsToComplete = tasks
+        return surveyViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: SurveyViewController, context: Context) {
+    }
 }

@@ -17,9 +17,6 @@ import SwiftUI
 @available(iOS 13.0, *)
 class TaskViewController: UIViewController {
     
-    @IBOutlet weak var groupId: UITextField!
-    @IBOutlet weak var uniqueId: UITextField!
-    @IBOutlet weak var tempUniqueId: UITextField!
     @IBOutlet weak var cameraPreview: UIView!
     @IBOutlet weak var dotView: UIView!
     @IBOutlet weak var startSessionButton: UIButton!
@@ -67,10 +64,10 @@ class TaskViewController: UIViewController {
             dotViewInitialYConstraint.constant = yCoordinate
             completedPathsForCurrentTask+=1
         }
-        startSessionButton.titleLabel?.text = "Sign In"
+        startSessionButton.titleLabel?.text = "Begin"
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
-        currentPathTitle.text = "Please enter the Group ID and Unique ID provided by your organization."
-        
+        currentPathTitle.text = "Proceed when you are ready."
+
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
@@ -91,35 +88,18 @@ class TaskViewController: UIViewController {
     }
     
     @objc func beginDotMovementForPathType() {
-        
-        guard let enteredGroupId = groupId.text, let enteredUniqueId = uniqueId.text, let temporaryUniqueId = tempUniqueId.text else {
-            currentPathTitle.text = "Please enter a valid login!"
-            return
-        }
-        if (!fileUploadService.hasLoginInfo()) {
-            fileUploadService.setGroupIdAndUniqueId(groupId: enteredGroupId, uniqueId: enteredUniqueId, temporaryPassword: temporaryUniqueId)
-            startSessionButton.titleLabel?.text = "Start"
-            groupId.isHidden = true
-            uniqueId.isHidden = true
-            tempUniqueId.isHidden = true
-            cameraPreview.isHidden = false
-            
-            videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
-            videoPreviewLayer.connection?.videoOrientation = .portrait
-            videoPreviewLayer.frame.size =  cameraPreview.frame.size
-            videoPreviewLayer.videoGravity = .resizeAspectFill
-            videoPreviewLayer.connection?.videoOrientation = .portrait
-            cameraPreview.layer.addSublayer(videoPreviewLayer)
-            captureSession.startRunning()
-            return
-        }
-        
-        groupId.isHidden = true
-        uniqueId.isHidden = true
-        tempUniqueId.isHidden = true
-        startSessionButton.isHidden = true
         dotView.isHidden = false
-        //recursively animate all points
+        startSessionButton.titleLabel?.text = "Start"
+        cameraPreview.isHidden = false
+        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
+        videoPreviewLayer.connection?.videoOrientation = .portrait
+        videoPreviewLayer.frame.size =  cameraPreview.frame.size
+        videoPreviewLayer.videoGravity = .resizeAspectFill
+        videoPreviewLayer.connection?.videoOrientation = .portrait
+        cameraPreview.layer.addSublayer(videoPreviewLayer)
+        captureSession.startRunning()
+
+        startSessionButton.isHidden = true
         currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
@@ -137,9 +117,6 @@ class TaskViewController: UIViewController {
     }
     
     @objc func dismissKeyboard (_ sender: UITapGestureRecognizer) {
-        groupId.resignFirstResponder()
-        uniqueId.resignFirstResponder()
-        tempUniqueId.resignFirstResponder()
     }
     
     private func animateForPathCurrentPoint(type: TaskOption) {
@@ -193,7 +170,7 @@ class TaskViewController: UIViewController {
             if (currentPathIndex < type.path.count) {
                 let xCoordinate = CGFloat(type.path[currentPathIndex].0)
                 let yCoordinate = CGFloat(type.path[currentPathIndex].1)
-                UIView.animate(withDuration: 2, delay: 3.0, options: .curveLinear, animations: {
+                UIView.animate(withDuration: 0, delay: 3.0, options: .curveLinear, animations: {
                     let originalFrame = self.dotView.frame
                     let newFrame = CGRect(x: xCoordinate, y: yCoordinate, width: originalFrame.width, height: originalFrame.height)
                     self.dotView.frame = newFrame
@@ -323,13 +300,6 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
             self.currentPathTitle.text = "Returned a result for prediction... \(status)"
         }
     }
-    
-    func didJustSignUpAndChangePassword() {
-        DispatchQueue.main.async {
-            self.currentPathTitle.text = "New password was set! Starting upload..."
-        }
-    }
-    
 }
 
 #endif

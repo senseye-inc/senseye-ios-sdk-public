@@ -15,10 +15,7 @@
                 <outlet property="dotView" destination="5VI-rk-yf6" id="qKE-Vl-3Ws"/>
                 <outlet property="dotViewInitialXConstraint" destination="ibK-Bi-QOq" id="bPd-sE-NiB"/>
                 <outlet property="dotViewInitialYConstraint" destination="Fft-dL-KrB" id="s6h-I5-pOG"/>
-                <outlet property="groupId" destination="j2W-4h-7l0" id="sZe-gL-wmK"/>
                 <outlet property="startSessionButton" destination="HI0-UL-OGu" id="rVn-KE-PLG"/>
-                <outlet property="tempUniqueId" destination="V0b-5y-4cL" id="Sbu-xY-DkO"/>
-                <outlet property="uniqueId" destination="0cC-j1-kgM" id="0Kh-Mm-PhU"/>
                 <outlet property="view" destination="iN0-l3-epB" id="GMb-ni-1M1"/>
                 <outlet property="xMarkView" destination="abO-d3-Ojk" id="brG-DB-4eC"/>
             </connections>
@@ -59,31 +56,6 @@
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Group ID" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="j2W-4h-7l0">
-                    <rect key="frame" x="107" y="177" width="200" height="24"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="24" id="Lc5-oi-9Lk"/>
-                        <constraint firstAttribute="width" constant="200" id="dqE-H6-udF"/>
-                    </constraints>
-                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                    <textInputTraits key="textInputTraits"/>
-                </textField>
-                <textField opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="252" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Unique ID" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="0cC-j1-kgM">
-                    <rect key="frame" x="107" y="231" width="200" height="224"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="200" id="0ng-ce-kWO"/>
-                    </constraints>
-                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                    <textInputTraits key="textInputTraits"/>
-                </textField>
-                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Temporary Password (if necessary)" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="V0b-5y-4cL">
-                    <rect key="frame" x="82" y="485" width="250" height="34"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="250" id="IPy-Hf-kTO"/>
-                    </constraints>
-                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                    <textInputTraits key="textInputTraits"/>
-                </textField>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kqa-cI-535">
                     <rect key="frame" x="0.0" y="177" width="414" height="300"/>
                     <color key="backgroundColor" systemColor="systemTealColor"/>
@@ -99,20 +71,13 @@
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="HI0-UL-OGu" secondAttribute="bottom" constant="100" id="3eO-nM-iti"/>
                 <constraint firstItem="kqa-cI-535" firstAttribute="top" secondItem="7KW-Ym-7x8" secondAttribute="bottom" id="4d1-U4-Orl"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="7KW-Ym-7x8" secondAttribute="trailing" constant="30" id="9Yi-Mf-9ha"/>
-                <constraint firstItem="V0b-5y-4cL" firstAttribute="top" secondItem="0cC-j1-kgM" secondAttribute="bottom" constant="30" id="9Z8-6I-cNy"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="kqa-cI-535" secondAttribute="trailing" id="Bcr-Gs-hHb"/>
                 <constraint firstItem="7KW-Ym-7x8" firstAttribute="centerX" secondItem="vUN-kp-3ea" secondAttribute="centerX" id="EIW-ov-OTA"/>
                 <constraint firstItem="5VI-rk-yf6" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" constant="156" id="Fft-dL-KrB"/>
                 <constraint firstItem="7KW-Ym-7x8" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" constant="40" id="Id1-DT-vWq"/>
-                <constraint firstItem="j2W-4h-7l0" firstAttribute="top" secondItem="7KW-Ym-7x8" secondAttribute="bottom" id="Mdi-0M-3Uw"/>
-                <constraint firstItem="V0b-5y-4cL" firstAttribute="centerX" secondItem="vUN-kp-3ea" secondAttribute="centerX" id="NqQ-LM-kpr"/>
                 <constraint firstItem="kqa-cI-535" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" constant="133" id="NsF-fJ-czR"/>
-                <constraint firstItem="V0b-5y-4cL" firstAttribute="top" secondItem="kqa-cI-535" secondAttribute="bottom" constant="8" id="ZcO-GR-l4A"/>
                 <constraint firstItem="abO-d3-Ojk" firstAttribute="centerX" secondItem="vUN-kp-3ea" secondAttribute="centerX" id="bJo-yo-VCu"/>
-                <constraint firstItem="0cC-j1-kgM" firstAttribute="top" secondItem="j2W-4h-7l0" secondAttribute="bottom" constant="30" id="gX3-qj-qHA"/>
                 <constraint firstItem="5VI-rk-yf6" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="200" id="ibK-Bi-QOq"/>
-                <constraint firstItem="j2W-4h-7l0" firstAttribute="centerX" secondItem="vUN-kp-3ea" secondAttribute="centerX" id="kES-yL-AAl"/>
-                <constraint firstItem="0cC-j1-kgM" firstAttribute="centerX" secondItem="vUN-kp-3ea" secondAttribute="centerX" id="mg1-iL-hie"/>
                 <constraint firstItem="abO-d3-Ojk" firstAttribute="centerY" secondItem="vUN-kp-3ea" secondAttribute="centerY" id="o2t-JW-tNj"/>
                 <constraint firstItem="kqa-cI-535" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="rgc-Xj-AUc"/>
                 <constraint firstItem="7KW-Ym-7x8" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="30" id="uMd-pV-0VR"/>

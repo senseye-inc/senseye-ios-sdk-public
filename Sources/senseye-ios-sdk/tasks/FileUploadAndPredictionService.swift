@@ -14,9 +14,11 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
     func didFinishUpload()
     func didFinishPredictionRequest()
     func didReturnResultForPrediction(status: String)
-    func didJustSignUpAndChangePassword()
 }
 
+/**
+ FileUploadAndPredictionService is responsible for communicating with backend service.
+ */
 class FileUploadAndPredictionService {
     
     private struct PredictRequestParameters: Encodable {
@@ -56,20 +58,11 @@ class FileUploadAndPredictionService {
     
     var isUploadOngoing: Bool = false
     weak var delegate: FileUploadAndPredictionServiceDelegate?
-    
-    /**
-        Maps group id, unique id to account username and password. Group id and unique id are
-        holdovers from the old "login" flow, and they will be deprecated.
-    */
-    func setGroupIdAndUniqueId(groupId: String, uniqueId: String, temporaryPassword: String) {
-        self.accountUsername = groupId
-        self.accountPassword = uniqueId
-        self.temporaryPassword = temporaryPassword
+
+    init() {
+        self.setUserApiKey()
     }
-    
-    func hasLoginInfo() -> Bool {
-        return self.accountUsername != nil && !(self.accountUsername?.isEmpty ?? true)
-    }
+        
 
      /**
         Uploads a video file to the server after ensuring signed in session matches user entry at login,
@@ -81,48 +74,18 @@ class FileUploadAndPredictionService {
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl
-        Amplify.Auth.fetchAuthSession { result in
-            switch result {
-            case .success(let session):
-                print("Is user signed in - \(session.isSignedIn)")
                 
-                guard let userName = self.accountUsername, let password = self.accountPassword else {
-                    return
-                }
-                let currentlyAuthenticatedAmplifyUser = Amplify.Auth.getCurrentUser()
-                let doesUserMatchCurrentSignIn = currentlyAuthenticatedAmplifyUser?.username == userName
-                if (!session.isSignedIn || !doesUserMatchCurrentSignIn) {
-                    Amplify.Auth.signOut { result in
-                        switch result {
-                        case .success():
-                            self.signIn(username: userName, password: password, filenameKey: fileNameKey, filename: filename, temporaryPassword: self.temporaryPassword)
-                        case .failure(let error):
-                            print("Amplify auth sign out failed \(error)")
-                        }
-                    }
-                } else {
-                    if (self.hostApiKey == nil) {
-                        Amplify.Auth.fetchUserAttributes() { result in
-                            switch result {
-                            case .success(let attributes):
-                                self.setUserApiKey(attributes: attributes)
-                                self.uploadFile(fileNameKey: fileNameKey, filename: filename)
-                            case .failure(let error):
-                                print("Fetching user attributes failed with error \(error)")
-                            }
-                        }
-                    } else {
-                        self.uploadFile(fileNameKey: fileNameKey, filename: filename)
-                    }
-                }
-            case .failure(let error):
-                print("Fetch session failed with error \(error)")
-            }
+        guard let _ = self.hostApiKey else {
+            return
         }
+
+        self.uploadFile(fileNameKey: fileNameKey, filename: filename)
     }
     
     private func uploadFile(fileNameKey: String, filename: URL) {
-         isUploadOngoing = true
+        isUploadOngoing = true
+        print("About to upload - video url: \(filename)")
+
          Amplify.Storage.uploadFile(
             key: fileNameKey,
             local: filename,
@@ -136,29 +99,36 @@ class FileUploadAndPredictionService {
                     self.isUploadOngoing = false
                     self.delegate?.didFinishUpload()
                 case let .failure(storageError):
-                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
                     self.isUploadOngoing = false
                 }
             }
         )
     }
     
-    private func setUserApiKey(attributes: Array<AuthUserAttribute>) {
-        for attribute in attributes {
-            if (attribute.key == AuthUserAttributeKey.custom("senseye_api_token")) {
-                self.hostApiKey = attribute.value
-                print("Set the api key " + attribute.value)
+    private func setUserApiKey() {
+        Amplify.Auth.fetchUserAttributes() { result in
+            switch result {
+            case .success(let attributes):
+                if let attribute = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
+                    self.hostApiKey = attribute.value
+                    print("Found and set senseye_api_token")
+                } else {
+                    print("unable to set api key")
+                }
+                print("Host api key: \(self.hostApiKey)")
+            case .failure(let authError):
+                print("Fetching user attribute senseye_api_token failed: \(authError)")
             }
         }
     }
     
-
     /**
-        Generate session json file from survey responses and experiment session tasks.
-
-        - Parameters:
-            - surveyInput: Array of responses from demographic survey
-            - tasks: Array of experiment tasks that are performed during the session
+     Generate session json file from survey responses and experiment session tasks.
+     
+     - Parameters:
+        - surveyInput: Array of responses from demographic survey
+        - tasks: Array of experiment tasks that are performed during the session
     */
     func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String]) {
         var sessionInputJson = JSON()
@@ -178,8 +148,9 @@ class FileUploadAndPredictionService {
     }
     
     /**
-        Submits a prediction job to the server by making a post request with
-        parameters: video urls, prediction threshold, and json metadata. 
+     Submits a prediction job to the server.
+     - Parameters:
+        - completed: Optional completion action for success or failure of a a network response.
      */
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         
@@ -237,8 +208,10 @@ class FileUploadAndPredictionService {
     }
     
     /**
-        Periodically checks the prediction job id's status from the server until a result is available. Lets the delegate 
-        handle a completed status.
+     Periodically checks the prediction job id's status from the server until a result is available. On success or failure of newtork response, a completion closure will run.
+     Additionally, an optional delegate action may be run on a 'completed' or 'failed' job response.
+     - Parameters:
+        - completed: Optional completion action for success or failure of a a network response.
      */
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
         
@@ -259,7 +232,6 @@ class FileUploadAndPredictionService {
                         print("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
                         completed(.success(jobStatusAndResultResponse.status))
                         self.delegate?.didReturnResultForPrediction(status: jobStatusAndResultResponse.status)
-                        
                         timer.invalidate()
                     } else {
                         print("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
@@ -274,64 +246,4 @@ class FileUploadAndPredictionService {
             }
         }
     }
-    
-    private func signIn(username: String, password: String, filenameKey: String, filename: URL, temporaryPassword: String?) {
-        var signInPassword = ""
-        if (temporaryPassword != nil || temporaryPassword != "") {
-            signInPassword = temporaryPassword!
-        } else {
-            signInPassword = password
-        }
-        Amplify.Auth.signIn(username: username, password: signInPassword) { result in
-            do {
-                    let signinResult = try result.get()
-                    switch signinResult.nextStep {
-                    case .confirmSignInWithSMSMFACode(let deliveryDetails, let info):
-                        print("SMS code send to \(deliveryDetails.destination)")
-                        print("Additional info \(info)")
-                        // Prompt the user to enter the SMSMFA code they received
-                        // Then invoke `confirmSignIn` api with the code
-                    case .confirmSignInWithCustomChallenge(let info):
-                        print("Custom challenge, additional info \(info)")
-                        // Prompt the user to enter custom challenge answer
-                        // Then invoke `confirmSignIn` api with the answer
-                    case .confirmSignInWithNewPassword(let info):
-                        print("New password additional info \(info)")
-                        Amplify.Auth.confirmSignIn(challengeResponse: password, options: nil) { confirmSignInResult in
-                            switch confirmSignInResult {
-                            case .success(let confirmedResult):
-                                print("signed in after password change")
-                                self.delegate?.didJustSignUpAndChangePassword()
-                                self.uploadFile(fileNameKey: filenameKey, filename: filename)
-                            case .failure(let error):
-                                print("Sign in failed \(error)")
-                            }
-                        }
-                        // Prompt the user to enter a new password
-                        // Then invoke `confirmSignIn` api with new password
-                    case .resetPassword(let info):
-                        print("Reset password additional info \(info)")
-                        // User needs to reset their password.
-                        // Invoke `resetPassword` api to start the reset password
-                        // flow, and once reset password flow completes, invoke
-                        // `signIn` api to trigger signin flow again.
-                    case .confirmSignUp(let info):
-                        print("Confirm signup additional info \(info)")
-                        // User was not confirmed during the signup process.
-                        // Invoke `confirmSignUp` api to confirm the user if
-                        // they have the confirmation code. If they do not have the
-                        // confirmation code, invoke `resendSignUpCode` to send the
-                        // code again.
-                        // After the user is confirmed, invoke the `signIn` api again.
-                    case .done:
-                        // Use has successfully signed in to the app
-                        self.uploadFile(fileNameKey: filenameKey, filename: filename)
-                        print("Signin complete")
-                    }
-                } catch {
-                    print ("Sign in failed \(error)")
-                }
-        }
-    }
-    
 }

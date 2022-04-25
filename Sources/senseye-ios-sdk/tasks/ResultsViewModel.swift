@@ -15,15 +15,15 @@ enum ResultLoadingStatus {
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
-    init(fileUploadService: FileUploadAndPredictionService) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.fileUploadService = fileUploadService
     }
     
-    let fileUploadService: FileUploadAndPredictionService
+    let fileUploadService: FileUploadAndPredictionServiceProtocol
     
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
-    @Published var loadingStatus: ResultLoadingStatus = .notStarted
+//    @Published var loadingStatus: ResultLoadingStatus = .notStarted
     
     func startPredictions() {
         isLoading = true

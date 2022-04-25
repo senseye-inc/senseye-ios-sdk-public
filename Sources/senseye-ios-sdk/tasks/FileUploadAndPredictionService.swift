@@ -10,6 +10,11 @@ import Amplify
 import Alamofire
 import SwiftyJSON
 
+protocol FileUploadAndPredictionServiceProtocol {
+    func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void)
+    func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
+}
+
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
     func didFinishUpload()
     func didFinishPredictionRequest()
@@ -58,35 +63,35 @@ class FileUploadAndPredictionService {
     
     var isUploadOngoing: Bool = false
     weak var delegate: FileUploadAndPredictionServiceDelegate?
-
+    
     init() {
         self.setUserApiKey()
     }
-        
-
-     /**
-        Uploads a video file to the server after ensuring signed in session matches user entry at login,
-        authenticating the session, and fetching host api key.
+    
+    
+    /**
+     Uploads a video file to the server after ensuring signed in session matches user entry at login,
+     authenticating the session, and fetching host api key.
      
-        - Parameters:
-            - fileUrl: URL of the video file to upload
-     */   
+     - Parameters:
+     - fileUrl: URL of the video file to upload
+     */
     func uploadData(fileUrl: URL) {
         let fileNameKey = fileUrl.lastPathComponent
         let filename = fileUrl
-                
+        
         guard let _ = self.hostApiKey else {
             return
         }
-
+        
         self.uploadFile(fileNameKey: fileNameKey, filename: filename)
     }
     
     private func uploadFile(fileNameKey: String, filename: URL) {
         isUploadOngoing = true
         print("About to upload - video url: \(filename)")
-
-         Amplify.Storage.uploadFile(
+        
+        Amplify.Storage.uploadFile(
             key: fileNameKey,
             local: filename,
             progressListener: { progress in
@@ -127,9 +132,9 @@ class FileUploadAndPredictionService {
      Generate session json file from survey responses and experiment session tasks.
      
      - Parameters:
-        - surveyInput: Array of responses from demographic survey
-        - tasks: Array of experiment tasks that are performed during the session
-    */
+     - surveyInput: Array of responses from demographic survey
+     - tasks: Array of experiment tasks that are performed during the session
+     */
     func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String]) {
         var sessionInputJson = JSON()
         sessionInputJson["tasks"].string = tasks.joined(separator: ",")
@@ -150,7 +155,7 @@ class FileUploadAndPredictionService {
     /**
      Submits a prediction job to the server.
      - Parameters:
-        - completed: Optional completion action for success or failure of a a network response.
+     - completed: Optional completion action for success or failure of a a network response.
      */
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         
@@ -171,7 +176,7 @@ class FileUploadAndPredictionService {
             key: jsonFileName,
             data: sessionJsonFile,
             progressListener: { progress in
-            print("Progress: \(progress)")
+                print("Progress: \(progress)")
             }, resultListener: { event in
                 switch event {
                 case let .success(data):
@@ -211,7 +216,7 @@ class FileUploadAndPredictionService {
      Periodically checks the prediction job id's status from the server until a result is available. On success or failure of newtork response, a completion closure will run.
      Additionally, an optional delegate action may be run on a 'completed' or 'failed' job response.
      - Parameters:
-        - completed: Optional completion action for success or failure of a a network response.
+     - completed: Optional completion action for success or failure of a a network response.
      */
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
         
@@ -247,3 +252,5 @@ class FileUploadAndPredictionService {
         }
     }
 }
+
+extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol { }

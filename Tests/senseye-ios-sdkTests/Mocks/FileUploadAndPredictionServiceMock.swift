@@ -10,18 +10,34 @@ import Foundation
 
 class FileUploadAndPredictionServiceMock {
     
-    var completion: Result<String, Error>?
     var shouldReturnError: Bool = false
     var startPredictionWasCalled: Bool = false
     var startPeriodicUpdatesWasCalled: Bool = false
-    
-    let mockStartPredictionForCurrentSessionUploadsResponse = "Success from \(#function)"
-    let mockStartPeriodicUpdatesOnPredictionIdResponse = "Success from \(#function)"
     
     func reset() {
         shouldReturnError = false
         startPredictionWasCalled = false
         startPeriodicUpdatesWasCalled = false
+    }
+    
+    func decodeResponse() -> Prediction? {
+        let fileURL = URL(fileURLWithPath: "/Users/frank/Desktop/senseye-ios-sdk/Tests/senseye-ios-sdkTests/Mocks/prediction-success-response.json")
+        
+        guard let data = try? Data(contentsOf: fileURL) else {
+            print("Error decoding JSON")
+            return nil
+        }
+        
+        do {
+            let predictionResult = try JSONDecoder().decode(Prediction.self, from: data)
+            return predictionResult
+        } catch {
+            print("Error building predictionResposne")
+            print(error.localizedDescription)
+            return nil
+        }
+        
+        
     }
     
     enum MockFileUploadAndPredictionServiceError: Error {
@@ -35,12 +51,15 @@ extension FileUploadAndPredictionServiceMock: FileUploadAndPredictionServiceProt
     
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         
+        let predictionResult = self.decodeResponse()
+        let predictionStatus = predictionResult?.status ?? "Error decoding prediction status"
+        
         startPredictionWasCalled = true
         
         if shouldReturnError {
             completed(.failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads))
         } else {
-            completed(.success(mockStartPredictionForCurrentSessionUploadsResponse))
+            completed(.success(predictionStatus))
         }
     }
     

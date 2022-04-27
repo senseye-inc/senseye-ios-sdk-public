@@ -21,23 +21,29 @@ class ResultsViewModelTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         sdk = SenseyeSDK()
-        sdk.initializeSDK()
         if !Amplify.isConfigured {
             let configurationURL = URL(fileURLWithPath: "/Users/frank/Desktop/senseye-ios-sdk/Sources/senseye-ios-sdk/Resources/amplifyconfiguration.json")
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
             try Amplify.add(plugin: AWSS3StoragePlugin())
             try Amplify.configure(AmplifyConfiguration.init(configurationFile: configurationURL))
         }
-        
         fileUploadService = FileUploadAndPredictionServiceMock()
         sut = ResultsViewModel(fileUploadService: fileUploadService)
     }
     
     override func tearDownWithError() throws {
         sut = nil
+//        fileUploadService.reset()
         fileUploadService = nil
         sdk = nil
         try super.tearDownWithError()
+    }
+    
+    // MARK: - Configuration Tests
+    
+    func testMockJSONDecoding() {
+        let predictionResult = fileUploadService.decodeResponse()
+        XCTAssertNotNil(predictionResult)
     }
     
     func testAmplifyIsConfigured() {
@@ -45,11 +51,20 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertTrue(configuration)
     }
     
+    // MARK: - Default State
+    
     func testIsLoadingBeginsFalse() {
         XCTAssertFalse(sut.isLoading)
     }
     
-    func testStartPreditionsIsLoadingEqualsTrue() {
+    func testErrorIsNil(){
+        XCTAssertNil(sut.error)
+    }
+    
+    
+    // MARK: - startPredictionForCurrentSessionUploads
+    
+    func testWhenStartPreditionsIsLoadingEqualsTrue() {
         // Given
         sut.isLoading = false
         
@@ -71,19 +86,28 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
     }
     
-    func testUpdatePredicitonStatusWhenPredictionResposneIsReturned() {
+    func testGetPredictionResponseFailure() {
         // Given
-//        let expectation = expectation(description: #function)
-        
+        fileUploadService.shouldReturnError = true
+
         // When
-        sut.fileUploadService.startPredictionForCurrentSessionUploads { result in
-            XCTAssertNotNil(result)
-            print(result)
-//            expectation.fulfill()
-        }
-        
+        sut.getPredictionResponse()
+        XCTAssert(sut.predictionStatus == "Starting predictions...")
+        print(sut.error?.localizedDescription)
+
         // Then
-//        wait(for: [expectation], timeout: 10)
+//        XCTAssertNotNil(sut.error)
     }
     
+    func testFunctionWasCalled() {
+        // Given
+        fileUploadService.startPredictionForCurrentSessionUploadsWasCalled = false
+
+        // When
+        sut.getPredictionResponse()
+
+        // Then
+        XCTAssert(fileUploadService.startPredictionForCurrentSessionUploadsWasCalled == true)
+    }
+
 }

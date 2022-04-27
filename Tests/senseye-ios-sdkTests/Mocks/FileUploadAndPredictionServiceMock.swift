@@ -10,14 +10,23 @@ import Foundation
 
 class FileUploadAndPredictionServiceMock {
     
+    var completion: Result<String, Error>?
     var shouldReturnError: Bool = false
-    var startPredictionWasCalled: Bool = false
-    var startPeriodicUpdatesWasCalled: Bool = false
+    var startPredictionForCurrentSessionUploadsWasCalled: Bool = false
+    var startPeriodicUpdatesOnPredictionIdWasCalled: Bool = false
+    
+    convenience init() {
+        self.init(false)
+    }
+    
+    init(_ shouldReturnError: Bool) {
+        self.shouldReturnError = shouldReturnError
+    }
     
     func reset() {
         shouldReturnError = false
-        startPredictionWasCalled = false
-        startPeriodicUpdatesWasCalled = false
+        startPredictionForCurrentSessionUploadsWasCalled = false
+        startPeriodicUpdatesOnPredictionIdWasCalled = false
     }
     
     func decodeResponse() -> Prediction? {
@@ -36,8 +45,6 @@ class FileUploadAndPredictionServiceMock {
             print(error.localizedDescription)
             return nil
         }
-        
-        
     }
     
     enum MockFileUploadAndPredictionServiceError: Error {
@@ -51,26 +58,25 @@ extension FileUploadAndPredictionServiceMock: FileUploadAndPredictionServiceProt
     
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         
-        let predictionResult = self.decodeResponse()
-        let predictionStatus = predictionResult?.status ?? "Error decoding prediction status"
-        
-        startPredictionWasCalled = true
+        startPredictionForCurrentSessionUploadsWasCalled = true
         
         if shouldReturnError {
             completed(.failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads))
         } else {
+            let predictionResult = self.decodeResponse()
+            let predictionStatus = predictionResult?.status ?? "Error decoding prediction status"
             completed(.success(predictionStatus))
         }
     }
     
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
         
-        startPeriodicUpdatesWasCalled = true
+        startPeriodicUpdatesOnPredictionIdWasCalled = true
         
         if shouldReturnError {
             completed(.failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId))
         } else {
-            completed(.success(mockStartPeriodicUpdatesOnPredictionIdResponse))
+            completed(.success("Success String from \(#function)"))
         }
     }
 }

@@ -22,9 +22,9 @@ struct PredictionResult: Codable {
 
 // MARK: - PredictionClass
 struct PredictionClass: Codable {
-    let fatigue, intoxication, threshold: Double?
+    let fatigue, intoxication, threshold: Float?
     let state: Int?
-    let processingTime: Double?
+    let processingTime: Float?
 
     enum CodingKeys: String, CodingKey {
         case fatigue, intoxication, threshold, state

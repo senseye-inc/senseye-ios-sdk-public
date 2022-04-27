@@ -7,11 +7,6 @@
 
 import Foundation
 
-
-enum ResultLoadingStatus {
-    case notStarted, requestMade, requestReceived, predictionReceived
-}
-
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
@@ -23,7 +18,7 @@ class ResultsViewModel: ObservableObject {
     
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
-//    @Published var loadingStatus: ResultLoadingStatus = .notStarted
+    @Published var error: Error? = nil
     
     func startPredictions() {
         isLoading = true
@@ -42,8 +37,9 @@ class ResultsViewModel: ObservableObject {
                 case .success(let predictionJobResponse):
                     print("Prediction Job Response: \(predictionJobResponse)")
                     self.predictionStatus = "Prediction API request sent..."
-                case .failure(let error):
-                    print("Error !! \(error.localizedDescription)")
+                case .failure(let predictionError):
+                    self.error = predictionError
+                    print("Error from \(#function): \(predictionError.localizedDescription)")
                 }
             }
         }
@@ -57,7 +53,7 @@ class ResultsViewModel: ObservableObject {
                     print("Success from view model: \(jobStatusAndResultResponse)")
                     self.predictionStatus = "Returned a result for prediction... \(jobStatusAndResultResponse)"
                 case .failure(let error):
-                    print("Error from viewModel: \(error)")
+                    print("Error from \(#function): \(error.localizedDescription)")
                 }
                 self.isLoading = false
             }

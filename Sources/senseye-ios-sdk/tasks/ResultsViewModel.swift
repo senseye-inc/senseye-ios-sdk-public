@@ -18,7 +18,7 @@ class ResultsViewModel: ObservableObject {
     
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
-    @Published var error: Error? = nil
+    @Published var error: Error?
     
     func startPredictions() {
         isLoading = true
@@ -35,10 +35,16 @@ class ResultsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let predictionJobResponse):
+                    print("entering success completion")
                     print("Prediction Job Response: \(predictionJobResponse)")
+                    
                     self.predictionStatus = "Prediction API request sent..."
+                    
                 case .failure(let predictionError):
+                    print("entering failure completion")
+                    
                     self.error = predictionError
+                    
                     print("Error from \(#function): \(predictionError.localizedDescription)")
                 }
             }

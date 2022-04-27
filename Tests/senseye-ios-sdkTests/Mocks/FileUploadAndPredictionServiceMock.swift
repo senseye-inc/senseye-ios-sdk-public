@@ -11,6 +11,7 @@ import Foundation
 class FileUploadAndPredictionServiceMock {
     
     var completion: Result<String, Error>?
+    
     var shouldReturnError: Bool = false
     var startPredictionForCurrentSessionUploadsWasCalled: Bool = false
     var startPeriodicUpdatesOnPredictionIdWasCalled: Bool = false
@@ -52,6 +53,11 @@ class FileUploadAndPredictionServiceMock {
         case startPeriodicUpdatesOnPredictionId
     }
     
+}
+
+enum MockFileUploadAndPredictionServiceError: Error {
+    case startPredictionForCurrentSessionUploads
+    case startPeriodicUpdatesOnPredictionId
 }
 
 extension FileUploadAndPredictionServiceMock: FileUploadAndPredictionServiceProtocol {

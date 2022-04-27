@@ -75,28 +75,28 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertTrue(sut.isLoading)
     }
     
-    func testUpdatePredictionStatusWhenGetPredictionResponseIsCalled() {
-        // Given
-        sut.predictionStatus = "(Default Status)"
-        
-        // When
-        sut.getPredictionResponse()
-        
-        // Then
-        XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
-    }
-    
+//    func testUpdatePredictionStatusWhenGetPredictionResponseIsCalled() {
+//        // Given
+//        sut.predictionStatus = "(Default Status)"
+//
+//        // When
+//        sut.getPredictionResponse()
+//
+//        // Then
+//        XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
+//    }
+//
     func testGetPredictionResponseFailure() {
         // Given
         fileUploadService.shouldReturnError = true
-
-        // When
+        print("✅")
+        print("Running get response")
         sut.getPredictionResponse()
-        XCTAssert(sut.predictionStatus == "Starting predictions...")
-        print(sut.error?.localizedDescription)
-
-        // Then
-//        XCTAssertNotNil(sut.error)
+        print("Error from sut view model: \(sut.error)")
+        print("PredictionStatus: \(sut.predictionStatus)")
+        print(sut.fileUploadService)
+        XCTAssertNotNil(sut.error)
+//        XCTAssertThrowsError(sut.getPredictionResponse())
     }
     
     func testFunctionWasCalled() {

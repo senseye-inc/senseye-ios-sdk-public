@@ -9,25 +9,20 @@ import Foundation
 
 // MARK: - Prediction
 struct Prediction: Codable {
-    let id, status: String?
-    let preditionResult: PredictionResult?
-    let timestamp: String?
+    let id, status: String
+    let result: PredictionJobStatusResultCodable
+    let timestamp: String
 }
 
 // MARK: - Result
-struct PredictionResult: Codable {
-    let version: String?
-    let prediction: PredictionClass?
+struct PredictionJobStatusResultCodable: Codable {
+    let version: String
+    let prediction: PredictionClass
 }
 
 // MARK: - PredictionClass
 struct PredictionClass: Codable {
-    let fatigue, intoxication, threshold: Float?
-    let state: Int?
-    let processingTime: Float?
-
-    enum CodingKeys: String, CodingKey {
-        case fatigue, intoxication, threshold, state
-        case processingTime = "processing_time"
-    }
+    let fatigue, intoxication, threshold: Double
+    let state: Int
+    let processing_time: Double
 }

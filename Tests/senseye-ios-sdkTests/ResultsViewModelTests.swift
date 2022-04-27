@@ -33,7 +33,6 @@ class ResultsViewModelTests: XCTestCase {
     
     override func tearDownWithError() throws {
         sut = nil
-//        fileUploadService.reset()
         fileUploadService = nil
         sdk = nil
         try super.tearDownWithError()
@@ -62,7 +61,7 @@ class ResultsViewModelTests: XCTestCase {
     }
     
     
-    // MARK: - startPredictionForCurrentSessionUploads
+    // MARK: - startPredictions
     
     func testWhenStartPreditionsIsLoadingEqualsTrue() {
         // Given
@@ -75,39 +74,90 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertTrue(sut.isLoading)
     }
     
-//    func testUpdatePredictionStatusWhenGetPredictionResponseIsCalled() {
-//        // Given
-//        sut.predictionStatus = "(Default Status)"
-//
-//        // When
-//        sut.getPredictionResponse()
-//
-//        // Then
-//        XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
-//    }
-//
-    func testGetPredictionResponseFailure() {
-        // Given
-        fileUploadService.shouldReturnError = true
-        print("✅")
-        print("Running get response")
-        sut.getPredictionResponse()
-        print("Error from sut view model: \(sut.error)")
-        print("PredictionStatus: \(sut.predictionStatus)")
-        print(sut.fileUploadService)
-        XCTAssertNotNil(sut.error)
-//        XCTAssertThrowsError(sut.getPredictionResponse())
-    }
+    // MARK: - getPredictionResponse
     
-    func testFunctionWasCalled() {
+    func testUpdatePredictionStatusWhenGetPredictionResponseIsCalled() {
         // Given
-        fileUploadService.startPredictionForCurrentSessionUploadsWasCalled = false
-
+        sut.predictionStatus = "(Default Status)"
+        
         // When
         sut.getPredictionResponse()
-
+        
         // Then
-        XCTAssert(fileUploadService.startPredictionForCurrentSessionUploadsWasCalled == true)
+        XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
     }
+    
+    func testGetPredictionResponseCallsStartPredictionForCurrentSessionUploadsWasCalled() {
+        sut.getPredictionResponse()
+        XCTAssertTrue(self.fileUploadService.startPredictionForCurrentSessionUploadsWasCalled)
+    }
+    
+    func testGetPredictionResponseSuccess() {
+        let expectation = expectation(description: #function)
+        let response = fileUploadService.decodeResponse()!
+        fileUploadService.result = .success(response.id)
+        
+        sut.getPredictionResponse()
+        
+        DispatchQueue.main.async {
+            XCTAssertEqual(self.sut.predictionStatus, "Prediction API request sent...")
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1)
+    }
+    
+    
+    func testGetPredictionResponseFailure() {
+        let expectation = expectation(description: #function)
+        fileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads)
+        
+        sut.getPredictionResponse()
+        
+        DispatchQueue.main.async {
+            let errorType = (self.sut.error as? MockFileUploadAndPredictionServiceError) == .startPredictionForCurrentSessionUploads
+            XCTAssertNotNil(self.sut.error)
+            XCTAssertTrue(errorType)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+    }
+    
+    // MARK: - startPeriodicPredictions
+    
+    func testStartPeriodicPredictionsCallSstartPeriodicUpdatesOnPredictionIdWasCalled() {
+        sut.startPeriodicPredictions()
+        XCTAssertTrue(self.fileUploadService.startPeriodicUpdatesOnPredictionIdWasCalled)
+    }
+    
+    func testStartPeriodicPredictionsSuccess() {
+        let expectation = expectation(description: #function)
+        let response = fileUploadService.decodeResponse()!
 
+        fileUploadService.result = .success(response.status)
+        
+        sut.startPeriodicPredictions()
+        
+        DispatchQueue.main.async {
+            let jobStatusAndResultResponse = response.status
+            XCTAssertEqual(self.sut.predictionStatus, "Returned a result for prediction... \(jobStatusAndResultResponse)")
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1)
+    }
+    
+    
+    func testStartPeriodicPredictionsFailure() {
+        let expectation = expectation(description: #function)
+        fileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId)
+        
+        sut.getPredictionResponse()
+        
+        DispatchQueue.main.async {
+            let errorType = (self.sut.error as? MockFileUploadAndPredictionServiceError) == .startPeriodicUpdatesOnPredictionId
+            XCTAssertNotNil(self.sut.error)
+            XCTAssertTrue(errorType)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+    }
 }

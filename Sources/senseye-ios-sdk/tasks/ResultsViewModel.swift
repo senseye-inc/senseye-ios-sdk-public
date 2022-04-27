@@ -37,15 +37,13 @@ class ResultsViewModel: ObservableObject {
                 case .success(let predictionJobResponse):
                     print("entering success completion")
                     print("Prediction Job Response: \(predictionJobResponse)")
-                    
                     self.predictionStatus = "Prediction API request sent..."
                     
                 case .failure(let predictionError):
                     print("entering failure completion")
-                    
+                    print("Error from \(#function): \(predictionError.localizedDescription)")
                     self.error = predictionError
                     
-                    print("Error from \(#function): \(predictionError.localizedDescription)")
                 }
             }
         }

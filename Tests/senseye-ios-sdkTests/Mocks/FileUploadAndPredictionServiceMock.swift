@@ -10,36 +10,35 @@ import Foundation
 
 class FileUploadAndPredictionServiceMock {
     
-    var completion: Result<String, Error>?
+    var result: Result<String, Error> = .failure(MockFileUploadAndPredictionServiceError.notInitialized)
     
-    var shouldReturnError: Bool = false
     var startPredictionForCurrentSessionUploadsWasCalled: Bool = false
     var startPeriodicUpdatesOnPredictionIdWasCalled: Bool = false
     
-    convenience init() {
-        self.init(false)
-    }
-    
-    init(_ shouldReturnError: Bool) {
-        self.shouldReturnError = shouldReturnError
-    }
-    
-    func reset() {
-        shouldReturnError = false
-        startPredictionForCurrentSessionUploadsWasCalled = false
-        startPeriodicUpdatesOnPredictionIdWasCalled = false
-    }
+    let jsonResponse: [String: Any] = [
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "status": "completed",
+        "result": [
+            "version": "0.0.1",
+            "prediction": [
+                "fatigue": 0.4567890123456789,
+                "intoxication": 0.4567890123456789,
+                "threshold": 0.5,
+                "state": 0,
+                "processing_time": 56.7890123456789
+            ]
+        ],
+        "timestamp": "2022-04-26T14:55:14.621Z"
+    ]
     
     func decodeResponse() -> Prediction? {
-        let fileURL = URL(fileURLWithPath: "/Users/frank/Desktop/senseye-ios-sdk/Tests/senseye-ios-sdkTests/Mocks/prediction-success-response.json")
-        
-        guard let data = try? Data(contentsOf: fileURL) else {
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonResponse, options: .prettyPrinted) else {
             print("Error decoding JSON")
             return nil
         }
         
         do {
-            let predictionResult = try JSONDecoder().decode(Prediction.self, from: data)
+            let predictionResult = try JSONDecoder().decode(Prediction.self, from: jsonData)
             return predictionResult
         } catch {
             print("Error building predictionResposne")
@@ -47,42 +46,23 @@ class FileUploadAndPredictionServiceMock {
             return nil
         }
     }
-    
-    enum MockFileUploadAndPredictionServiceError: Error {
-        case startPredictionForCurrentSessionUploads
-        case startPeriodicUpdatesOnPredictionId
-    }
-    
 }
 
 enum MockFileUploadAndPredictionServiceError: Error {
     case startPredictionForCurrentSessionUploads
     case startPeriodicUpdatesOnPredictionId
+    case notInitialized
 }
 
 extension FileUploadAndPredictionServiceMock: FileUploadAndPredictionServiceProtocol {
     
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
-        
         startPredictionForCurrentSessionUploadsWasCalled = true
-        
-        if shouldReturnError {
-            completed(.failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads))
-        } else {
-            let predictionResult = self.decodeResponse()
-            let predictionStatus = predictionResult?.status ?? "Error decoding prediction status"
-            completed(.success(predictionStatus))
-        }
+        completed(result)
     }
     
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
-        
         startPeriodicUpdatesOnPredictionIdWasCalled = true
-        
-        if shouldReturnError {
-            completed(.failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId))
-        } else {
-            completed(.success("Success String from \(#function)"))
-        }
+        completed(result)
     }
 }

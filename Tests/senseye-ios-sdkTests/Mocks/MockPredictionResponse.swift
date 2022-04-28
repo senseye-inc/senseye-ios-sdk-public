@@ -7,21 +7,22 @@
 
 import Foundation
 
+
 // MARK: - Prediction
-struct Prediction: Codable {
+struct MockPredictionResponse: Codable {
     let id, status: String
-    let result: PredictionJobStatusResultCodable
+    let result: MockPredictionResult
     let timestamp: String
 }
 
 // MARK: - Result
-struct PredictionJobStatusResultCodable: Codable {
+struct MockPredictionResult: Codable {
     let version: String
-    let prediction: PredictionClass
+    let prediction: MockPredictionDetail
 }
 
 // MARK: - PredictionClass
-struct PredictionClass: Codable {
+struct MockPredictionDetail: Codable {
     let fatigue, intoxication, threshold: Double
     let state: Int
     let processing_time: Double

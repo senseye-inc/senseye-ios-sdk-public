@@ -9,8 +9,6 @@ import XCTest
 import Combine
 @testable import senseye_ios_sdk
 
-// Naming Structure: test_UnitOfWork_StateUnderTest_ExpectedBehavior
-
 @available(iOS 15.0, *)
 class ResultsViewModelTests: XCTestCase {
     

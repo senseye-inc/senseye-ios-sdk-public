@@ -11,11 +11,11 @@ import XCTest
 class LoginViewModelTests: XCTestCase {
 
     var model: LoginView.ViewModel!
-    var mockAuthenticationService: AuthenticationService!
+    var mockAuthenticationService: MockAuthenticationService!
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        mockAuthenticationService = AuthenticationService()
+        mockAuthenticationService = MockAuthenticationService()
         model = LoginView.ViewModel(authenticationService: mockAuthenticationService)
     }
     
@@ -24,6 +24,12 @@ class LoginViewModelTests: XCTestCase {
         mockAuthenticationService = nil
         try super.tearDownWithError()
     }
+    
+    func testSetup() {
+
+    }
+    
+    
 
     /*
      Tests Needed:

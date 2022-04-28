@@ -8,6 +8,12 @@
 import Amplify
 import Foundation
 
+protocol AuthenticationServiceProtocol {
+    func signOut(completeSignOut: (()->())? )
+    func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?)
+    var delegate: AuthenticationServiceDelegate? { get set }
+}
+
 protocol AuthenticationServiceDelegate: AnyObject {
     func didConfirmSignInWithNewPassword()
     func didSuccessfullySignIn()
@@ -189,3 +195,5 @@ public class AuthenticationService {
     }
     
 }
+
+extension AuthenticationService: AuthenticationServiceProtocol { }

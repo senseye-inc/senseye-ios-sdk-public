@@ -58,6 +58,7 @@ class ResultsViewModel: ObservableObject {
                     self.predictionStatus = "Returned a result for prediction... \(jobStatusAndResultResponse)"
                 case .failure(let error):
                     print("Error from \(#function): \(error.localizedDescription)")
+                    self.error = error
                 }
                 self.isLoading = false
             }

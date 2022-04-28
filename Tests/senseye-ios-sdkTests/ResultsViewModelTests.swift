@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import Combine
 @testable import senseye_ios_sdk
 @testable import Amplify
 @testable import AWSS3StoragePlugin
@@ -14,150 +15,140 @@ import XCTest
 @available(iOS 15.0, *)
 class ResultsViewModelTests: XCTestCase {
     
-    var sut: ResultsViewModel!
-    var fileUploadService: FileUploadAndPredictionServiceMock!
-    var sdk: SenseyeSDK!
+    var model: ResultsViewModel!
+    var mockFileUploadService: MockFileUploadAndPredictionService!
+    var cancellables = Set<AnyCancellable>()
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        sdk = SenseyeSDK()
-        if !Amplify.isConfigured {
-            let configurationURL = URL(fileURLWithPath: "/Users/frank/Desktop/senseye-ios-sdk/Sources/senseye-ios-sdk/Resources/amplifyconfiguration.json")
-            try Amplify.add(plugin: AWSCognitoAuthPlugin())
-            try Amplify.add(plugin: AWSS3StoragePlugin())
-            try Amplify.configure(AmplifyConfiguration.init(configurationFile: configurationURL))
-        }
-        fileUploadService = FileUploadAndPredictionServiceMock()
-        sut = ResultsViewModel(fileUploadService: fileUploadService)
+        mockFileUploadService = MockFileUploadAndPredictionService()
+        model = ResultsViewModel(fileUploadService: mockFileUploadService)
     }
     
     override func tearDownWithError() throws {
-        sut = nil
-        fileUploadService = nil
-        sdk = nil
+        model = nil
+        mockFileUploadService = nil
         try super.tearDownWithError()
-    }
-    
-    // MARK: - Configuration Tests
-    
-    func testMockJSONDecoding() {
-        let predictionResult = fileUploadService.decodeResponse()
-        XCTAssertNotNil(predictionResult)
-    }
-    
-    func testAmplifyIsConfigured() {
-        let configuration = Amplify.isConfigured
-        XCTAssertTrue(configuration)
     }
     
     // MARK: - Default State
     
     func testIsLoadingBeginsFalse() {
-        XCTAssertFalse(sut.isLoading)
+        XCTAssertFalse(model.isLoading)
     }
     
     func testErrorIsNil(){
-        XCTAssertNil(sut.error)
+        XCTAssertNil(model.error)
     }
-    
     
     // MARK: - startPredictions
     
     func testWhenStartPreditionsIsLoadingEqualsTrue() {
         // Given
-        sut.isLoading = false
+        model.isLoading = false
         
         // When
-        sut.startPredictions()
+        model.startPredictions()
         
         // Then
-        XCTAssertTrue(sut.isLoading)
+        XCTAssertTrue(model.isLoading)
     }
     
     // MARK: - getPredictionResponse
     
     func testUpdatePredictionStatusWhenGetPredictionResponseIsCalled() {
         // Given
-        sut.predictionStatus = "(Default Status)"
+        model.predictionStatus = "(Default Status)"
         
         // When
-        sut.getPredictionResponse()
+        model.getPredictionResponse()
         
         // Then
-        XCTAssertEqual(sut.predictionStatus, "Starting predictions...")
+        XCTAssertEqual(model.predictionStatus, "Starting predictions...")
     }
     
     func testGetPredictionResponseCallsStartPredictionForCurrentSessionUploadsWasCalled() {
-        sut.getPredictionResponse()
-        XCTAssertTrue(self.fileUploadService.startPredictionForCurrentSessionUploadsWasCalled)
+        model.getPredictionResponse()
+        XCTAssertTrue(self.mockFileUploadService.startPredictionForCurrentSessionUploadsWasCalled)
     }
     
     func testGetPredictionResponseSuccess() {
         let expectation = expectation(description: #function)
-        let response = fileUploadService.decodeResponse()!
-        fileUploadService.result = .success(response.id)
+        let response = mockFileUploadService.decodeResponse()!
+        mockFileUploadService.result = .success(response.id)
         
-        sut.getPredictionResponse()
+        model.$predictionStatus
+            .dropFirst(2) // Drop 2. First Publisher is on initilization. Second publisher is waiting for prediction response
+            .sink { _ in
+                expectation.fulfill()
+            }
+            .store(in: &cancellables)
         
-        DispatchQueue.main.async {
-            XCTAssertEqual(self.sut.predictionStatus, "Prediction API request sent...")
-            expectation.fulfill()
+        model.getPredictionResponse()
+        
+        wait(for: [expectation], timeout: 5)
+        XCTAssertEqual(self.model.predictionStatus, "Prediction API request sent...")
         }
-        wait(for: [expectation], timeout: 1)
-    }
-    
     
     func testGetPredictionResponseFailure() {
         let expectation = expectation(description: #function)
-        fileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads)
+        mockFileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads)
         
-        sut.getPredictionResponse()
+        model.$error
+            .dropFirst() // Drop intialization publisher
+            .sink { _ in
+                expectation.fulfill()
+            }
+            .store(in: &cancellables)
         
-        DispatchQueue.main.async {
-            let errorType = (self.sut.error as? MockFileUploadAndPredictionServiceError) == .startPredictionForCurrentSessionUploads
-            XCTAssertNotNil(self.sut.error)
-            XCTAssertTrue(errorType)
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 2)
+        model.getPredictionResponse()
+        
+        wait(for: [expectation], timeout: 5)
+        XCTAssertNotNil(model.error)
     }
     
     // MARK: - startPeriodicPredictions
     
     func testStartPeriodicPredictionsCallSstartPeriodicUpdatesOnPredictionIdWasCalled() {
-        sut.startPeriodicPredictions()
-        XCTAssertTrue(self.fileUploadService.startPeriodicUpdatesOnPredictionIdWasCalled)
+        model.startPeriodicPredictions()
+        XCTAssertTrue(self.mockFileUploadService.startPeriodicUpdatesOnPredictionIdWasCalled)
     }
     
     func testStartPeriodicPredictionsSuccess() {
         let expectation = expectation(description: #function)
-        let response = fileUploadService.decodeResponse()!
+        let response = mockFileUploadService.decodeResponse()!
+        mockFileUploadService.result = .success(response.status)
 
-        fileUploadService.result = .success(response.status)
+        model.$predictionStatus
+            .dropFirst()
+            .sink { _ in
+                expectation.fulfill()
+            }
+            .store(in: &cancellables)
         
-        sut.startPeriodicPredictions()
+        model.startPeriodicPredictions()
         
-        DispatchQueue.main.async {
-            let jobStatusAndResultResponse = response.status
-            XCTAssertEqual(self.sut.predictionStatus, "Returned a result for prediction... \(jobStatusAndResultResponse)")
-            expectation.fulfill()
-        }
         wait(for: [expectation], timeout: 1)
+        let jobStatusAndResultResponse = response.status
+        XCTAssertEqual(self.model.predictionStatus, "Returned a result for prediction... \(jobStatusAndResultResponse)")
     }
-    
     
     func testStartPeriodicPredictionsFailure() {
         let expectation = expectation(description: #function)
-        fileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId)
+        mockFileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId)
         
-        sut.getPredictionResponse()
+        model.$error
+            .dropFirst()
+            .sink { _ in
+                expectation.fulfill()
+            }
+            .store(in: &cancellables)
         
-        DispatchQueue.main.async {
-            let errorType = (self.sut.error as? MockFileUploadAndPredictionServiceError) == .startPeriodicUpdatesOnPredictionId
-            XCTAssertNotNil(self.sut.error)
-            XCTAssertTrue(errorType)
-            expectation.fulfill()
-        }
+        model.getPredictionResponse()
+        
         wait(for: [expectation], timeout: 2)
+        let errorType = (self.model.error as? MockFileUploadAndPredictionServiceError) == .startPeriodicUpdatesOnPredictionId
+        XCTAssertNotNil(self.model.error)
+        XCTAssertTrue(errorType)
     }
 }

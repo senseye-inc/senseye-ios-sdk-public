@@ -9,36 +9,6 @@ import Foundation
 @testable import senseye_ios_sdk
 import XCTest
 
-class SpyAuthenticationServiceDelegate: AuthenticationServiceDelegate {
-    
-    var didSuccessfullySignInResult: Bool?
-    var didSuccessfullySignOutResult: Bool?
-    var asyncExpectation: XCTestExpectation?
-    
-    func didConfirmSignInWithNewPassword() { }
-    
-    func didSuccessfullySignIn() {
-        guard let expectation = asyncExpectation else {
-            XCTFail("SpyDelegate was not setup correctly. Missing XCTExpectation reference")
-            return
-        }
-        
-        didSuccessfullySignInResult = true
-        expectation.fulfill()
-    }
-    
-    func didSuccessfullySignOut() {
-        guard let expectation = asyncExpectation else {
-            XCTFail("SpyDelegate was not setup correctly. Missing XCTExpectation reference")
-            return
-        }
-        didSuccessfullySignOutResult = true
-        expectation.fulfill()
-    }
-    
-    
-}
-
 class MockAuthenticationService {
     
     var signOutWasCalled: Bool = false
@@ -68,6 +38,4 @@ extension MockAuthenticationService: AuthenticationServiceDelegate {
     func didSuccessfullySignIn() { }
     
     func didSuccessfullySignOut() { }
-    
-    
 }

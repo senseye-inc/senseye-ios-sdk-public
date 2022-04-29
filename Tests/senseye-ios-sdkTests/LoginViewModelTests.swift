@@ -58,7 +58,7 @@ class LoginViewModelTests: XCTestCase {
     
     // MARK: - onAppear
     
-    func test_onAppear_signOutCalledIfUserIsSignedIn() {
+    func test_onAppear_signOutCalledIfUserIsSignedInOnAppear() {
         // Given
         model.isUserSignedIn = true
         
@@ -68,39 +68,4 @@ class LoginViewModelTests: XCTestCase {
         // Then
         XCTAssertTrue(mockAuthenticationService.signOutWasCalled)
     }
-    
-    // MARK: - AuthenticationServiceDelegate
-    
-    func test_didSuccessfullySignIn_setsIsUserSignedInToTrue() {
-        // Given
-        model.isUserSignedIn = false
-        mockAuthenticationService.delegate?.didConfirmSignInWithNewPassword()
-        
-        // When
-        mockAuthenticationService.didSuccessfullySignIn()
-        
-        // Then
-        XCTAssertTrue(model.isUserSignedIn)
-    }
-    
-    func test_didSuccessfullySignOut_setsIsUserSignedInToFalse() {
-        
-    }
-    
-    
-    
-    /*
-     Tests Needed:
-     
-     viewModel
-     - func login()
-     - func onAppear()
-     - delegate methods?
-     
-     authenticationService
-     - func authenticateSession()
-     - func signOut()
-     - delegate methods?
-     */
-    
 }

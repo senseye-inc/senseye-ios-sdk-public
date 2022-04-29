@@ -9,7 +9,7 @@ import XCTest
 
 @available(iOS 15.0, *)
 class LoginViewModelTests: XCTestCase {
-
+    
     var model: LoginView.ViewModel!
     var mockAuthenticationService: MockAuthenticationService!
     
@@ -25,20 +25,76 @@ class LoginViewModelTests: XCTestCase {
         try super.tearDownWithError()
     }
     
-    func testSetup() {
-
+    // MARK: - login
+    
+    func test_login_withNewAccountAndInvalidPasswordSubmissionShowsPasswordAlert() {
+        // Given
+        model.isNewAccount = true
+        let validSubmission = model.isValidNewPasswordSubmission()
+        
+        // When
+        model.login()
+        
+        // Then
+        if !validSubmission {
+            XCTAssertTrue(model.isShowingPasswordAlert)
+        } else {
+            XCTAssertFalse(model.isShowingPasswordAlert)
+        }
+    }
+    
+    func test_login_withExistingAccountShowsNoPasswordAlert() {
+        // Given
+        model.isNewAccount = false
+        
+        // When
+        model.login()
+        
+        // Then
+        XCTAssertTrue(model.newPassword == "")
+        XCTAssertTrue(model.temporaryPassword == "")
+        XCTAssertFalse(model.isShowingPasswordAlert)
+    }
+    
+    // MARK: - onAppear
+    
+    func test_onAppear_signOutCalledIfUserIsSignedIn() {
+        // Given
+        model.isUserSignedIn = true
+        
+        // When
+        model.onAppear()
+        
+        // Then
+        XCTAssertTrue(mockAuthenticationService.signOutWasCalled)
+    }
+    
+    // MARK: - AuthenticationServiceDelegate
+    
+    func test_didSuccessfullySignIn_setsIsUserSignedInToTrue() {
+        // Given
+        model.isUserSignedIn = false
+        mockAuthenticationService.delegate?.didConfirmSignInWithNewPassword()
+        
+        // When
+        mockAuthenticationService.didSuccessfullySignIn()
+        
+        // Then
+        XCTAssertTrue(model.isUserSignedIn)
+    }
+    
+    func test_didSuccessfullySignOut_setsIsUserSignedInToFalse() {
+        
     }
     
     
-
+    
     /*
      Tests Needed:
      
      viewModel
      - func login()
      - func onAppear()
-     - func isMatchingPassword()
-     - func isValidNewPasswordSubmission()
      - delegate methods?
      
      authenticationService
@@ -46,5 +102,5 @@ class LoginViewModelTests: XCTestCase {
      - func signOut()
      - delegate methods?
      */
-
+    
 }

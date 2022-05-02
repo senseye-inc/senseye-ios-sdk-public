@@ -18,7 +18,6 @@ class MockAuthenticationService {
 }
 
 extension MockAuthenticationService: AuthenticationServiceProtocol {
-    
     func signOut(completeSignOut: (() -> ())?) {
         signOutWasCalled = true
     }

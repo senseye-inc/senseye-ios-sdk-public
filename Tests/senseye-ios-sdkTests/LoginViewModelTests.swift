@@ -38,8 +38,6 @@ class LoginViewModelTests: XCTestCase {
         // Then
         if !validSubmission {
             XCTAssertTrue(model.isShowingPasswordAlert)
-        } else {
-            XCTAssertFalse(model.isShowingPasswordAlert)
         }
     }
     
@@ -56,9 +54,16 @@ class LoginViewModelTests: XCTestCase {
         XCTAssertFalse(model.isShowingPasswordAlert)
     }
     
+    func test_login_callsAuthenticationServiceAuthenticateSession() {
+        //  When
+        model.login()
+        
+        XCTAssertTrue(mockAuthenticationService.authenticateSessionWasCalled)
+    }
+    
     // MARK: - onAppear
     
-    func test_onAppear_signOutCalledIfUserIsSignedInOnAppear() {
+    func test_onAppear_signOutCalledIfUserIsSignedIn() {
         // Given
         model.isUserSignedIn = true
         

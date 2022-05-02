@@ -15,10 +15,6 @@ class MockAuthenticationService {
     var authenticateSessionWasCalled: Bool = false
     
     weak var delegate: AuthenticationServiceDelegate?
-    
-    var accountUsername: String? = nil
-    var accountPassword: String? = nil
-    var temporaryPassword: String? = nil
 }
 
 extension MockAuthenticationService: AuthenticationServiceProtocol {
@@ -27,7 +23,7 @@ extension MockAuthenticationService: AuthenticationServiceProtocol {
         signOutWasCalled = true
     }
     
-    public func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
+    func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
         authenticateSessionWasCalled = true
     }
 }

@@ -7,23 +7,18 @@
 
 import Foundation
 
-
-enum ResultLoadingStatus {
-    case notStarted, requestMade, requestReceived, predictionReceived
-}
-
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
-    init(fileUploadService: FileUploadAndPredictionService) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.fileUploadService = fileUploadService
     }
     
-    let fileUploadService: FileUploadAndPredictionService
+    let fileUploadService: FileUploadAndPredictionServiceProtocol
     
     @Published var predictionStatus: String = "(Default Status)"
     @Published var isLoading: Bool = false
-    @Published var loadingStatus: ResultLoadingStatus = .notStarted
+    @Published var error: Error?
     
     func startPredictions() {
         isLoading = true
@@ -40,10 +35,15 @@ class ResultsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let predictionJobResponse):
+                    print("entering success completion")
                     print("Prediction Job Response: \(predictionJobResponse)")
                     self.predictionStatus = "Prediction API request sent..."
-                case .failure(let error):
-                    print("Error !! \(error.localizedDescription)")
+                    
+                case .failure(let predictionError):
+                    print("entering failure completion")
+                    print("Error from \(#function): \(predictionError.localizedDescription)")
+                    self.error = predictionError
+                    
                 }
             }
         }
@@ -57,7 +57,8 @@ class ResultsViewModel: ObservableObject {
                     print("Success from view model: \(jobStatusAndResultResponse)")
                     self.predictionStatus = "Returned a result for prediction... \(jobStatusAndResultResponse)"
                 case .failure(let error):
-                    print("Error from viewModel: \(error)")
+                    print("Error from \(#function): \(error.localizedDescription)")
+                    self.error = error
                 }
                 self.isLoading = false
             }

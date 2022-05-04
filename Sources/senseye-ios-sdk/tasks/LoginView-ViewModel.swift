@@ -21,9 +21,9 @@ extension LoginView {
         @Published var isUserSignedIn = false
         @Published var isShowingPasswordAlert = false
 
-        private let authenticationService: AuthenticationService
+        private var authenticationService: AuthenticationServiceProtocol
 
-        init(authenticationService: AuthenticationService) {
+        init(authenticationService: AuthenticationServiceProtocol) {
             self.authenticationService = authenticationService
         }
         
@@ -49,7 +49,7 @@ extension LoginView {
         func onAppear() {
             authenticationService.delegate = self
             if (self.isUserSignedIn) {
-                self.authenticationService.signOut()
+                self.authenticationService.signOut(completeSignOut: nil)
             }
             print("Login view appears! isSignedIn is \(self.isUserSignedIn)")
         }

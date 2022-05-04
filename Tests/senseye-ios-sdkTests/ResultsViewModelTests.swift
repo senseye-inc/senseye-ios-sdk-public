@@ -30,16 +30,16 @@ class ResultsViewModelTests: XCTestCase {
     
     // MARK: - Default State
     
-    func test_isLoading_shouldBeFalse() {
+    func testIsLoadigShouldBeFalse() {
         XCTAssertFalse(model.isLoading)
     }
     
-    func test_error_shouldBeNil(){
+    func testErrorShouldBeNil(){
         XCTAssertNil(model.error)
     }
     
     // MARK: - startPredictions
-    func test_startPredictions_isLoadingShouldBeTrue() {
+    func testStartPredictionsIsLoadingShouldBeTrue() {
         // Given
         model.isLoading = false
         
@@ -52,7 +52,7 @@ class ResultsViewModelTests: XCTestCase {
     
     // MARK: - getPredictionResponse
     
-    func test_getPredictionResponse_updatesPredictionStatus() {
+    func testGetPredictionResponseUpdatesPredictionStatus() {
         // Given
         model.predictionStatus = "(Default Status)"
         
@@ -63,7 +63,7 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertEqual(model.predictionStatus, "Starting predictions...")
     }
     
-    func test_getPredictionResponse_startPredictionForCurrentSessionUploadsShouldBeTrue() {
+    func testGetPredictionResponseStartPredictionForCurrentSessionUploadsShouldBeTrue() {
         // When
         model.getPredictionResponse()
         
@@ -71,7 +71,7 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertTrue(mockFileUploadService.startPredictionForCurrentSessionUploadsWasCalled)
     }
     
-    func test_getPredictionResponseSuccess_updatesPredictionStatus() {
+    func testGetPredictionResponseSuccessUpdatesPredictionStatus() {
         // Given
         let expectation = expectation(description: #function)
         let response = mockFileUploadService.predictionResponse
@@ -93,7 +93,7 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertEqual(self.model.predictionStatus, "Prediction API request sent...")
         }
     
-    func test_getPredictionResponseFailure_errorIsNotNil() {
+    func testGetPredictionResponseFailureErrorIsNotNil() {
         // Given
         let expectation = expectation(description: #function)
         mockFileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPredictionForCurrentSessionUploads)
@@ -118,7 +118,7 @@ class ResultsViewModelTests: XCTestCase {
     
     // MARK: - startPeriodicPredictions
     
-    func test_startPeriodicPredictions_startPeriodicUpdatesOnPredictionIdShouldBeTrue() {
+    func testStartPeriodicPredictionsStartPeriodicUpdatesOnPredictionIdShouldBeTrue() {
         // When
         model.startPeriodicPredictions()
         
@@ -126,7 +126,7 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertTrue(self.mockFileUploadService.startPeriodicUpdatesOnPredictionIdWasCalled)
     }
     
-    func test_startPeriodicPredictionsSuccess_updatesPredictionStatus() {
+    func testStartPeriodicPredictionsSuccessUpdatesPredictionStatus() {
         // Given
         let expectation = expectation(description: #function)
         let response = mockFileUploadService.predictionResponse
@@ -149,7 +149,7 @@ class ResultsViewModelTests: XCTestCase {
         XCTAssertEqual(self.model.predictionStatus, "Returned a result for prediction... \(jobStatusAndResultResponse)")
     }
     
-    func test_startPeriodicPredictionsFailure_errorIsNotNil() {
+    func testStartPeriodicPredictionsFailureErrorIsNotNil() {
         // Given
         let expectation = expectation(description: #function)
         mockFileUploadService.result = .failure(MockFileUploadAndPredictionServiceError.startPeriodicUpdatesOnPredictionId)

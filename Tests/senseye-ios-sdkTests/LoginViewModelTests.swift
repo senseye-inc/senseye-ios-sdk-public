@@ -27,7 +27,7 @@ class LoginViewModelTests: XCTestCase {
     
     // MARK: - login
     
-    func test_login_withNewAccountAndInvalidPasswordSubmissionShowsPasswordAlert() {
+    func testLoginWithNewAccountAndInvalidPasswordSubmissionShowsPasswordAlert() {
         // Given
         model.isNewAccount = true
         let validSubmission = model.isValidNewPasswordSubmission()
@@ -41,7 +41,7 @@ class LoginViewModelTests: XCTestCase {
         }
     }
     
-    func test_login_withExistingAccountShowsNoPasswordAlert() {
+    func testLoginWithExistingAccountShowsNoPasswordAlert() {
         // Given
         model.isNewAccount = false
         
@@ -54,7 +54,7 @@ class LoginViewModelTests: XCTestCase {
         XCTAssertFalse(model.isShowingPasswordAlert)
     }
     
-    func test_login_callsAuthenticationServiceAuthenticateSession() {
+    func testLoginCallsAuthenticationServiceAuthenticateSession() {
         //  When
         model.login()
         
@@ -63,7 +63,7 @@ class LoginViewModelTests: XCTestCase {
     
     // MARK: - onAppear
     
-    func test_onAppear_signOutCalledIfUserIsSignedIn() {
+    func testOnAppearSignOutCalledIfUserIsSignedIn() {
         // Given
         model.isUserSignedIn = true
         

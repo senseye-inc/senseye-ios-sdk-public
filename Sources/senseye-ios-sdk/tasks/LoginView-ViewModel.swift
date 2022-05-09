@@ -13,8 +13,8 @@ import SwiftUI
 @available(iOS 15.0.0, *)
 extension LoginView {
     class ViewModel: ObservableObject {
-        @Published var username: String = ""
-        @Published var password: String = ""
+        @Published var username: String = "ios_tester_account_1"
+        @Published var password: String = "050297"
         @Published var newPassword: String = ""
         @Published var temporaryPassword: String = ""
         @Published var isNewAccount = false

@@ -24,7 +24,6 @@ class TaskViewController: UIViewController {
     @IBOutlet weak var dotViewInitialXConstraint: NSLayoutConstraint!
     @IBOutlet weak var dotViewInitialYConstraint: NSLayoutConstraint!
     @IBOutlet weak var currentPathTitle: UILabel!
-    var videoPreviewLayer: AVCaptureVideoPreviewLayer!
     
     private var taskConfig = TaskConfig()
     private var completedPathsForCurrentTask = 0
@@ -37,7 +36,8 @@ class TaskViewController: UIViewController {
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
-    var cameraService = CameraSevice()
+    
+    var cameraService = CameraService()
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
@@ -67,26 +67,15 @@ class TaskViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
-        cameraService.start(completion: { error in
-            if let error = error {
-                print("Error setting up camera service: \(error.localizedDescription)")
-            } else {
-                print("Success calling \(#function)")
-            }
-        })
+        cameraService.start()
     }
     
     @objc func beginDotMovementForPathType() {
         dotView.isHidden = false
         startSessionButton.titleLabel?.text = "Start"
         cameraPreview.isHidden = false
-        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: cameraService.captureSession)
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        videoPreviewLayer.frame.size =  cameraPreview.frame.size
-        videoPreviewLayer.videoGravity = .resizeAspectFill
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        cameraPreview.layer.addSublayer(videoPreviewLayer)
-        cameraService.captureSession.startRunning()
+        
+        cameraService.setupVideoPreviewLayer(for: cameraPreview)
 
         startSessionButton.isHidden = true
         currentPathTitle.text = "Starting \(currentTask?.title)..."
@@ -236,7 +225,7 @@ extension TaskViewController: CAAnimationDelegate {
 }
 
 @available(iOS 13.0, *)
-extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
+extension TaskViewController: AVCaptureFileOutputRecordingDelegate {
     
     //Frame-by-Frame output
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {

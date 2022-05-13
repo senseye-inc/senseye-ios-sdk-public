@@ -29,7 +29,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     func checkPermissions() {
-        switch frontCameraDevice.authorizationStatus {
+        switch frontCameraDevice.videoAuthorizationStatus {
         case .authorized: // The user has previously granted access to the camera.
             self.setupCaptureSession()
         case .notDetermined: // The user has not yet been asked for camera access.
@@ -49,7 +49,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     func setupCaptureSession() {
         
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
-            print("Error cast cameraRepresentable to AvCaptureDevice")
+            print("Error casting cameraRepresentable to AvCaptureDevice")
             return
         }
         configureCameraForHighestFrameRate(device: frontCameraDevice)

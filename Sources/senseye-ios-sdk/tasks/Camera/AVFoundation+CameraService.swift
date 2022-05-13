@@ -19,22 +19,17 @@ enum CameraRepresentableAuthorizationStatus : Int {
 // MARK: - Protocol for AVCaptureDevice
 
 protocol CameraRepresentable {
-    var cameraAuthorizedForVideo: Bool { get }
-    var authorizationStatus: CameraRepresentableAuthorizationStatus { get set }
+    
+    var videoAuthorizationStatus: AVAuthorizationStatus { get set }
     func requestAccessForVideo(completion: @escaping (Bool) -> Void)
 }
 
 extension AVCaptureDevice: CameraRepresentable {
-    var cameraAuthorizedForVideo: Bool {
-        return AVCaptureDevice.authorizationStatus(for: .video) == .authorized
-    }
-    
-    var authorizationStatus: CameraRepresentableAuthorizationStatus {
+   
+    var videoAuthorizationStatus: AVAuthorizationStatus {
         get {
-            CameraRepresentableAuthorizationStatus(rawValue: AVCaptureDevice.authorizationStatus(for: .video).rawValue)!
-        } set {
-            
-        }
+            AVCaptureDevice.authorizationStatus(for: .video)
+        } set { }
     }
     
     func requestAccessForVideo(completion: @escaping (Bool) -> Void) {
@@ -49,46 +44,11 @@ extension AVCaptureDevice: CameraRepresentable {
 final class MockAVCaptureDevice: CameraRepresentable {
     
     var requestAccessCalled: Bool = false
-    var cameraAuthorizedForVideo: Bool = true
-    var authorizationStatus: CameraRepresentableAuthorizationStatus {
-        get {
-            .notDetermined
-        } set {
-            
-        }
-    }
+    var videoAuthorizationStatus: AVAuthorizationStatus = .notDetermined
     
     func requestAccessForVideo(completion: @escaping (Bool) -> Void) {
         requestAccessCalled = true
+        completion(requestAccessCalled)
     }
 }
 
-// MARK: - Mock Camera Service
-
-//protocol CameraServiceProtocol {
-//    func start()
-//    func setupVideoPreviewLayer(for cameraPreview: UIView)
-//    var captureMovieFileOutput: AVCaptureMovieFileOutput { get set }
-//    var captureSession: AVCaptureSession { get set }
-//    func checkPermissions()
-//}
-
-//final class MockCameraService: CameraServiceProtocol {
-//
-//    let mockAVCaptureDevice = MockAVCaptureDevice()
-//
-//    func start() { }
-//
-//    func setupVideoPreviewLayer(for cameraPreview: UIView) { }
-//
-//    var captureMovieFileOutput = AVCaptureMovieFileOutput()
-//
-//    var captureSession = AVCaptureSession()
-//
-//    func checkPermissions() {
-//        mockAVCaptureDevice.requestAccessForVideo { granted in
-//
-//        }
-//    }
-//
-//}

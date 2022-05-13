@@ -15,32 +15,38 @@ class CameraServiceTests: XCTestCase {
     
     var sut: CameraService!
     var mockAVCaptureDevice: MockAVCaptureDevice!
-
+    
     override func setUpWithError() throws {
         try super.setUpWithError()
         mockAVCaptureDevice = MockAVCaptureDevice()
         sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
     }
-
+    
     override func tearDownWithError() throws {
         sut = nil
         mockAVCaptureDevice = nil
         try super.tearDownWithError()
     }
     
-    func testSetupCaptureSession() {
+    func testCheckPermissionsCalledOnNotDetermined() {
         // given
+        sut.frontCameraDevice.videoAuthorizationStatus = .notDetermined
+
+        // when
         sut.checkPermissions()
-        mockAVCaptureDevice.authorizationStatus = .notDetermined
-        let exp = expectation(description: #function)
+        
+        // then
+        XCTAssertTrue(self.mockAVCaptureDevice.requestAccessCalled)
+    }
+    
+    func testCheckPermissionsNotCalledOnAuthorized() {
+        // given
+        sut.frontCameraDevice.videoAuthorizationStatus = .authorized
         
         // when
-        sut.frontCameraDevice.requestAccessForVideo { returnedBool in
-            // then
-            XCTAssertTrue(self.mockAVCaptureDevice.requestAccessCalled)
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1)
+        sut.checkPermissions()
+        
+        //then
+        XCTAssertFalse(self.mockAVCaptureDevice.requestAccessCalled)
     }
-
 }

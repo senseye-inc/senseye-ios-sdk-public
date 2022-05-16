@@ -31,7 +31,7 @@ class CameraServiceTests: XCTestCase {
     func testCheckPermissionsCalledOnNotDetermined() {
         // given
         sut.frontCameraDevice.videoAuthorizationStatus = .notDetermined
-
+        
         // when
         sut.checkPermissions()
         
@@ -49,4 +49,16 @@ class CameraServiceTests: XCTestCase {
         //then
         XCTAssertFalse(self.mockAVCaptureDevice.requestAccessCalled)
     }
+    
+    func testCaptureSessionPresetIsHigh() {
+        // given
+        sut.frontCameraDevice.videoAuthorizationStatus = .authorized
+        
+        // when
+        sut.setupCaptureSession()
+        
+        //then
+        XCTAssertEqual(sut.captureSession.sessionPreset, .high)
+    }
+    
 }

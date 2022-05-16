@@ -7,25 +7,17 @@
 
 import Foundation
 import AVFoundation
-import UIKit
-
-enum CameraRepresentableAuthorizationStatus : Int {
-    case notDetermined  = 0
-    case restricted     = 1
-    case denied         = 2
-    case authorized     = 3
-}
+//import UIKit
 
 // MARK: - Protocol for AVCaptureDevice
 
 protocol CameraRepresentable {
-    
     var videoAuthorizationStatus: AVAuthorizationStatus { get set }
     func requestAccessForVideo(completion: @escaping (Bool) -> Void)
 }
 
 extension AVCaptureDevice: CameraRepresentable {
-   
+    
     var videoAuthorizationStatus: AVAuthorizationStatus {
         get {
             AVCaptureDevice.authorizationStatus(for: .video)

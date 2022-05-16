@@ -15,9 +15,9 @@ import UIKit
 class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     
     var videoPreviewLayer = AVCaptureVideoPreviewLayer()
-    var captureSession = AVCaptureSession()
     var captureOutput = AVCaptureVideoDataOutput()
     var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    var captureSession = AVCaptureSession()
     var frontCameraDevice: CameraRepresentable
     
     init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!) {
@@ -56,18 +56,18 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             
-            self.captureSession.beginConfiguration()
-            guard let videoDeviceInput = try? AVCaptureDeviceInput(device: self.frontCameraDevice as! AVCaptureDevice), captureSession.canAddInput(videoDeviceInput) else {
+            captureSession.beginConfiguration()
+            guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
                 print("videoDeviceInput error")
                 return
             }
-            self.captureSession.addInput(videoDeviceInput)
-            self.captureSession.sessionPreset = .high
-            self.captureSession.addOutput(self.captureOutput)
-            self.captureSession.addOutput(self.captureMovieFileOutput)
+            captureSession.addInput(videoDeviceInput)
+            captureSession.sessionPreset = .high
+            captureSession.addOutput(captureOutput)
+            captureSession.addOutput(captureMovieFileOutput)
             let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-            self.captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
-            self.captureSession.commitConfiguration()
+            captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+            captureSession.commitConfiguration()
         }
     }
     

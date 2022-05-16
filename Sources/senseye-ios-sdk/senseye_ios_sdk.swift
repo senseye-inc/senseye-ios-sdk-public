@@ -25,7 +25,7 @@ public class SenseyeSDK {
     
     public func initializeSDK() {
         do {
-            guard let configurationURL = Bundle.main.url(forResource: "amplifyconfiguration", withExtension: "json") else {
+            guard let configurationURL = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
                 print("Unable to load amplifyconfiguration.")
                 return
             }
@@ -42,13 +42,14 @@ public class SenseyeSDK {
     public func initialViewController() -> UIViewController { loginViewController() }
     
     public func surveyViewController() -> UIViewController {
-        let surveyViewController = SurveyViewController(nibName: "SurveyViewController", bundle: nil)
-        surveyViewController.taskIdsToComplete = self.tasks
-        return surveyViewController
+        if let surveyViewController: SurveyViewController = Bundle.module.loadNibNamed("SurveyViewController", owner: nil, options: nil)?.first as? SurveyViewController {
+            return surveyViewController
+        }
+        return UIViewController()
     }
     
     public func taskViewControllerForTasks() -> UIViewController {
-        let taskViewController = TaskViewController(nibName: "TaskViewController", bundle: nil)
+        let taskViewController = TaskViewController(nibName: "TaskViewController", bundle: .module)
         taskViewController.taskIdsToComplete = self.tasks
         return taskViewController
     }

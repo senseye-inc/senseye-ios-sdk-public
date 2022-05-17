@@ -34,7 +34,7 @@ class TaskViewController: UIViewController {
     private var finishedAllTasks: Bool = false
     private var isPathOngoing: Bool = false
     
-    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+   
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
     var cameraService = CameraService()
@@ -67,6 +67,7 @@ class TaskViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
+        cameraService.delegate = self
         cameraService.start()
     }
     
@@ -81,13 +82,12 @@ class TaskViewController: UIViewController {
         currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
-           let taskNameId = currentTask?.taskId,
-           let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
+           let taskNameId = currentTask?.taskId {
             xMarkView.isHidden = path.shouldShowX
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
             DispatchQueue.global(qos: .userInitiated).async {
-                self.cameraService.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+                self.cameraService.startRecordingForTask(taskId: taskNameId)
                 self.toggleCameraPreviewVisibility(isHidden: true)
                 print("started capture session")
             }
@@ -122,7 +122,7 @@ class TaskViewController: UIViewController {
                 if (currentInterval == 20) {
                     timer.invalidate()
                     DispatchQueue.global(qos: .userInitiated).async {
-                        self.cameraService.captureMovieFileOutput.stopRecording()
+                        self.cameraService.stopRecording()
                     }
                     self.isPathOngoing = false
                     self.currentTasksIndex+=1
@@ -158,7 +158,7 @@ class TaskViewController: UIViewController {
                 })
             } else {
                 DispatchQueue.global(qos: .userInitiated).async {
-                    self.cameraService.captureMovieFileOutput.stopRecording()
+                    self.cameraService.stopRecording()
                 }
                 isPathOngoing = false
                 self.currentTasksIndex+=1
@@ -202,7 +202,7 @@ extension TaskViewController: CAAnimationDelegate {
             if (currentTasksIndex == pathTypes.count) {
                 self.finishedAllTasks = true
                 DispatchQueue.global(qos: .userInitiated).async { [self] in
-                    self.cameraService.captureMovieFileOutput.stopRecording()
+                    self.cameraService.stopRecording()
                     toggleCameraPreviewVisibility(isHidden: true)
                 }
             } else {
@@ -215,7 +215,7 @@ extension TaskViewController: CAAnimationDelegate {
         if (finishedAllTasks == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
             toggleCameraPreviewVisibility(isHidden: true)
-            self.cameraService.captureSession.stopRunning()
+            self.cameraService.stopCaptureSession()
             fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: taskIdsToComplete)
         } else {
             currentPathTitle.text = currentTask?.title
@@ -225,26 +225,16 @@ extension TaskViewController: CAAnimationDelegate {
 }
 
 @available(iOS 13.0, *)
-extension TaskViewController: AVCaptureFileOutputRecordingDelegate {
+extension TaskViewController: CameraServiceDelegate {
     
-    //Frame-by-Frame output
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        print("video frame")
-    }
-    
-    //Full recording output
-    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
-        print("video output start")
-    }
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+    func didFinishFileOutput(fileURL: URL) {
         print("video output finish")
-        print(error.debugDescription)
-        print(outputFileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: outputFileURL)
+        print(fileURL.absoluteString)
+        fileUploadService.uploadData(fileUrl: fileURL)
         self.startSessionButton.isHidden = false
         self.toggleCameraPreviewVisibility(isHidden: false)
     }
+
     
 }
 

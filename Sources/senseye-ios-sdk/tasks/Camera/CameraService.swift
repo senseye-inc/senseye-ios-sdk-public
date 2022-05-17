@@ -11,15 +11,20 @@ import UIKit
 
 protocol CameraServiceDelegate: AnyObject {
     func didFinishFileOutput(fileURL: URL)
+    func showAlertCameraAccessNeeded(alert: UIAlertController)
 }
 
 class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
     
-    private(set) var videoPreviewLayer = AVCaptureVideoPreviewLayer()
-    private(set) var captureOutput = AVCaptureVideoDataOutput()
-    private(set) var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    private var videoPreviewLayer = AVCaptureVideoPreviewLayer()
+    private var captureOutput = AVCaptureVideoDataOutput()
+    private var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
-    private(set) var frontCameraDevice: CameraRepresentable
+    
+    var cameraPermissionsAllowed: Bool {
+        frontCameraDevice.videoAuthorizationStatus == .authorized
+    }
     
     weak var delegate: CameraServiceDelegate?
     
@@ -39,11 +44,18 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             self.setupCaptureSession()
         case .notDetermined: // The user has not yet been asked for camera access.
             frontCameraDevice.requestAccessForVideo { granted in
-                guard granted else { return }
+                guard granted else {
+                    DispatchQueue.main.async {
+                        self.showAlert()
+                    }
+                    return
+                }
                 self.setupCaptureSession()
             }
         case .denied: // The user has previously denied access.
-            return
+            DispatchQueue.main.async {
+                self.showAlert()
+            }
         case .restricted: // The user can't grant access due to restrictions.
             return
         @unknown default:
@@ -145,4 +157,21 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         delegate?.didFinishFileOutput(fileURL: outputFileURL)
     }
+    
+    func showAlert() {
+        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
+        
+        let alert = UIAlertController(
+            title: "Camera Access Required",
+            message: "Camera access is required to make full use of this app.",
+            preferredStyle: UIAlertController.Style.alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
+        alert.addAction(UIAlertAction(title: "Show Settings", style: .cancel, handler: { (alert) -> Void in
+            UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
+        }))
+        delegate?.showAlertCameraAccessNeeded(alert: alert)
+    }
+    
 }

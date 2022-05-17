@@ -7,9 +7,6 @@
 
 import Foundation
 import AVFoundation
-//import UIKit
-
-// MARK: - Protocol for AVCaptureDevice
 
 protocol CameraRepresentable {
     var videoAuthorizationStatus: AVAuthorizationStatus { get set }
@@ -30,8 +27,6 @@ extension AVCaptureDevice: CameraRepresentable {
         }
     }
 }
-
-// MARK: - MockAVCaptureDevice
 
 final class MockAVCaptureDevice: CameraRepresentable {
     

@@ -34,7 +34,6 @@ class TaskViewController: UIViewController {
     private var finishedAllTasks: Bool = false
     private var isPathOngoing: Bool = false
     
-   
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
     var cameraService = CameraService()
@@ -62,6 +61,7 @@ class TaskViewController: UIViewController {
         }
         startSessionButton.titleLabel?.text = "Begin"
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
+        startSessionButton.isEnabled = cameraService.cameraPermissionsAllowed
         currentPathTitle.text = "Proceed when you are ready."
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
@@ -236,6 +236,10 @@ extension TaskViewController: CameraServiceDelegate {
         fileUploadService.uploadData(fileUrl: fileURL)
         self.startSessionButton.isHidden = false
         self.toggleCameraPreviewVisibility(isHidden: false)
+    }
+    
+    func showAlertCameraAccessNeeded(alert: UIAlertController) {
+        self.present(alert, animated: true, completion: nil)
     }
 
     

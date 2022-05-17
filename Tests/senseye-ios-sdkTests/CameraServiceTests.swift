@@ -19,7 +19,6 @@ class CameraServiceTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         mockAVCaptureDevice = MockAVCaptureDevice()
-        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
     }
     
     override func tearDownWithError() throws {
@@ -30,7 +29,8 @@ class CameraServiceTests: XCTestCase {
     
     func testCheckPermissionsCalledOnNotDetermined() {
         // given
-        sut.frontCameraDevice.videoAuthorizationStatus = .notDetermined
+        mockAVCaptureDevice.videoAuthorizationStatus = .notDetermined
+        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
         // when
         sut.checkPermissions()
@@ -41,7 +41,8 @@ class CameraServiceTests: XCTestCase {
     
     func testCheckPermissionsNotCalledOnAuthorized() {
         // given
-        sut.frontCameraDevice.videoAuthorizationStatus = .authorized
+        mockAVCaptureDevice.videoAuthorizationStatus = .authorized
+        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
         // when
         sut.checkPermissions()
@@ -52,7 +53,8 @@ class CameraServiceTests: XCTestCase {
     
     func testCaptureSessionPresetIsHigh() {
         // given
-        sut.frontCameraDevice.videoAuthorizationStatus = .authorized
+        mockAVCaptureDevice.videoAuthorizationStatus = .authorized
+        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
         // when
         sut.setupCaptureSession()

@@ -8,17 +8,22 @@
 import Foundation
 import AVFoundation
 import UIKit
-@available(iOS 12, *)
 
+protocol CameraServiceDelegate: AnyObject {
+    func didFinishFileOutput(fileURL: URL)
+}
 
-@available(iOS 12, *)
-class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
     
-    var videoPreviewLayer = AVCaptureVideoPreviewLayer()
-    var captureOutput = AVCaptureVideoDataOutput()
-    var captureMovieFileOutput = AVCaptureMovieFileOutput()
-    var captureSession = AVCaptureSession()
-    var frontCameraDevice: CameraRepresentable
+    private(set) var videoPreviewLayer = AVCaptureVideoPreviewLayer()
+    private(set) var captureOutput = AVCaptureVideoDataOutput()
+    private(set) var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    private(set) var captureSession = AVCaptureSession()
+    private(set) var frontCameraDevice: CameraRepresentable
+    
+    weak var delegate: CameraServiceDelegate?
+    
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
     init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!) {
         self.frontCameraDevice = frontCameraDevice
@@ -114,5 +119,29 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                 print("Error from \(#function)")
             }
         }
+    }
+    
+    func startRecordingForTask(taskId: String) {
+        let currentTimeStamp = Date().currentTimeMillis()
+        guard let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskId).mp4") else {
+            return
+        }
+        self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+    }
+    
+    func stopRecording() {
+        self.captureMovieFileOutput.stopRecording()
+    }
+    
+    func startCaptureSessions() {
+        self.captureSession.startRunning()
+    }
+    
+    func stopCaptureSession() {
+        self.captureSession.stopRunning()
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        delegate?.didFinishFileOutput(fileURL: outputFileURL)
     }
 }

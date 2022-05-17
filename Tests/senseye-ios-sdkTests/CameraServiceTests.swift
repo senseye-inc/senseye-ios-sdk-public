@@ -13,7 +13,7 @@ import AVFoundation
 @available(iOS 12, *)
 class CameraServiceTests: XCTestCase {
     
-    var sut: CameraService!
+    var cameraService: CameraService!
     var mockAVCaptureDevice: MockAVCaptureDevice!
     
     override func setUpWithError() throws {
@@ -22,45 +22,36 @@ class CameraServiceTests: XCTestCase {
     }
     
     override func tearDownWithError() throws {
-        sut = nil
+        cameraService = nil
         mockAVCaptureDevice = nil
         try super.tearDownWithError()
     }
     
     func testCheckPermissionsCalledOnNotDetermined() {
-        // given
         mockAVCaptureDevice.videoAuthorizationStatus = .notDetermined
-        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
+        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        // when
-        sut.checkPermissions()
+        cameraService.checkPermissions()
         
-        // then
-        XCTAssertTrue(self.mockAVCaptureDevice.requestAccessCalled)
+        XCTAssertTrue(mockAVCaptureDevice.requestAccessCalled)
     }
     
     func testCheckPermissionsNotCalledOnAuthorized() {
-        // given
         mockAVCaptureDevice.videoAuthorizationStatus = .authorized
-        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
+        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        // when
-        sut.checkPermissions()
+        cameraService.checkPermissions()
         
-        //then
-        XCTAssertFalse(self.mockAVCaptureDevice.requestAccessCalled)
+        XCTAssertFalse(mockAVCaptureDevice.requestAccessCalled)
     }
     
     func testCaptureSessionPresetIsHigh() {
-        // given
         mockAVCaptureDevice.videoAuthorizationStatus = .authorized
-        sut = CameraService(frontCameraDevice: mockAVCaptureDevice)
+        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        // when
-        sut.setupCaptureSession()
+        cameraService.setupCaptureSession()
         
-        //then
-        XCTAssertEqual(sut.captureSession.sessionPreset, .high)
+        XCTAssertEqual(cameraService.captureSession.sessionPreset, .high)
     }
     
 }

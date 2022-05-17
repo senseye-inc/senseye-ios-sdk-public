@@ -84,6 +84,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         videoPreviewLayer.connection?.videoOrientation = .portrait
         cameraPreview.layer.addSublayer(videoPreviewLayer)
         captureSession.startRunning()
+        cameraPreview.isHidden = false
     }
     
     func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
@@ -133,7 +134,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.captureMovieFileOutput.stopRecording()
     }
     
-    func startCaptureSessions() {
+    func startCaptureSession() {
         self.captureSession.startRunning()
     }
     

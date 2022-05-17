@@ -71,12 +71,15 @@ class TaskViewController: UIViewController {
         cameraService.start()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        cameraService.setupVideoPreviewLayer(for: cameraPreview)
+    }
+    
     @objc func beginDotMovementForPathType() {
         dotView.isHidden = false
         startSessionButton.titleLabel?.text = "Start"
-        cameraPreview.isHidden = false
-        
-        cameraService.setupVideoPreviewLayer(for: cameraPreview)
 
         startSessionButton.isHidden = true
         currentPathTitle.text = "Starting \(currentTask?.title)..."

@@ -63,7 +63,7 @@ class TaskViewController: UIViewController {
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
         startSessionButton.isEnabled = cameraService.cameraPermissionsAllowed
         currentPathTitle.text = "Proceed when you are ready."
-
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
@@ -80,7 +80,7 @@ class TaskViewController: UIViewController {
     @objc func beginDotMovementForPathType() {
         dotView.isHidden = false
         startSessionButton.titleLabel?.text = "Start"
-
+        
         startSessionButton.isHidden = true
         currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
@@ -238,10 +238,24 @@ extension TaskViewController: CameraServiceDelegate {
         self.toggleCameraPreviewVisibility(isHidden: false)
     }
     
-    func showAlertCameraAccessNeeded(alert: UIAlertController) {
-        self.present(alert, animated: true, completion: nil)
+    func showCameraAccessAlert() {
+        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
+        
+        let alert = UIAlertController(
+            title: "Camera Access Required",
+            message: "Camera access is required to make full use of this app.",
+            preferredStyle: UIAlertController.Style.alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
+        alert.addAction(UIAlertAction(title: "Show Settings", style: .cancel, handler: { (alert) -> Void in
+            UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
+        }))
+        DispatchQueue.main.async {
+            self.present(alert, animated: true, completion: nil)            
+        }
     }
-
+    
     
 }
 

@@ -38,7 +38,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         checkPermissions()
     }
     
-    func checkPermissions() {
+    private func checkPermissions() {
         switch frontCameraDevice.videoAuthorizationStatus {
         case .authorized: // The user has previously granted access to the camera.
             self.setupCaptureSession()
@@ -59,7 +59,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         }
     }
     
-    func setupCaptureSession() {
+    private func setupCaptureSession() {
         
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             print("Error casting cameraRepresentable to AvCaptureDevice")
@@ -109,25 +109,27 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             }
         }
         
-        if let bestFormat = bestFormat,
-           let bestFrameRateRange = bestFrameRateRange {
-            do {
-                try device.lockForConfiguration()
-                
-                // Set the device's active format.
-                device.activeFormat = bestFormat
-                
-                // Set the device's min/max frame duration.
-                let duration = bestFrameRateRange.minFrameDuration
-                device.activeVideoMinFrameDuration = duration
-                device.activeVideoMaxFrameDuration = duration
-                
-                device.unlockForConfiguration()
-            } catch {
-                // Handle error.
-                print("Error from \(#function)")
-            }
+        guard let bestFormat = bestFormat, let bestFrameRateRange = bestFrameRateRange else {
+            print("Capture Device format is nil for \(device).\n bestFormat: \(bestFormat)/n bestFrameRate: \(bestFrameRateRange)")
+            return
         }
+        do {
+            try device.lockForConfiguration()
+            
+            // Set the device's active format.
+            device.activeFormat = bestFormat
+            
+            // Set the device's min/max frame duration.
+            let duration = bestFrameRateRange.minFrameDuration
+            device.activeVideoMinFrameDuration = duration
+            device.activeVideoMaxFrameDuration = duration
+            
+            device.unlockForConfiguration()
+        } catch {
+            // Handle error.
+            print("Error from \(#function). Unable to set device format")
+        }
+        
     }
     
     func startRecordingForTask(taskId: String) {
@@ -153,5 +155,5 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         delegate?.didFinishFileOutput(fileURL: outputFileURL)
     }
-
+    
 }

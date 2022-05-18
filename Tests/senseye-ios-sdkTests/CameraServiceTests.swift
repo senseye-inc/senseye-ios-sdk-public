@@ -27,22 +27,24 @@ class CameraServiceTests: XCTestCase {
         try super.tearDownWithError()
     }
     
-    func testCheckPermissionsCalledOnNotDetermined() {
+    func testCameraOnVideoAuthorizationStatusNotDetermined() {
         mockAVCaptureDevice.videoAuthorizationStatus = .notDetermined
         cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
         cameraService.checkPermissions()
         
         XCTAssertTrue(mockAVCaptureDevice.requestAccessCalled)
+        XCTAssertEqual(mockAVCaptureDevice.videoAuthorizationStatus, .notDetermined)
     }
     
-    func testCheckPermissionsNotCalledOnAuthorized() {
+    func testCameraOnVideoAuthorizationStatusAuthorized() {
         mockAVCaptureDevice.videoAuthorizationStatus = .authorized
         cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
         cameraService.checkPermissions()
         
         XCTAssertFalse(mockAVCaptureDevice.requestAccessCalled)
+        XCTAssertEqual(mockAVCaptureDevice.videoAuthorizationStatus, .authorized)
     }
     
     func testCaptureSessionPresetIsHigh() {

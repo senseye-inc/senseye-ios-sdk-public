@@ -9,16 +9,14 @@ import Foundation
 import AVFoundation
 
 protocol CameraRepresentable {
-    var videoAuthorizationStatus: AVAuthorizationStatus { get set }
+    var videoAuthorizationStatus: AVAuthorizationStatus { get }
     func requestAccessForVideo(completion: @escaping (Bool) -> Void)
 }
 
 extension AVCaptureDevice: CameraRepresentable {
     
     var videoAuthorizationStatus: AVAuthorizationStatus {
-        get {
-            AVCaptureDevice.authorizationStatus(for: .video)
-        } set { }
+        AVCaptureDevice.authorizationStatus(for: .video)
     }
     
     func requestAccessForVideo(completion: @escaping (Bool) -> Void) {

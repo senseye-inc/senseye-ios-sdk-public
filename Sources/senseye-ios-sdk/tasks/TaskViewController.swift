@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Deepak Kumar on 11/9/21.
 //
@@ -24,7 +24,6 @@ class TaskViewController: UIViewController {
     @IBOutlet weak var dotViewInitialXConstraint: NSLayoutConstraint!
     @IBOutlet weak var dotViewInitialYConstraint: NSLayoutConstraint!
     @IBOutlet weak var currentPathTitle: UILabel!
-    var videoPreviewLayer: AVCaptureVideoPreviewLayer!
     
     private var taskConfig = TaskConfig()
     private var completedPathsForCurrentTask = 0
@@ -35,13 +34,9 @@ class TaskViewController: UIViewController {
     private var finishedAllTasks: Bool = false
     private var isPathOngoing: Bool = false
     
-    private var captureSession = AVCaptureSession()
-    private var captureOutput = AVCaptureVideoDataOutput()
-    private var captureMovieFileOutput = AVCaptureMovieFileOutput()
-    private var frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
+    private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
-    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-    private let fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
+    var cameraService = CameraService()
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
@@ -66,50 +61,36 @@ class TaskViewController: UIViewController {
         }
         startSessionButton.titleLabel?.text = "Begin"
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
+        startSessionButton.isEnabled = cameraService.cameraPermissionsAllowed
         currentPathTitle.text = "Proceed when you are ready."
-
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
-        DispatchQueue.global(qos: .userInitiated).async { [self] in
-            guard let videoDeviceInput = try? AVCaptureDeviceInput(device: self.frontCameraDevice!) else {
-                print("videoDeviceInput error")
-                return
-            }
-            self.captureSession.addInput(videoDeviceInput)
-            self.captureSession.sessionPreset = AVCaptureSession.Preset.high
-            self.captureSession.addOutput(self.captureOutput)
-            self.captureSession.addOutput(self.captureMovieFileOutput)
-            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-            self.captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
-            self.captureSession.beginConfiguration()
-            self.captureSession.commitConfiguration()
-        }
+        cameraService.delegate = self
+        cameraService.start()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        cameraService.setupVideoPreviewLayer(for: cameraPreview)
     }
     
     @objc func beginDotMovementForPathType() {
         dotView.isHidden = false
         startSessionButton.titleLabel?.text = "Start"
-        cameraPreview.isHidden = false
-        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        videoPreviewLayer.frame.size =  cameraPreview.frame.size
-        videoPreviewLayer.videoGravity = .resizeAspectFill
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        cameraPreview.layer.addSublayer(videoPreviewLayer)
-        captureSession.startRunning()
-
+        
         startSessionButton.isHidden = true
         currentPathTitle.text = "Starting \(currentTask?.title)..."
         let currentTimeStamp = Date().currentTimeMillis()
         if !isPathOngoing, let path = currentTask,
-           let taskNameId = currentTask?.taskId,
-           let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskNameId).mp4") {
+           let taskNameId = currentTask?.taskId {
             xMarkView.isHidden = path.shouldShowX
             self.isPathOngoing = true
             self.animateForPathCurrentPoint(type: path)
             DispatchQueue.global(qos: .userInitiated).async {
-                self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+                self.cameraService.startRecordingForTask(taskId: taskNameId)
                 self.toggleCameraPreviewVisibility(isHidden: true)
                 print("started capture session")
             }
@@ -144,7 +125,7 @@ class TaskViewController: UIViewController {
                 if (currentInterval == 20) {
                     timer.invalidate()
                     DispatchQueue.global(qos: .userInitiated).async {
-                        self.captureMovieFileOutput.stopRecording()
+                        self.cameraService.stopRecording()
                     }
                     self.isPathOngoing = false
                     self.currentTasksIndex+=1
@@ -180,7 +161,7 @@ class TaskViewController: UIViewController {
                 })
             } else {
                 DispatchQueue.global(qos: .userInitiated).async {
-                    self.captureMovieFileOutput.stopRecording()
+                    self.cameraService.stopRecording()
                 }
                 isPathOngoing = false
                 self.currentTasksIndex+=1
@@ -224,7 +205,7 @@ extension TaskViewController: CAAnimationDelegate {
             if (currentTasksIndex == pathTypes.count) {
                 self.finishedAllTasks = true
                 DispatchQueue.global(qos: .userInitiated).async { [self] in
-                    self.captureMovieFileOutput.stopRecording()
+                    self.cameraService.stopRecording()
                     toggleCameraPreviewVisibility(isHidden: true)
                 }
             } else {
@@ -237,7 +218,7 @@ extension TaskViewController: CAAnimationDelegate {
         if (finishedAllTasks == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
             toggleCameraPreviewVisibility(isHidden: true)
-            self.captureSession.stopRunning()
+            self.cameraService.stopCaptureSession()
             fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: taskIdsToComplete)
         } else {
             currentPathTitle.text = currentTask?.title
@@ -247,26 +228,34 @@ extension TaskViewController: CAAnimationDelegate {
 }
 
 @available(iOS 13.0, *)
-extension TaskViewController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
+extension TaskViewController: CameraServiceDelegate {
     
-    //Frame-by-Frame output
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        print("video frame")
-    }
-    
-    //Full recording output
-    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
-        print("video output start")
-    }
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+    func didFinishFileOutput(fileURL: URL) {
         print("video output finish")
-        print(error.debugDescription)
-        print(outputFileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: outputFileURL)
+        print(fileURL.absoluteString)
+        fileUploadService.uploadData(fileUrl: fileURL)
         self.startSessionButton.isHidden = false
         self.toggleCameraPreviewVisibility(isHidden: false)
     }
+    
+    func showCameraAccessAlert() {
+        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
+        
+        let alert = UIAlertController(
+            title: "Camera Access Required",
+            message: "Camera access is required to make full use of this app.",
+            preferredStyle: UIAlertController.Style.alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
+        alert.addAction(UIAlertAction(title: "Show Settings", style: .cancel, handler: { (alert) -> Void in
+            UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
+        }))
+        DispatchQueue.main.async {
+            self.present(alert, animated: true, completion: nil)            
+        }
+    }
+    
     
 }
 

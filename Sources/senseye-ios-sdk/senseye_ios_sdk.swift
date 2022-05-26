@@ -49,9 +49,11 @@ public class SenseyeSDK {
     }
     
     public func taskViewControllerForTasks() -> UIViewController {
-        let taskViewController = TaskViewController(nibName: "TaskViewController", bundle: .module)
-        taskViewController.taskIdsToComplete = self.tasks
-        return taskViewController
+        if let taskViewController: TaskViewController = Bundle.module.loadNibNamed("TaskViewController", owner: nil, options: nil)?.first as? TaskViewController {
+            taskViewController.taskIdsToComplete = self.tasks
+            return taskViewController
+        }
+        return UIViewController()
     }
     
     /**

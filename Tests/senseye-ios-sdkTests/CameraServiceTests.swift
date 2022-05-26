@@ -10,28 +10,31 @@ import CoreMotion
 @testable import senseye_ios_sdk
 import AVFoundation
 
-@available(iOS 12, *)
+@available(iOS 13.0, *)
 class CameraServiceTests: XCTestCase {
     
     var cameraService: CameraService!
     var mockAVCaptureDevice: MockAVCaptureDevice!
+    var mockAuthenticationService: MockAuthenticationService!
     
     override func setUpWithError() throws {
         try super.setUpWithError()
+        mockAuthenticationService = MockAuthenticationService()
         mockAVCaptureDevice = MockAVCaptureDevice()
+        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice, authenticationService: mockAuthenticationService)
     }
     
     override func tearDownWithError() throws {
         cameraService = nil
+        mockAuthenticationService = nil
         mockAVCaptureDevice = nil
         try super.tearDownWithError()
     }
     
     func testCameraOnVideoAuthorizationStatusNotDetermined() {
         mockAVCaptureDevice.videoAuthorizationStatus = .notDetermined
-        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        cameraService.checkPermissions()
+        cameraService.start()
         
         XCTAssertTrue(mockAVCaptureDevice.requestAccessCalled)
         XCTAssertEqual(mockAVCaptureDevice.videoAuthorizationStatus, .notDetermined)
@@ -39,9 +42,8 @@ class CameraServiceTests: XCTestCase {
     
     func testCameraOnVideoAuthorizationStatusAuthorized() {
         mockAVCaptureDevice.videoAuthorizationStatus = .authorized
-        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        cameraService.checkPermissions()
+        cameraService.start()
         
         XCTAssertFalse(mockAVCaptureDevice.requestAccessCalled)
         XCTAssertEqual(mockAVCaptureDevice.videoAuthorizationStatus, .authorized)
@@ -49,11 +51,28 @@ class CameraServiceTests: XCTestCase {
     
     func testCaptureSessionPresetIsHigh() {
         mockAVCaptureDevice.videoAuthorizationStatus = .authorized
-        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice)
         
-        cameraService.setupCaptureSession()
+        cameraService.start()
         
         XCTAssertEqual(cameraService.captureSession.sessionPreset, .high)
+    }
+    
+    func testAuthorizedShouldEnableStartSessionButton() {
+        cameraService.shouldSetupCaptureSession = false
+        mockAVCaptureDevice.videoAuthorizationStatus = .authorized
+        
+        cameraService.start()
+        
+        XCTAssertTrue(cameraService.shouldSetupCaptureSession)
+    }
+    
+    func testDeniedShouldDisableStartSessionButton() {
+        cameraService.shouldSetupCaptureSession = false
+        mockAVCaptureDevice.videoAuthorizationStatus = .denied
+        
+        cameraService.start()
+        
+        XCTAssertFalse(cameraService.shouldSetupCaptureSession)
     }
     
 }

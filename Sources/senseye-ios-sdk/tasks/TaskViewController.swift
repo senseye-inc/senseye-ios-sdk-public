@@ -13,6 +13,7 @@ import UIKit
 import AVFoundation
 import AVKit
 import SwiftUI
+import Combine
 
 @available(iOS 13.0, *)
 class TaskViewController: UIViewController {
@@ -36,7 +37,8 @@ class TaskViewController: UIViewController {
     
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
-    var cameraService = CameraService()
+    @ObservedObject var cameraService = CameraService()
+    var cancellables = Set<AnyCancellable>()
     
     var taskIdsToComplete: [String] = []
     var surveyInput: [String: String] = [:]
@@ -61,7 +63,13 @@ class TaskViewController: UIViewController {
         }
         startSessionButton.titleLabel?.text = "Begin"
         startSessionButton.addTarget(self, action: #selector(beginDotMovementForPathType), for: .touchUpInside)
-        startSessionButton.isEnabled = cameraService.cameraPermissionsAllowed
+        cameraService.$shouldSetupCaptureSession
+            .sink { isEnabled in
+                DispatchQueue.main.async {
+                    self.startSessionButton.isEnabled = isEnabled
+                }
+            }
+            .store(in: &cancellables)
         currentPathTitle.text = "Proceed when you are ready."
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))

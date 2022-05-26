@@ -14,7 +14,8 @@ protocol CameraServiceDelegate: AnyObject {
     func showCameraAccessAlert()
 }
 
-class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate {
+@available(iOS 13.0, *)
+class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate, ObservableObject {
     
     private var videoPreviewLayer = AVCaptureVideoPreviewLayer()
     private var captureOutput = AVCaptureVideoDataOutput()
@@ -22,20 +23,21 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
     
-    var cameraPermissionsAllowed: Bool {
-        frontCameraDevice.videoAuthorizationStatus == .authorized
-    }
+    @Published var shouldSetupCaptureSession: Bool = false
+
+    let authenticationService: AuthenticationServiceProtocol
     
     weak var delegate: CameraServiceDelegate?
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!) {
+    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol = AuthenticationService()) {
         self.frontCameraDevice = frontCameraDevice
+        self.authenticationService = authenticationService
     }
     
     func start() {
-        checkPermissions()
+        self.checkPermissions()
     }
     
     private func checkPermissions() {
@@ -60,12 +62,13 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
+        self.shouldSetupCaptureSession = true
         
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             print("Error casting cameraRepresentable to AvCaptureDevice")
             return
         }
-        configureCameraForHighestFrameRate(device: frontCameraDevice)
+        self.configureCameraForHighestFrameRate(device: frontCameraDevice)
         
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             
@@ -132,12 +135,16 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         
     }
     
+    
+    
     func startRecordingForTask(taskId: String) {
-        let currentTimeStamp = Date().currentTimeMillis()
-        guard let fileUrl = fileDestUrl?.appendingPathComponent("0000_\(currentTimeStamp)_\(taskId).mp4") else {
-            return
+        authenticationService.getUsername { [self] username in
+            let currentTimeStamp = Date().currentTimeMillis()
+            guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
+                return
+            }
+            self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
         }
-        self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
     }
     
     func stopRecording() {
@@ -153,7 +160,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        delegate?.didFinishFileOutput(fileURL: outputFileURL)
+        self.delegate?.didFinishFileOutput(fileURL: outputFileURL)
     }
     
 }

@@ -11,6 +11,7 @@ import Foundation
 protocol AuthenticationServiceProtocol {
     func signOut(completeSignOut: (()->())? )
     func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?)
+    func getUsername(completion: @escaping ((String) -> Void))
     var delegate: AuthenticationServiceDelegate? { get set }
 }
 
@@ -26,22 +27,22 @@ protocol AuthenticationServiceDelegate: AnyObject {
 public class AuthenticationService {
     
     weak var delegate: AuthenticationServiceDelegate?
-
+    
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
     private var temporaryPassword: String? = nil
     
     /**
-    Authenticates the user session and fetches api key to allow for uploading and processing files. Use
-    didAuthenticateSession to dispatch another action if authorization is successful. This function handles all sign in flows.
+     Authenticates the user session and fetches api key to allow for uploading and processing files. Use
+     didAuthenticateSession to dispatch another action if authorization is successful. This function handles all sign in flows.
      
-    TODO: Add optional completion action.
+     TODO: Add optional completion action.
      
      - Parameters:
-        - accountUsername: User name credential
-        - accountPassword: Primary name credential. In a new account flow, this is the desired new password for the user.
-        - temporaryPassword: In a new account flow, the temporary password is initially provided to complete a new password change for the account.
-    */
+     - accountUsername: User name credential
+     - accountPassword: Primary name credential. In a new account flow, this is the desired new password for the user.
+     - temporaryPassword: In a new account flow, the temporary password is initially provided to complete a new password change for the account.
+     */
     
     public func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
         
@@ -64,10 +65,10 @@ public class AuthenticationService {
     /**
      Sign out the currently signed in user. Calling this function on a nil current user will have no side effect unless an optional
      completion closure is provided.
-    
-       - Parameters:
-           - completeSignOut: Optional completion action
-    */
+     
+     - Parameters:
+     - completeSignOut: Optional completion action
+     */
     public func signOut(completeSignOut: (()->())? = nil ) {
         // User must exist to signout
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
@@ -95,7 +96,7 @@ public class AuthenticationService {
             }
         }
     }
-
+    
     /**
      Convenience function.
      */
@@ -118,7 +119,7 @@ public class AuthenticationService {
         let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username
         print("current signed in user: \(currentSignedInUser)")
         let doesUserMatchCurrentSignIn = currentSignedInUser == username
-
+        
         if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
             self.signOut(completeSignOut:  {
                 self.signIn(username: username, password: password, temporaryPassword: self.temporaryPassword)
@@ -129,8 +130,8 @@ public class AuthenticationService {
     }
     
     /**
-    Sign in with handling cases for different account states.
-    */
+     Sign in with handling cases for different account states.
+     */
     private func signIn(username: String, password: String, temporaryPassword: String?) {
         let signInPassword: String
         
@@ -139,7 +140,7 @@ public class AuthenticationService {
         } else {
             signInPassword = temporaryPassword!
         }
-
+        
         Amplify.Auth.signIn(username: username, password: signInPassword) { result in
             do {
                 let signinResult = try result.get()
@@ -172,7 +173,7 @@ public class AuthenticationService {
                     print("Reset password additional info \(info)")
                     // Invoke `resetPassword` api to start the reset password
                     // flow, and once reset password flow completes, invoke
-                    // `signIn` api to trigger signin flow again.                    
+                    // `signIn` api to trigger signin flow again.
                 case .confirmSignUp(let info):
                     print("Confirm signup additional info \(info)")
                     // TODO: User was not confirmed during the signup process.
@@ -193,7 +194,14 @@ public class AuthenticationService {
             }
         }
     }
-    
+
+    func getUsername(completion: @escaping ((String) -> Void)) {
+        guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
+            print("Error getting signed in user")
+            return
+        }
+        completion(currentSignedInUser)
+    }
 }
 
 extension AuthenticationService: AuthenticationServiceProtocol { }

@@ -51,7 +51,7 @@ extension LoginView {
             if (self.isUserSignedIn) {
                 self.authenticationService.signOut(completeSignOut: nil)
             }
-            print("Login view appears! isSignedIn is \(self.isUserSignedIn)")
+            Log.debug("Login view appears! isSignedIn is \(self.isUserSignedIn)")
         }
         
         func isMatchingNewPassword() -> Bool { self.password == self.newPassword }
@@ -66,18 +66,18 @@ extension LoginView {
 @available(iOS 15.0.0, *)
 extension LoginView.ViewModel: AuthenticationServiceDelegate {
     func didConfirmSignInWithNewPassword() {
-        print("New account password set.")
+        Log.info("New account password set.")
     }
     
     func didSuccessfullySignIn() {
-        print("Successful sign in")
+        Log.info("Successful sign in")
         DispatchQueue.main.async {
             self.isUserSignedIn = true
         }
     }
  
     func didSuccessfullySignOut() {
-        print("Successful signed out")
+        Log.info("Successful signed out")
         DispatchQueue.main.async {
             self.isUserSignedIn = false
         }

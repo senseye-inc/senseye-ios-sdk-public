@@ -7,11 +7,9 @@ import AWSS3StoragePlugin
 import AWSCognitoAuthPlugin
 import SwiftUI
 
-
 protocol SenseyeTaskCompletionDelegate: AnyObject {
     func didCompleteTasksAndReturnResult(result: String)
 }
-
 @available(iOS 15.0, *)
 public class SenseyeSDK {
     
@@ -20,22 +18,23 @@ public class SenseyeSDK {
     weak var delegate: SenseyeTaskCompletionDelegate?
     
     public init() {
-        print("SDK Object created!")
+        Log.enable()
+        Log.debug("SDK Object created!", shouldLogContext: false)
     }
     
     public func initializeSDK() {
         do {
             guard let configurationURL = Bundle.main.url(forResource: "amplifyconfiguration", withExtension: "json") else {
-                print("Unable to load amplifyconfiguration.")
+                Log.error("Unable to load amplifyconfiguration.")
                 return
             }
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
             try Amplify.add(plugin: AWSS3StoragePlugin())
             try Amplify.configure(AmplifyConfiguration.init(configurationFile: configurationURL))
             
-            print("Amplify configured with storage plugin")
+            Log.info("Amplify configured with storage plugin")
         } catch {
-            print("Failed to initialize Amplify with \(error)")
+            Log.error("Failed to initialize Amplify with \(error)")
         }
     }
     

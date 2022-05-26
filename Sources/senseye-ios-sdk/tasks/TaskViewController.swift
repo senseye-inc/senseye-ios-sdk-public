@@ -100,7 +100,7 @@ class TaskViewController: UIViewController {
             DispatchQueue.global(qos: .userInitiated).async {
                 self.cameraService.startRecordingForTask(taskId: taskNameId)
                 self.toggleCameraPreviewVisibility(isHidden: true)
-                print("started capture session")
+                Log.info("started capture session")
             }
         }
     }
@@ -110,7 +110,7 @@ class TaskViewController: UIViewController {
     
     private func animateForPathCurrentPoint(type: TaskOption) {
         let currentPathIndex = completedPathsForCurrentTask
-        print(type.type.rawValue + " index " + String(currentPathIndex))
+        Log.debug(type.type.rawValue + " index " + String(currentPathIndex))
         if (type.type == .smoothPursuit) {
             let circularPath = UIBezierPath(arcCenter: xMarkView.center, radius: taskConfig.smoothPursuitCircleRadius, startAngle: .pi*2, endAngle: 0, clockwise: false)
             
@@ -239,8 +239,8 @@ extension TaskViewController: CAAnimationDelegate {
 extension TaskViewController: CameraServiceDelegate {
     
     func didFinishFileOutput(fileURL: URL) {
-        print("video output finish")
-        print(fileURL.absoluteString)
+        Log.info("video output finish")
+        Log.debug(fileURL.absoluteString)
         fileUploadService.uploadData(fileUrl: fileURL)
         self.startSessionButton.isHidden = false
         self.toggleCameraPreviewVisibility(isHidden: false)
@@ -274,7 +274,7 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
         if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
             DispatchQueue.main.async {
                 self.fileUploadService.startPredictionForCurrentSessionUploads { result in
-                    print("Result from TaskVC \(#function): \(result)")
+                    Log.info("Result from TaskVC \(result)")
                 }
                 let resultsView = ResultsView(fileUploadService: self.fileUploadService)
                 self.present(UIHostingController(rootView: resultsView), animated: true)
@@ -286,7 +286,7 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     func didFinishPredictionRequest() {
         fileUploadService.startPeriodicUpdatesOnPredictionId { result in
             DispatchQueue.main.async {
-                print("Result From TaskVC \(#function): \(result)")
+                Log.info("Result From TaskVC \(result)")
                 self.currentPathTitle.text = "Prediction API request sent..."
             }
         }

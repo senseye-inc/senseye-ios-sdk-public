@@ -65,7 +65,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.shouldSetupCaptureSession = true
         
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
-            print("Error casting cameraRepresentable to AvCaptureDevice")
+            Log.error("Error casting cameraRepresentable to AvCaptureDevice")
             return
         }
         self.configureCameraForHighestFrameRate(device: frontCameraDevice)
@@ -74,7 +74,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             
             captureSession.beginConfiguration()
             guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-                print("videoDeviceInput error")
+                Log.error("videoDeviceInput error")
                 return
             }
             captureSession.addInput(videoDeviceInput)
@@ -113,7 +113,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         }
         
         guard let bestFormat = bestFormat, let bestFrameRateRange = bestFrameRateRange else {
-            print("Capture Device format is nil for \(device).\n bestFormat: \(bestFormat)/n bestFrameRate: \(bestFrameRateRange)")
+            Log.error("Capture Device format is nil for \(device).\n bestFormat: \(bestFormat)/n bestFrameRate: \(bestFrameRateRange)")
             return
         }
         do {
@@ -130,7 +130,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             device.unlockForConfiguration()
         } catch {
             // Handle error.
-            print("Error from \(#function). Unable to set device format")
+            Log.error("Error from \(#function). Unable to set device format")
         }
         
     }

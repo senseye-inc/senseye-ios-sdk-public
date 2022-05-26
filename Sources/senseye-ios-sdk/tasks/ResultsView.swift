@@ -39,7 +39,7 @@ struct ResultsView: View {
                 Spacer()
                 
                 Button {
-                    print("Button Tapped")
+                    Log.debug("Button Tapped")
                 } label: {
                     SenseyeButton(text: "Home")
                 }

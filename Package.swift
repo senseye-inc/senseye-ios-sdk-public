@@ -15,6 +15,7 @@ let package = Package(
     dependencies: [
         .package(name: "Amplify", url: "https://github.com/aws-amplify/amplify-ios", from: "1.17.0"),
         .package(name: "Alamofire", url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.5.0")),
+        .package(name: "CocoaLumberjack", url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.7.4"),
         .package(name: "SwiftyJSON", url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "4.0.0")
     ],
     targets: [
@@ -29,6 +30,7 @@ let package = Package(
                 .product(name: "AWSS3StoragePlugin", package: "Amplify", condition: nil),
                 .product(name: "AWSCognitoAuthPlugin", package: "Amplify", condition: nil),
                 .product(name: "Alamofire", package: "Alamofire", condition: nil),
+                .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack", condition: nil),
                 .product(name: "SwiftyJSON", package: "SwiftyJSON", condition: nil)
             ],
             resources: [

@@ -57,7 +57,7 @@ public class AuthenticationService {
             case .success(let session):
                 self.synchronizeLogin(to: session)
             case .failure(let error):
-                print("Fetch session failed with error \(error)")
+                Log.error("Fetch session failed with error \(error)")
             }
         }
     }
@@ -83,16 +83,16 @@ public class AuthenticationService {
                     Amplify.Auth.signOut { result in
                         switch result {
                         case .success():
-                            print("\(currentSignedInUser) signed out")
+                            Log.info("\(currentSignedInUser) signed out")
                             self.delegate?.didSuccessfullySignOut()
                             completeSignOut?()
                         case .failure(let error):
-                            print("Amplify auth signout failed in \(#function) with error \(error)")
+                            Log.warn("Amplify auth signout failed in \(#function) with error \(error)")
                         }
                     }
                 }
             case .failure(let error):
-                print("Fetch session failed in \(#function) with error \(error)")
+                Log.error("Fetch session failed in \(#function) with error \(error)")
             }
         }
     }
@@ -112,12 +112,12 @@ public class AuthenticationService {
      */
     private func synchronizeLogin(to currentSession: AuthSession) {
         guard let username = self.accountUsername, let password = self.accountPassword else {
-            print("Need accountUsername or accountPassword")
+            Log.warn("Need accountUsername or accountPassword")
             return
         }
         
         let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username
-        print("current signed in user: \(currentSignedInUser)")
+        Log.debug("current signed in user: \(String(describing: currentSignedInUser))")
         let doesUserMatchCurrentSignIn = currentSignedInUser == username
         
         if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
@@ -146,36 +146,36 @@ public class AuthenticationService {
                 let signinResult = try result.get()
                 switch signinResult.nextStep {
                 case .confirmSignInWithSMSMFACode(let deliveryDetails, let info):
-                    print("SMS code send to \(deliveryDetails.destination)")
-                    print("Additional info \(info)")
+                    Log.debug("SMS code send to \(deliveryDetails.destination)")
+                    Log.debug("Additional info \(String(describing: info))")
                     // TODO: Prompt the user to enter the SMSMFA code they received
                     // Then invoke `confirmSignIn` api with the code
                 case .confirmSignInWithCustomChallenge(let info):
-                    print("Custom challenge, additional info \(info)")
+                    Log.debug("Custom challenge, additional info \(String(describing: info))")
                     // TODO: Prompt the user to enter custom challenge answer
                     // Then invoke `confirmSignIn` api with the answer
                 case .confirmSignInWithNewPassword(let info):
                     // Replace temporary password user's desired password
                     // Then invoke `confirmSignIn` api with new password
                     // TODO: Do double password entries
-                    print("New password additional info \(info)")
+                    Log.debug("New password additional info \(String(describing: info))")
                     Amplify.Auth.confirmSignIn(challengeResponse: password, options: nil) { confirmSignInResult in
                         switch confirmSignInResult {
                         case .success(let confirmedResult):
-                            print("Confirmed sign in w new password.")
+                            Log.debug("Confirmed \(confirmedResult) sign in w new password.")
                             self.delegate?.didConfirmSignInWithNewPassword()
                             self.delegate?.didSuccessfullySignIn()
                         case .failure(let authError):
-                            print("Sign in w new password failed \(authError)")
+                            Log.warn("Sign in w new password failed \(authError)")
                         }
                     }
                 case .resetPassword(let info):
-                    print("Reset password additional info \(info)")
+                    Log.debug("Reset password additional info \(String(describing: info))")
                     // Invoke `resetPassword` api to start the reset password
                     // flow, and once reset password flow completes, invoke
                     // `signIn` api to trigger signin flow again.
                 case .confirmSignUp(let info):
-                    print("Confirm signup additional info \(info)")
+                    Log.debug("Confirm signup additional info \(String(describing: info))")
                     // TODO: User was not confirmed during the signup process.
                     // Invoke `confirmSignUp` api to confirm the user if
                     // they have the confirmation code. If they do not have the
@@ -184,13 +184,13 @@ public class AuthenticationService {
                     // After the user is confirmed, invoke the `signIn` api again.
                 case .done:
                     // Use has successfully signed in to the app
-                    print("done")
+                    Log.debug("done")
                     self.delegate?.didSuccessfullySignIn()
-                    print("Signin complete")
+                    Log.info("Signin complete")
                 }
             } catch {
                 // TODO: Insert delegate or completion handler for failed sign in.
-                print("Sign in failed \(error)")
+                Log.error("Sign in failed \(error)")
             }
         }
     }

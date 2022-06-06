@@ -10,11 +10,7 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct ResultsView: View {
     
-    @StateObject var resultsViewModel: ResultsViewModel
-    
-    init(fileUploadService: FileUploadAndPredictionService) {
-        _resultsViewModel = StateObject(wrappedValue: ResultsViewModel(fileUploadService: fileUploadService))
-    }
+    @StateObject var resultsViewModel = ResultsViewModel()
     
     var body: some View {
         ZStack {
@@ -41,7 +37,7 @@ struct ResultsView: View {
                 Button {
                     Log.debug("Button Tapped")
                 } label: {
-                    SenseyeButton(text: "Home")
+                    SenseyeButton(text: "Home", foregroundColor: .senseyeSecondary, fillColor: .senseyePrimary)
                 }
 
                 Spacer()
@@ -82,25 +78,5 @@ struct ResultNameAndImageStack: View {
                 .foregroundColor(resultPassed ? .senseyeSecondary : .senseyeRed)
         }
         .frame(maxWidth: 250)
-    }
-}
-
-@available(iOS 13.0.0, *)
-struct SenseyeButton: View {
-    
-    let text: String
-
-    var body: some View {
-        Text(text.uppercased())
-            .foregroundColor(.senseyePrimary)
-            .padding()
-            .frame(width: 147, height: 52)
-            .background(
-                RoundedRectangle(
-                    cornerRadius: 34,
-                    style: .continuous
-                )
-                .fill(Color.senseyeSecondary)
-            )
     }
 }

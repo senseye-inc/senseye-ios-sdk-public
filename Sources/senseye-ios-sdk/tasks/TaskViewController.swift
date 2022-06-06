@@ -276,7 +276,7 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
                 self.fileUploadService.startPredictionForCurrentSessionUploads { result in
                     Log.info("Result from TaskVC \(result)")
                 }
-                let resultsView = ResultsView(fileUploadService: self.fileUploadService)
+                let resultsView = ResultsView()
                 self.present(UIHostingController(rootView: resultsView), animated: true)
                 self.currentPathTitle.text = "Starting predictions..."
             }

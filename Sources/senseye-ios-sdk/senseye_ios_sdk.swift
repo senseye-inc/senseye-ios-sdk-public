@@ -62,7 +62,7 @@ public class SenseyeSDK {
     // ReusltsView UI Testing
     
     public func getResultsView() -> some View {
-        let resultsView = ResultsView(fileUploadService: FileUploadAndPredictionService())
+        let resultsView = ResultsView()
         return resultsView
     }
 }

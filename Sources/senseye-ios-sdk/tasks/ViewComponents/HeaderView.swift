@@ -1,6 +1,5 @@
 //
 //  HeaderView.swift
-//  SenseyeUILayout
 //
 //  Created by Frank Oftring on 4/12/22.
 //

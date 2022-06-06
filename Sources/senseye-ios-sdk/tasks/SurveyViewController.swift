@@ -22,11 +22,12 @@ class SurveyViewController: UIViewController {
     @IBOutlet weak var eyeColorInput: UITextField!
     private var eyeColorPickerView: UIPickerView?
     @IBOutlet weak var continueButton: UIButton!
+    @IBOutlet weak var continueToTabViewButton: UIButton!
     
     private var ageInputs = ["20","21","22"]
     private var genderInputs = ["Male", "Female", "Other"]
     private var eyeColorInputs = ["Blue", "Green", "Brown", "Black"]
-        
+
     var taskIdsToComplete: [String] = []
     
     override func viewDidLoad() {
@@ -60,6 +61,9 @@ class SurveyViewController: UIViewController {
         
         let continueButtonGesture = UITapGestureRecognizer(target: self, action: #selector(self.continueToTaskViewController(_:)))
         continueButton.addGestureRecognizer(continueButtonGesture)
+
+        let continueToTabViewButtonGesture = UITapGestureRecognizer(target: self, action: #selector(self.continueToTabView(_:)))
+        continueToTabViewButton.addGestureRecognizer(continueToTabViewButtonGesture)
         
     }
     
@@ -93,7 +97,7 @@ class SurveyViewController: UIViewController {
         eyeColorController.view.addSubview(eyeColorPickerView!)
         eyeColorController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         eyeColorController.addAction(UIAlertAction(title: "OK", style: .default, handler: { action in
-        
+
         }))
         let alertHeightConstraint = NSLayoutConstraint(item: eyeColorController.view, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 200)
         eyeColorController.view.addConstraint(alertHeightConstraint)
@@ -114,6 +118,15 @@ class SurveyViewController: UIViewController {
         }
     }
     
+    @objc func continueToTabView(_ sender: UITapGestureRecognizer) {
+        let senseyeTabView = SenseyeTabView()
+        let hostingController = UIHostingController(rootView: senseyeTabView)
+        weak var currentViewController = self
+        self.dismiss(animated: true) {
+            currentViewController?.present(hostingController, animated: true, completion: nil)
+        }
+    }
+    
 }
 
 @available(iOS 15.0, *)
@@ -122,7 +135,7 @@ extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
        return 1
     }
-        
+
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         var numOfRows = 0
         switch pickerView {
@@ -137,7 +150,7 @@ extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
         }
        return numOfRows
     }
-        
+
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         var valueToDisplay = ""
         switch pickerView {

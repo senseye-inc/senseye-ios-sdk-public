@@ -10,7 +10,7 @@ import Foundation
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol = FileUploadAndPredictionService()) {
         self.fileUploadService = fileUploadService
     }
     

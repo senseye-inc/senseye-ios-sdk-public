@@ -13,6 +13,9 @@ class MockAuthenticationService {
     
     var signOutWasCalled: Bool = false
     var authenticateSessionWasCalled: Bool = false
+    var getUsernameWasCalled: Bool = false
+    
+    var username: String = "Example User"
     
     weak var delegate: AuthenticationServiceDelegate?
 }
@@ -24,6 +27,11 @@ extension MockAuthenticationService: AuthenticationServiceProtocol {
     
     func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
         authenticateSessionWasCalled = true
+    }
+    
+    func getUsername(completion: @escaping ((String) -> Void)) {
+        getUsernameWasCalled = true
+        completion(username)
     }
 }
 

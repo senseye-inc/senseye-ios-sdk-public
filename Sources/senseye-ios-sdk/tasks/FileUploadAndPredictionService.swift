@@ -89,22 +89,22 @@ class FileUploadAndPredictionService {
     
     private func uploadFile(fileNameKey: String, filename: URL) {
         isUploadOngoing = true
-        print("About to upload - video url: \(filename)")
+        Log.debug("About to upload - video url: \(filename)")
         
         Amplify.Storage.uploadFile(
             key: fileNameKey,
             local: filename,
             progressListener: { progress in
-                print("Progress: \(progress)")
+                Log.info("Progress: \(progress)")
             }, resultListener: { event in
                 switch event {
                 case let .success(data):
-                    print("Completed: \(data)")
+                    Log.info("Completed: \(data)")
                     self.currentSessionUploadFileKeys.append(fileNameKey)
                     self.isUploadOngoing = false
                     self.delegate?.didFinishUpload()
                 case let .failure(storageError):
-                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
+                    Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
                     self.isUploadOngoing = false
                 }
             }
@@ -117,13 +117,13 @@ class FileUploadAndPredictionService {
             case .success(let attributes):
                 if let attribute = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
                     self.hostApiKey = attribute.value
-                    print("Found and set senseye_api_token")
+                    Log.debug("Found and set senseye_api_token")
                 } else {
-                    print("unable to set api key")
+                    Log.warn("unable to set api key")
                 }
-                print("Host api key: \(self.hostApiKey)")
+                Log.debug("Host api key: \(String(describing: self.hostApiKey))")
             case .failure(let authError):
-                print("Fetching user attribute senseye_api_token failed: \(authError)")
+                Log.warn("Fetching user attribute senseye_api_token failed: \(authError)")
             }
         }
     }
@@ -147,7 +147,7 @@ class FileUploadAndPredictionService {
         do {
             try self.currentSessionJsonInputFile = sessionInputJson.rawData()
         } catch {
-            print("Error in json parsing for input file")
+            Log.error("Error in json parsing for input file")
         }
         
     }
@@ -166,7 +166,7 @@ class FileUploadAndPredictionService {
         var uploadS3URLs: [String] = []
         for localFileNameKey in currentSessionUploadFileKeys {
             uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
-            print("\(s3HostBucketUrl+localFileNameKey)")
+            Log.debug("\(s3HostBucketUrl+localFileNameKey)")
         }
         
         let currentTimeStamp = Date().currentTimeMillis()
@@ -176,10 +176,11 @@ class FileUploadAndPredictionService {
             key: jsonFileName,
             data: sessionJsonFile,
             progressListener: { progress in
-                print("Progress: \(progress)")
+                Log.info("Progress: \(progress)")
             }, resultListener: { event in
                 switch event {
                 case let .success(data):
+                    Log.debug("Data: \(data)")
                     let params = PredictRequestParameters(video_urls: uploadS3URLs, threshold: 0.5, json_metadata_url: s3JsonFileName)
                     guard let apiKey = self.hostApiKey else {
                         return
@@ -191,19 +192,19 @@ class FileUploadAndPredictionService {
                     AF.request(self.hostApi+"/predict", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: SubmitPredictionJobResponseCodable.self) { response in
                         switch response.result {
                         case let .success(predictionJobResponse):
-                            print("Prediction request success \(predictionJobResponse)")
+                            Log.info("Prediction request success \(predictionJobResponse)")
                             self.currentSessionPredictionId = predictionJobResponse.id
                             self.delegate?.didFinishPredictionRequest()
                             completed(.success(predictionJobResponse.id))
                         case let .failure(failure):
-                            print("Prediction request failure \(failure)")
+                            Log.warn("Prediction request failure \(failure)")
                             
                             // Network related error
                             completed(.failure(failure))
                         }
                     }
                 case let .failure(storageError):
-                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    Log.warn("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
                     completed(.failure(storageError))
                 }
             }
@@ -234,15 +235,15 @@ class FileUploadAndPredictionService {
                 switch response.result {
                 case let .success(jobStatusAndResultResponse):
                     if (jobStatusAndResultResponse.status == "completed" || jobStatusAndResultResponse.status == "failed") {
-                        print("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
+                        Log.info("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
                         completed(.success(jobStatusAndResultResponse.status))
                         self.delegate?.didReturnResultForPrediction(status: jobStatusAndResultResponse.status)
                         timer.invalidate()
                     } else {
-                        print("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
+                        Log.info("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
                     }
                 case let .failure(failure):
-                    print("Prediction periodic request failure \(failure)")
+                    Log.warn("Prediction periodic request failure \(failure)")
                     
                     // Failure to return a prediction
                     completed(.failure(failure))

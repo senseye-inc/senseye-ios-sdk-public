@@ -10,7 +10,7 @@ import Foundation
 @available(iOS 13.0, *)
 class ResultsViewModel: ObservableObject {
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol = FileUploadAndPredictionService()) {
         self.fileUploadService = fileUploadService
     }
     
@@ -31,17 +31,17 @@ class ResultsViewModel: ObservableObject {
     func getPredictionResponse() {
         fileUploadService.startPredictionForCurrentSessionUploads { result in
             self.predictionStatus = "Starting predictions..."
-            print("Starting predictions")
+            Log.info("Starting predictions")
             DispatchQueue.main.async {
                 switch result {
                 case .success(let predictionJobResponse):
-                    print("entering success completion")
-                    print("Prediction Job Response: \(predictionJobResponse)")
+                    Log.debug("entering success completion")
+                    Log.info("Prediction Job Response: \(predictionJobResponse)")
                     self.predictionStatus = "Prediction API request sent..."
                     
                 case .failure(let predictionError):
-                    print("entering failure completion")
-                    print("Error from \(#function): \(predictionError.localizedDescription)")
+                    Log.debug("entering failure completion")
+                    Log.info("Error from \(#function): \(predictionError.localizedDescription)")
                     self.error = predictionError
                     
                 }
@@ -54,10 +54,10 @@ class ResultsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let jobStatusAndResultResponse):
-                    print("Success from view model: \(jobStatusAndResultResponse)")
+                    Log.info("Success from view model: \(jobStatusAndResultResponse)")
                     self.predictionStatus = "Returned a result for prediction... \(jobStatusAndResultResponse)"
                 case .failure(let error):
-                    print("Error from \(#function): \(error.localizedDescription)")
+                    Log.error("Error from \(#function): \(error.localizedDescription)")
                     self.error = error
                 }
                 self.isLoading = false

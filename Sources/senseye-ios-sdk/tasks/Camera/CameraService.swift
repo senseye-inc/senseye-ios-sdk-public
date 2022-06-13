@@ -9,31 +9,26 @@ import Foundation
 import AVFoundation
 import UIKit
 
-protocol CameraServiceDelegate: AnyObject {
-    func didFinishFileOutput(fileURL: URL)
-    func showCameraAccessAlert()
-}
-
 @available(iOS 13.0, *)
+@MainActor
 class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate, ObservableObject {
     
-    private var videoPreviewLayer = AVCaptureVideoPreviewLayer()
     private var captureOutput = AVCaptureVideoDataOutput()
     private var captureMovieFileOutput = AVCaptureMovieFileOutput()
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
-    
-    @Published var shouldSetupCaptureSession: Bool = false
+    private let authenticationService: AuthenticationServiceProtocol
+    private let fileUploadService: FileUploadAndPredictionService
 
-    let authenticationService: AuthenticationServiceProtocol
-    
-    weak var delegate: CameraServiceDelegate?
+    @Published var shouldSetupCaptureSession: Bool = false
+    @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol = AuthenticationService()) {
+    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol = AuthenticationService(), fileUploadService: FileUploadAndPredictionService) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
+        self.fileUploadService = fileUploadService
     }
     
     func start() {
@@ -47,13 +42,13 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         case .notDetermined: // The user has not yet been asked for camera access.
             frontCameraDevice.requestAccessForVideo { granted in
                 guard granted else {
-                    self.delegate?.showCameraAccessAlert()
+                    self.shouldShowCameraPermissionsDeniedAlert = true
                     return
                 }
                 self.setupCaptureSession()
             }
         case .denied: // The user has previously denied access.
-            delegate?.showCameraAccessAlert()
+            shouldShowCameraPermissionsDeniedAlert = true
         case .restricted: // The user can't grant access due to restrictions.
             return
         @unknown default:
@@ -69,37 +64,33 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             return
         }
         self.configureCameraForHighestFrameRate(device: frontCameraDevice)
-        
-        DispatchQueue.global(qos: .userInitiated).async { [self] in
-            
-            captureSession.beginConfiguration()
-            guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-                Log.error("videoDeviceInput error")
-                return
-            }
-            captureSession.addInput(videoDeviceInput)
-            captureSession.sessionPreset = .high
-            captureSession.addOutput(captureOutput)
-            captureSession.addOutput(captureMovieFileOutput)
-            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-            captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
-            captureSession.commitConfiguration()
+
+        captureSession.beginConfiguration()
+        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
+            print("videoDeviceInput error")
+            return
         }
+        captureSession.addInput(videoDeviceInput)
+        captureSession.sessionPreset = .high
+        captureSession.addOutput(captureOutput)
+        captureSession.addOutput(captureMovieFileOutput)
+        let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
+        captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+        captureSession.commitConfiguration()
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {
-        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        var videoPreviewLayer = AVCaptureVideoPreviewLayer()
+        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         videoPreviewLayer.connection?.videoOrientation = .portrait
         videoPreviewLayer.frame.size =  cameraPreview.frame.size
         videoPreviewLayer.videoGravity = .resizeAspectFill
         videoPreviewLayer.connection?.videoOrientation = .portrait
         cameraPreview.layer.addSublayer(videoPreviewLayer)
-        captureSession.startRunning()
-        cameraPreview.isHidden = false
+        self.captureSession.startRunning()
     }
     
-    func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
-        
+    private func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
         var bestFormat: AVCaptureDevice.Format?
         var bestFrameRateRange: AVFrameRateRange?
         
@@ -132,11 +123,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
             // Handle error.
             Log.error("Error from \(#function). Unable to set device format")
         }
-        
     }
-    
-    
-    
+
     func startRecordingForTask(taskId: String) {
         authenticationService.getUsername { [self] username in
             let currentTimeStamp = Date().currentTimeMillis()
@@ -157,10 +145,17 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()
+        fileUploadService.createSessionInputJsonFile(surveyInput: ["Test": "Test"], tasks: [])
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        self.delegate?.didFinishFileOutput(fileURL: outputFileURL)
+        print("video output finish")
+        print(outputFileURL.absoluteString)
+        fileUploadService.uploadData(fileUrl: outputFileURL)
     }
-    
+
+    func goToSettings() {
+        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
+        UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
+    }
 }

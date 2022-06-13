@@ -12,25 +12,29 @@ class PLRViewModel: ObservableObject {
 
     @Published var backgroundColor: Color = .white
     @Published var xMarkColor: Color = .black
-    @Published var currentInterval: Int = 0
+    @Published var shouldShowConfirmationView: Bool = false
+
+    var currentInterval: Int = 0
+    var numberOfPLRShown: Int = 1
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
+        numberOfPLRShown += 1
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
             self.currentInterval += 1
             if (self.currentInterval <= 10) {
                 DispatchQueue.main.async {
-                    self.switchColors()
+                    self.toggleColors()
                 }
             } else {
                 timer.invalidate()
-                print("PLR Time Cancelled")
+                Log.info("PLRView Timer Cancelled")
                 didFinishCompletion()
                 self.reset()
             }
         }
     }
 
-    private func switchColors() {
+    private func toggleColors() {
         backgroundColor = (backgroundColor == .white ? .black : .white)
         xMarkColor = (xMarkColor == .black ? .white : .black)
     }

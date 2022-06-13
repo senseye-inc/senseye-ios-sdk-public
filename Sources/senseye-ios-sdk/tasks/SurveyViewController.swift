@@ -29,6 +29,7 @@ class SurveyViewController: UIViewController {
     private var eyeColorInputs = ["Blue", "Green", "Brown", "Black"]
 
     var taskIdsToComplete: [String] = []
+    let fileUploadService = FileUploadAndPredictionService()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -119,7 +120,7 @@ class SurveyViewController: UIViewController {
     }
     
     @objc func continueToTabView(_ sender: UITapGestureRecognizer) {
-        let senseyeTabView = SenseyeTabView()
+        let senseyeTabView = SenseyeTabView(fileUploadService: self.fileUploadService)
         let hostingController = UIHostingController(rootView: senseyeTabView)
         weak var currentViewController = self
         self.dismiss(animated: true) {

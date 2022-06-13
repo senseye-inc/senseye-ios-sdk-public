@@ -32,12 +32,12 @@ class TaskViewController: UIViewController {
     private var pathTypes: [TaskOption] = []
     private var currentTask: TaskOption?
     private var currentTasksIndex = 0
-    private var finishedAllTasks: Bool = false
+    private var shouldShowResultsView: Bool = false
     private var isPathOngoing: Bool = false
     
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
-    @ObservedObject var cameraService = CameraService()
+    @ObservedObject var cameraService = CameraService(fileUploadService: FileUploadAndPredictionService())
     var cancellables = Set<AnyCancellable>()
     
     var taskIdsToComplete: [String] = []
@@ -75,7 +75,6 @@ class TaskViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard (_:)))
         self.view.addGestureRecognizer(tapGesture)
         
-        cameraService.delegate = self
         cameraService.start()
     }
     
@@ -208,22 +207,22 @@ extension TaskViewController: CAAnimationDelegate {
         self.completedPathsForCurrentTask = 0
         if (currentTasksIndex != -1 && currentTasksIndex < pathTypes.count) {
             currentTask = pathTypes[currentTasksIndex]
-            self.finishedAllTasks = false
+            self.shouldShowResultsView = false
         } else {
             if (currentTasksIndex == pathTypes.count) {
-                self.finishedAllTasks = true
+                self.shouldShowResultsView = true
                 DispatchQueue.global(qos: .userInitiated).async { [self] in
                     self.cameraService.stopRecording()
                     toggleCameraPreviewVisibility(isHidden: true)
                 }
             } else {
-                self.finishedAllTasks = false
+                self.shouldShowResultsView = false
             }
             currentTask = nil
             currentTasksIndex = -1
         }
         
-        if (finishedAllTasks == true) {
+        if (shouldShowResultsView == true) {
             currentPathTitle.text = "Task Complete! Uploading..."
             toggleCameraPreviewVisibility(isHidden: true)
             self.cameraService.stopCaptureSession()
@@ -235,48 +234,16 @@ extension TaskViewController: CAAnimationDelegate {
     
 }
 
-@available(iOS 13.0, *)
-extension TaskViewController: CameraServiceDelegate {
-    
-    func didFinishFileOutput(fileURL: URL) {
-        Log.info("video output finish")
-        Log.debug(fileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: fileURL)
-        self.startSessionButton.isHidden = false
-        self.toggleCameraPreviewVisibility(isHidden: false)
-    }
-    
-    func showCameraAccessAlert() {
-        let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
-        
-        let alert = UIAlertController(
-            title: "Camera Access Required",
-            message: "Camera access is required to make full use of this app.",
-            preferredStyle: UIAlertController.Style.alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
-        alert.addAction(UIAlertAction(title: "Show Settings", style: .cancel, handler: { (alert) -> Void in
-            UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
-        }))
-        DispatchQueue.main.async {
-            self.present(alert, animated: true, completion: nil)            
-        }
-    }
-    
-    
-}
-
 @available(iOS 14.0, *)
 extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     
     func didFinishUpload() {
-        if (fileUploadService.isUploadOngoing != true && self.finishedAllTasks) {
+        if (fileUploadService.isUploadOngoing != true && self.shouldShowResultsView) {
             DispatchQueue.main.async {
                 self.fileUploadService.startPredictionForCurrentSessionUploads { result in
                     Log.info("Result from TaskVC \(result)")
                 }
-                let resultsView = ResultsView()
+                let resultsView = ResultsView(fileUploadService: self.fileUploadService)
                 self.present(UIHostingController(rootView: resultsView), animated: true)
                 self.currentPathTitle.text = "Starting predictions..."
             }

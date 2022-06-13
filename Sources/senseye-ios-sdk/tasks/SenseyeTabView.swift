@@ -9,53 +9,63 @@ import SwiftUI
 enum Tab {
     case imageView
     case plrView
-    case confirmationView
     case resultsView
+    case cameraView
 }
 
 @available(iOS 14.0, *)
+@MainActor
 class TabController: ObservableObject {
-    @Published var activeTab: Tab = .imageView
-    @Published var currentTaskTitle: String = "No tasks completed yet"
-    @Published var nextTab: Tab? = nil
+    @Published var activeTab: Tab = .cameraView
+
+    var currentTaskTitle: String = "N/A"
+    var nextTab: Tab = .imageView
 
     func open(_ tab: Tab) {
         activeTab = tab
-    }
-
-    func updateTitle(with title: String) {
-        self.currentTaskTitle = title
     }
 }
 
 @available(iOS 15.0, *)
 struct SenseyeTabView: View {
+
     @StateObject var tabController = TabController()
-    @State var disbleSwipingOnTabView: Bool = true
+    @StateObject var cameraService: CameraService
+
+    let fileUploadService: FileUploadAndPredictionService
+
+    init(fileUploadService: FileUploadAndPredictionService) {
+        _cameraService = StateObject(wrappedValue: CameraService(fileUploadService: fileUploadService))
+        self.fileUploadService = fileUploadService
+    }
 
     var body: some View {
         TabView(selection: $tabController.activeTab) {
             RotatingImageView()
                 .tag(Tab.imageView)
-                .gesture(disbleSwipingOnTabView ? DragGesture() : nil)
+                .gesture(DragGesture())
 
             PLRView()
                 .tag(Tab.plrView)
-                .gesture(disbleSwipingOnTabView ? DragGesture() : nil)
+                .gesture(DragGesture())
 
-            UserConfirmationView(taskCompleted: tabController.currentTaskTitle)
-                .tag(Tab.confirmationView)
-                .gesture(disbleSwipingOnTabView ? DragGesture() : nil)
-
-            // Creating a new instance for now. Will need to fix this implementation in the future and decide how to inject fileUploadService into ResultsView.
-            ResultsView()
+            ResultsView(fileUploadService: fileUploadService)
                 .tag(Tab.resultsView)
-                .gesture(disbleSwipingOnTabView ? DragGesture() : nil)
+                .gesture(DragGesture())
+
+            CameraView()
+                .tag(Tab.cameraView)
+                .gesture(DragGesture())
+                
         }
+        .onAppear(perform: {
+            cameraService.start()
+        })
         .navigationTitle("")
         .navigationBarHidden(true)
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         .environmentObject(tabController)
+        .environmentObject(cameraService)
         .edgesIgnoringSafeArea(.all)
         .statusBar(hidden: true)
     }

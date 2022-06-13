@@ -5,11 +5,12 @@
 //
 
 import SwiftUI
-@available(iOS 14.0, *)
+@available(iOS 15.0, *)
 struct PLRView: View {
 
     @StateObject var viewModel: PLRViewModel = PLRViewModel()
     @EnvironmentObject var tabController: TabController
+    @EnvironmentObject var cameraService: CameraService
 
     var body: some View {
         ZStack {
@@ -23,11 +24,22 @@ struct PLRView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
+            cameraService.startRecordingForTask(taskId: "PLR_\(viewModel.numberOfPLRShown)")
             viewModel.showPLR {
-                tabController.updateTitle(with: "PLR")
+                cameraService.stopRecording()
                 tabController.nextTab = .imageView
-                tabController.open(.confirmationView)
+                viewModel.shouldShowConfirmationView.toggle()
             }
+        }
+        .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
+            // Dismiss Action
+        } content: {
+            UserConfirmationView(taskCompleted: "PLR", yesAction: {
+                viewModel.shouldShowConfirmationView.toggle()
+                tabController.open(.cameraView)
+            }, noAction: {
+                tabController.nextTab = .plrView
+            })
         }
     }
 }

@@ -11,6 +11,7 @@ struct RotatingImageView: View {
 
     @StateObject var viewModel: RotatingImageViewModel = RotatingImageViewModel()
     @EnvironmentObject var tabController: TabController
+    @EnvironmentObject var cameraService: CameraService
 
     var body: some View {
         ZStack {
@@ -23,17 +24,31 @@ struct RotatingImageView: View {
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
                 .onAppear {
+                    cameraService.startRecordingForTask(taskId: "PTSD_\(viewModel.numberOfImageSetsShown)")
                     viewModel.showImages {
-                        if viewModel.finishedAllTasks {
-                            tabController.nextTab = .resultsView
-                        } else {
-                            tabController.nextTab = .plrView
-                        }
-                        tabController.updateTitle(with: "PTSD \(viewModel.numberOfImagesShown)/\(viewModel.totalNumberOfImagesToBeShown)")
-                        tabController.open(.confirmationView)
+                        cameraService.stopRecording()
+                        viewModel.shouldShowConfirmationView.toggle()
                     }
                 }
             }
+        }
+        .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
+            // Dismiss Action
+        } content: {
+            UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
+                viewModel.shouldShowConfirmationView.toggle()
+                if viewModel.finishedAllTasks {
+                    cameraService.stopCaptureSession()
+                    Log.info("Finsished all tasks")
+                    tabController.open(.resultsView)
+                } else {
+                    tabController.nextTab = .plrView
+                    tabController.open(.cameraView)
+                }
+            }, noAction: {
+                viewModel.removeLastImageSet()
+                tabController.nextTab = .imageView
+            })
         }
     }
 }

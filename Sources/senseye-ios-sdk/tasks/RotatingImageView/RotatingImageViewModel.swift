@@ -14,37 +14,46 @@ class RotatingImageViewModel: ObservableObject {
 
     let imageNames: [String] = ["acorns_1", "astronaut_1", "bird_3", "beach", "bird_1", "bricks_1", "building_1", "cake3", "icecream", "lake_13", "leaves_1", "nature_1"]
 
+    @Published var shouldShowConfirmationView: Bool = false
+    @Published var currentImageIndex: Int = 0
+
     var numberOfImagesShown = 0
     var totalNumberOfImagesToBeShown = 24
-    var finishedAllTasks: Bool = false
     var timerCount: Int = 0
+    var numberOfImageSetsShown: Int = 1
+
+    var finishedAllTasks: Bool {
+        numberOfImagesShown >= totalNumberOfImagesToBeShown
+    }
     var currentImageName: String {
         imageNames[currentImageIndex]
     }
 
-    @Published var currentImageIndex: Int = 0
+    var taskCompleted: String {
+        "PTSD \(numberOfImagesShown)/\(totalNumberOfImagesToBeShown)"
+    }
 
     func showImages(didFinishCompletion: @escaping () -> Void) {
+        numberOfImageSetsShown += 1
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
             timerCount += 1
             numberOfImagesShown += 1
             if timerCount < imageNames.count {
-                currentImageIndex += 1 
+                currentImageIndex += 1
             } else {
                 timer.invalidate()
-                print("Image View Timer Cancelled")
-                if numberOfImagesShown >= totalNumberOfImagesToBeShown {
-                    finishedAllTasks = true
-                    print("Finsished all tasks")
-                }
+                Log.info("RotatingImageViewModel Timer Cancelled")
                 reset()
                 didFinishCompletion()
             }
         }
     }
 
+    func removeLastImageSet() {
+        self.numberOfImagesShown -= (self.imageNames.count)
+    }
+
     private func reset() {
-        print("Reset Called")
         currentImageIndex = 0
         timerCount = 0
     }

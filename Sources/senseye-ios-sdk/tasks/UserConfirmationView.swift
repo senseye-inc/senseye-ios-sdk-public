@@ -5,11 +5,21 @@
 //
 
 import SwiftUI
-@available(iOS 14.0, *)
+@available(iOS 15.0, *)
 struct UserConfirmationView: View {
 
     @EnvironmentObject var tabController: TabController
-    let taskCompleted: String
+    @Environment(\.presentationMode) var presentationMode
+    @State var isShowingAlert: Bool = false
+    let taskCompleted: String?
+    let yesAction: (() -> Void)?
+    let noAction: (() -> Void)?
+
+    init(taskCompleted: String? = nil, yesAction: (() -> Void)? = nil, noAction: (() -> Void)? = nil) {
+        self.taskCompleted = taskCompleted
+        self.yesAction = yesAction
+        self.noAction = noAction
+    }
 
     var body: some View {
         ZStack {
@@ -19,7 +29,7 @@ struct UserConfirmationView: View {
             VStack {
                 Spacer()
 
-                Text("Was this a good recording for \(taskCompleted)?")
+                Text("Was this a good recording for \(taskCompleted ?? "n/a")?")
                     .font(.title)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
@@ -28,21 +38,28 @@ struct UserConfirmationView: View {
 
                 HStack {
                     Button {
-                        print("No Pressed")
+                        isShowingAlert = true
+                        if let noAction = noAction {
+                            noAction()
+                        }
                     } label: {
                         SenseyeButton(text: "No", foregroundColor: .senseyePrimary, fillColor: .red)
                     }
-
                     Button {
-                        print("Active Tab: \(tabController.activeTab)")
-                        if let nextTab = tabController.nextTab {
-                            print("Next Tab: \(tabController.nextTab)")
-                            tabController.open(nextTab)
+                        if let yesAction = yesAction {
+                            yesAction()
                         }
                     } label: {
                         SenseyeButton(text: "Yes", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }
                 }
+            }
+        }
+        .alert("Thank you, please tap return to restart the task", isPresented: $isShowingAlert) {
+            Button("Return") {
+                presentationMode.wrappedValue.dismiss()
+                isShowingAlert = false
+                tabController.open(.cameraView)
             }
         }
     }

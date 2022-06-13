@@ -59,11 +59,5 @@ public class SenseyeSDK {
         return UIHostingController(rootView: LoginView(authenticationService: AuthenticationService()))
     }
     
-    // ReusltsView UI Testing
-    
-    public func getResultsView() -> some View {
-        let resultsView = ResultsView()
-        return resultsView
-    }
 }
 #endif

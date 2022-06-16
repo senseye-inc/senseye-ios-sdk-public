@@ -34,7 +34,10 @@ let package = Package(
                 .product(name: "SwiftyJSON", package: "SwiftyJSON", condition: nil)
             ],
             resources: [
-                .process("Resources")
+                .process("Resources/amplifyconfiguration.json"),
+                .process("Resources/awsconfiguration.json"),
+                .process("Resources/SingleTaskViewController.xib"),
+                .process("Resources/SurveyViewController.xib")
             ]),
         .testTarget(
             name: "senseye-ios-sdkTests",

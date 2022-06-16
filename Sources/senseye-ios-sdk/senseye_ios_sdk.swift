@@ -25,7 +25,7 @@ public class SenseyeSDK {
     public func initializeSDK() {
         do {
             guard let configurationURL = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
-                print("Unable to load amplifyconfiguration.")
+                Log.error("Unable to load amplifyconfiguration.")
                 return
             }
             try Amplify.add(plugin: AWSCognitoAuthPlugin())

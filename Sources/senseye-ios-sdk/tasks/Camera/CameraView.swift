@@ -27,6 +27,7 @@ struct CameraView: View {
                 .disabled(!cameraService.shouldSetupCaptureSession)
             }
         }
+        .onAppear { cameraService.start() }
         .edgesIgnoringSafeArea(.all)
         .alert("Need Camera Access", isPresented: $cameraService.shouldShowCameraPermissionsDeniedAlert) {
             Button("Go to settings") {

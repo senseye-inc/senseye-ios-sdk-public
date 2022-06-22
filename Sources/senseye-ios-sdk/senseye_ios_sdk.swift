@@ -61,6 +61,16 @@ public class SenseyeSDK {
     public func loginViewController() -> UIViewController {
         return UIHostingController(rootView: LoginView(authenticationService: AuthenticationService()))
     }
+
+    @MainActor public func senseyeTabView() -> some View {
+        let authenticationService = AuthenticationService()
+        let fileUploadService = FileUploadAndPredictionService()
+        let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
+        return SenseyeTabView()
+            .environmentObject(authenticationService)
+            .environmentObject(fileUploadService)
+            .environmentObject(cameraService)
+    }
     
 }
 #endif

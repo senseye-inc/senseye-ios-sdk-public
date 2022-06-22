@@ -24,7 +24,8 @@ protocol AuthenticationServiceDelegate: AnyObject {
 /**
  The AuthenticationService for the SDK  lets developers authenticate sessions through Senseye's backend  service.
  */
-public class AuthenticationService {
+@available(iOS 13.0, *)
+public class AuthenticationService: ObservableObject {
     
     weak var delegate: AuthenticationServiceDelegate?
     
@@ -204,4 +205,5 @@ public class AuthenticationService {
     }
 }
 
+@available(iOS 13.0, *)
 extension AuthenticationService: AuthenticationServiceProtocol { }

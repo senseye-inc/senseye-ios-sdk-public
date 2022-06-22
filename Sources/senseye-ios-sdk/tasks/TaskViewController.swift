@@ -37,7 +37,7 @@ class TaskViewController: UIViewController {
     
     private var fileUploadService: FileUploadAndPredictionService = FileUploadAndPredictionService()
     
-    @ObservedObject var cameraService = CameraService(fileUploadService: FileUploadAndPredictionService())
+    @ObservedObject var cameraService = CameraService(authenticationService: AuthenticationService(), fileUploadService: FileUploadAndPredictionService())
     var cancellables = Set<AnyCancellable>()
     
     var taskIdsToComplete: [String] = []

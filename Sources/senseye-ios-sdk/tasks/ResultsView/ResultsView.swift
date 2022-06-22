@@ -37,7 +37,6 @@ struct ResultsView: View {
                 }
                 
                 Spacer()
-                
                 Button {
                     Log.debug("Button Tapped")
                 } label: {

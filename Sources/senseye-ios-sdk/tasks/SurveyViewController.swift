@@ -30,6 +30,7 @@ class SurveyViewController: UIViewController {
 
     var taskIdsToComplete: [String] = []
     let fileUploadService = FileUploadAndPredictionService()
+    let authService = AuthenticationService()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -120,7 +121,7 @@ class SurveyViewController: UIViewController {
     }
     
     @objc func continueToTabView(_ sender: UITapGestureRecognizer) {
-        let senseyeTabView = SenseyeTabView(fileUploadService: self.fileUploadService)
+        let senseyeTabView = SenseyeTabView()
         let hostingController = UIHostingController(rootView: senseyeTabView)
         weak var currentViewController = self
         self.dismiss(animated: true) {
@@ -187,7 +188,7 @@ extension SurveyViewController: UIPickerViewDelegate, UIPickerViewDataSource {
 Compatibility for SwiftUI representable View
  */
 @available(iOS 15.0, *)
-struct SurveyView: UIViewControllerRepresentable {    
+struct SurveyViewRepresentable: UIViewControllerRepresentable {    
     typealias UIViewControllerType = SurveyViewController
     
     func makeUIViewController(context: Context) -> SurveyViewController {

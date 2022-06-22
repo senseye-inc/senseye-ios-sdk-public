@@ -24,7 +24,8 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 /**
  FileUploadAndPredictionService is responsible for communicating with backend service.
  */
-class FileUploadAndPredictionService {
+@available(iOS 13.0, *)
+class FileUploadAndPredictionService: ObservableObject {
     
     private struct PredictRequestParameters: Encodable {
         var video_urls: [String]
@@ -254,4 +255,5 @@ class FileUploadAndPredictionService {
     }
 }
 
+@available(iOS 13.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol { }

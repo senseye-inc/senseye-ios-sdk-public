@@ -24,8 +24,9 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    private var surveyInput : [String: String] = [:]
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol = AuthenticationService(), fileUploadService: FileUploadAndPredictionService) {
+    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionService) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
@@ -126,6 +127,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
 
     func startRecordingForTask(taskId: String) {
+        getSurveyResults()
         authenticationService.getUsername { [self] username in
             let currentTimeStamp = Date().currentTimeMillis()
             guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
@@ -142,10 +144,19 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func startCaptureSession() {
         self.captureSession.startRunning()
     }
+
+    func getSurveyResults() {
+        let age = UserDefaults.standard.value(forKey: "selectedAge") as! Int
+        let eyeColor = UserDefaults.standard.value(forKey: "selectedEyeColor") as! String
+        let gender = UserDefaults.standard.value(forKey: "selectedGender") as! String
+        surveyInput["age"] = String(age)
+        surveyInput["gender"] = gender
+        surveyInput["eyeColor"] = eyeColor
+    }
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()
-        fileUploadService.createSessionInputJsonFile(surveyInput: ["Test": "Test"], tasks: [])
+        fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {

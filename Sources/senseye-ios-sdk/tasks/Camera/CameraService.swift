@@ -58,7 +58,9 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
-        self.shouldSetupCaptureSession = true
+        DispatchQueue.main.async {
+            self.shouldSetupCaptureSession = true
+        }
         
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             Log.error("Error casting cameraRepresentable to AvCaptureDevice")

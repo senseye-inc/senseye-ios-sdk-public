@@ -19,7 +19,6 @@ class RotatingImageViewModel: ObservableObject {
 
     var numberOfImagesShown = 0
     var totalNumberOfImagesToBeShown = 24
-    var timerCount: Int = 0
     var numberOfImageSetsShown: Int = 1
 
     var finishedAllTasks: Bool {
@@ -36,9 +35,8 @@ class RotatingImageViewModel: ObservableObject {
     func showImages(didFinishCompletion: @escaping () -> Void) {
         numberOfImageSetsShown += 1
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
-            timerCount += 1
             numberOfImagesShown += 1
-            if timerCount < imageNames.count {
+            if currentImageIndex < imageNames.count - 1 {
                 currentImageIndex += 1
             } else {
                 timer.invalidate()
@@ -55,7 +53,6 @@ class RotatingImageViewModel: ObservableObject {
 
     private func reset() {
         currentImageIndex = 0
-        timerCount = 0
     }
 }
 

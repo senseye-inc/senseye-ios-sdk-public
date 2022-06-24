@@ -48,7 +48,7 @@ struct SenseyeTabView: View {
                     .tag(Tab.surveyView)
                     .gesture(DragGesture())
 
-                RotatingImageView()
+                RotatingImageView(fileUploadService: fileUploadService)
                     .tag(Tab.imageView)
                     .gesture(DragGesture())
 

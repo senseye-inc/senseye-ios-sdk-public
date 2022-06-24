@@ -13,6 +13,7 @@ import SwiftyJSON
 protocol FileUploadAndPredictionServiceProtocol {
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void)
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
+    func downloadIndividualImageAssets(imageKey: String, successfullCompletion: @escaping () -> Void)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -63,9 +64,11 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionJsonInputFile: Data? = nil
     
     var isUploadOngoing: Bool = false
+    private var fileManager: FileManager
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     init() {
+        self.fileManager = FileManager.default
         self.setUserApiKey()
     }
     
@@ -251,6 +254,30 @@ class FileUploadAndPredictionService: ObservableObject {
                     timer.invalidate()
                 }
             }
+        }
+    }
+    
+    func downloadIndividualImageAssets(imageKey: String, successfullCompletion: @escaping () -> Void) {
+        let downloadToFileName = self.fileManager.urls(for: .documentDirectory,
+                                                          in: .userDomainMask)[0]
+            .appendingPathComponent("\(imageKey).png")
+        let filePath = downloadToFileName.path
+        if !self.fileManager.fileExists(atPath: filePath) {
+            Amplify.Storage.downloadFile(
+                key: imageKey,
+                local: downloadToFileName,
+                progressListener: { progress in
+                    print("Progress: \(progress)")
+                }, resultListener: { event in
+                    switch event {
+                    case .success:
+                        print("Completed")
+                    case .failure(let storageError):
+                        print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    }
+                })
+        } else {
+            successfullCompletion()
         }
     }
 }

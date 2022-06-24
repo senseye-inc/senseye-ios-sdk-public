@@ -9,7 +9,12 @@ import SwiftUI
 @available(iOS 15.0, *)
 struct RotatingImageView: View {
 
-    @StateObject var viewModel: RotatingImageViewModel = RotatingImageViewModel()
+    @StateObject var viewModel: RotatingImageViewModel
+    
+    init(fileUploadService: FileUploadAndPredictionService) {
+        _viewModel = StateObject(wrappedValue: RotatingImageViewModel(fileUploadService: fileUploadService))
+    }
+    
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
 
@@ -24,11 +29,16 @@ struct RotatingImageView: View {
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
                 .onAppear {
-                    cameraService.startRecordingForTask(taskId: "PTSD_\(viewModel.numberOfImageSetsShown)")
-                    viewModel.showImages {
-                        cameraService.stopRecording()
-                        viewModel.shouldShowConfirmationView.toggle()
+                    viewModel.downloadPtsdImageSetsIfRequired {
+                        DispatchQueue.main.async {
+                            cameraService.startRecordingForTask(taskId: "PTSD_\(viewModel.numberOfImageSetsShown)")
+                            viewModel.showImages {
+                                cameraService.stopRecording()
+                                viewModel.shouldShowConfirmationView.toggle()
+                            }
+                        }
                     }
+                    
                 }
             }
         }

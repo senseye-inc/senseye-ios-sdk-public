@@ -262,23 +262,41 @@ class FileUploadAndPredictionService: ObservableObject {
                                                           in: .userDomainMask)[0]
             .appendingPathComponent("\(imageKey).png")
         let filePath = downloadToFileName.path
+        Amplify.Storage.list { event in
+            switch event {
+            case let .success(listResult):
+                print("Completed")
+                listResult.items.forEach { item in
+                    print("Key: \(item.key)")
+                }
+            case let .failure(storageError):
+                print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+            }
+        }
+        
+        
+        /*
+         Amplify.Storage.downloadFile(
+             key: imageKey,
+             local: downloadToFileName,
+             progressListener: { progress in
+                 print("Progress: \(progress)")
+             }, resultListener: { event in
+                 switch event {
+                 case .success:
+                     print("Completed")
+                     successfullCompletion()
+                 case .failure(let storageError):
+                     print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                 }
+             })
+         
         if !self.fileManager.fileExists(atPath: filePath) {
-            Amplify.Storage.downloadFile(
-                key: imageKey,
-                local: downloadToFileName,
-                progressListener: { progress in
-                    print("Progress: \(progress)")
-                }, resultListener: { event in
-                    switch event {
-                    case .success:
-                        print("Completed")
-                    case .failure(let storageError):
-                        print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                    }
-                })
+            
         } else {
             successfullCompletion()
         }
+         */
     }
 }
 

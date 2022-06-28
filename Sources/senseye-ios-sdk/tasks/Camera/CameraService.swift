@@ -72,9 +72,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.configureCameraForHighestFrameRate(device: frontCameraDevice)
 
         captureSession.beginConfiguration()
-        print("AV -- starting commiting configuration")
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-            print("videoDeviceInput error")
+            Log.error("videoDeviceInput error")
             captureSession.commitConfiguration()
             return
         }
@@ -85,7 +84,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
         captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
         captureSession.commitConfiguration()
-        print("AV -- done commiting configuration")
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {
@@ -97,7 +95,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         videoPreviewLayer.connection?.videoOrientation = .portrait
         cameraPreview.layer.addSublayer(videoPreviewLayer)
         self.captureSession.startRunning()
-        print("AV -- setting up preview layer")
     }
     
     private func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
@@ -169,14 +166,12 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        print("video output finish")
-        print(outputFileURL.absoluteString)
+        Log.error("Video output finish \(outputFileURL.absoluteString)")
         latestFileUrl = outputFileURL
     }
     
     func uploadLatestFile() {
         if latestFileUrl != nil {
-            print("uploaded latest file")
             fileUploadService.uploadData(fileUrl: latestFileUrl!)
             latestFileUrl = nil
         }

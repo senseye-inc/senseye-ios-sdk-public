@@ -48,7 +48,7 @@ extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProt
         completed(result)
     }
     
-    func downloadIndividualImageAssets(imageKey: String, successfullCompletion: @escaping () -> Void) {
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
     }
 }
 

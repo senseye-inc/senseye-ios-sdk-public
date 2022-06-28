@@ -30,12 +30,12 @@ class RotatingImageViewModel: ObservableObject {
     var finishedAllTasks: Bool {
         numberOfImagesShown >= ptsdImageNames.count
     }
-    var currentImageName: String {
+    
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    var currentImageName: URL? {
         let imageKey = ptsdImageNames[currentImageIndex]
-        let downloadToFileName = self.fileManager.urls(for: .documentDirectory,
-                                                          in: .userDomainMask)[0]
-        downloadToFileName.appendingPathComponent("\(imageKey).png")
-        return downloadToFileName.path
+        let fullFileName = fileDestUrl?.appendingPathComponent("\(imageKey).png")
+        return fullFileName
     }
 
     var taskCompleted: String {
@@ -48,7 +48,9 @@ class RotatingImageViewModel: ObservableObject {
         let dispatchGroup = DispatchGroup()
         for imageKey in ptsdImageNames {
             dispatchGroup.enter()
-            fileUploadService.downloadIndividualImageAssets(imageKey: imageKey) {
+            //public/ptsd_image_sets/acorns_1.png
+            let s3imageKey = "ptsd_image_sets/\(imageKey).png"
+            fileUploadService.downloadIndividualImageAssets(imageS3Key: s3imageKey) {
                 dispatchGroup.leave()
             }
         }

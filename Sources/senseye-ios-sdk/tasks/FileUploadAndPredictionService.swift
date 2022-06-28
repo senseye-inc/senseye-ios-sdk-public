@@ -13,7 +13,7 @@ import SwiftyJSON
 protocol FileUploadAndPredictionServiceProtocol {
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void)
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
-    func downloadIndividualImageAssets(imageKey: String, successfullCompletion: @escaping () -> Void)
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -65,6 +65,7 @@ class FileUploadAndPredictionService: ObservableObject {
     
     var isUploadOngoing: Bool = false
     private var fileManager: FileManager
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     init() {
@@ -257,46 +258,35 @@ class FileUploadAndPredictionService: ObservableObject {
         }
     }
     
-    func downloadIndividualImageAssets(imageKey: String, successfullCompletion: @escaping () -> Void) {
-        let downloadToFileName = self.fileManager.urls(for: .documentDirectory,
-                                                          in: .userDomainMask)[0]
-            .appendingPathComponent("\(imageKey).png")
-        let filePath = downloadToFileName.path
-        Amplify.Storage.list { event in
-            switch event {
-            case let .success(listResult):
-                print("Completed")
-                listResult.items.forEach { item in
-                    print("Key: \(item.key)")
-                }
-            case let .failure(storageError):
-                print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-            }
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
+        
+        guard let imageName = imageS3Key.split(separator: "/").last, let filePath = fileDestUrl?.appendingPathComponent("\(imageName)") else {
+            return
         }
+        print(imageS3Key)
         
-        
-        /*
-         Amplify.Storage.downloadFile(
-             key: imageKey,
-             local: downloadToFileName,
-             progressListener: { progress in
-                 print("Progress: \(progress)")
-             }, resultListener: { event in
-                 switch event {
-                 case .success:
-                     print("Completed")
-                     successfullCompletion()
-                 case .failure(let storageError):
-                     print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                 }
-             })
-         
-        if !self.fileManager.fileExists(atPath: filePath) {
-            
+        if !self.fileManager.fileExists(atPath: filePath.path) {
+            Amplify.Storage.downloadData(
+                key: imageS3Key,
+                progressListener: { progress in
+                    print("Progress: \(progress)")
+                }, resultListener: { (event) in
+                    switch event {
+                    case let .success(data):
+                        print("Completed: \(data)")
+                        do {
+                            try data.write(to: filePath)
+                            successfullCompletion()
+                        } catch {
+                            print("Failed write")
+                        }
+                    case let .failure(storageError):
+                        print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
+            })
         } else {
             successfullCompletion()
         }
-         */
     }
 }
 

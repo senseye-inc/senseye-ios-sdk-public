@@ -25,7 +25,7 @@ struct RotatingImageView: View {
 
             GeometryReader { geometry in
                 HStack(spacing: 0) {
-                    SingleImageView(imageName: viewModel.currentImageName)
+                    SingleImageView(imageName: viewModel.currentImageName!)
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
                 .onAppear {

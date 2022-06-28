@@ -1,45 +1,45 @@
 //
-//  PLRView.swift
+//  SwiftUIView.swift
+//  
 //
-//  Created by Frank Oftring on 5/23/22.
+//  Created by Frank Oftring on 6/14/22.
 //
 
 import SwiftUI
-@available(iOS 15.0, *)
-struct PLRView: View {
 
-    @StateObject var viewModel: PLRViewModel = PLRViewModel()
+@available(iOS 15.0, *)
+struct CalibrationView: View {
+
+    @StateObject var viewModel = CalibrationViewModel()
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
 
     var body: some View {
         ZStack {
-            viewModel.backgroundColor
+            Color.black
+            GeometryReader { _ in
 
-            Image(systemName: "xmark")
-                .resizable()
-                .foregroundColor(viewModel.xMarkColor)
-                .scaledToFit()
-                .frame(width: 30, height: 25.5)
+                Circle()
+                    .fill(.white)
+                    .frame(width: 50, height: 50)
+                    .offset(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
+            }
         }
-        .edgesIgnoringSafeArea(.all)
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "PLR_\(viewModel.numberOfPLRShown)")
-            viewModel.showPLR {
+            cameraService.startRecordingForTask(taskId: "calibration")
+            viewModel.startCalibration {
                 cameraService.stopRecording()
                 viewModel.shouldShowConfirmationView.toggle()
             }
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
-            UserConfirmationView(taskCompleted: "PLR", yesAction: {
+            UserConfirmationView(taskCompleted: "Calibration", yesAction: {
                 viewModel.shouldShowConfirmationView.toggle()
                 tabController.nextTab = .imageView
                 tabController.open(.cameraView)
             }, noAction: {
-                tabController.nextTab = .plrView
+                tabController.nextTab = .calibrationView
             })
         }
     }
 }
-
-

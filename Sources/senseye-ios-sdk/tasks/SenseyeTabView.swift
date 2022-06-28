@@ -13,6 +13,7 @@ enum Tab {
     case cameraView
     case loginView
     case surveyView
+    case calibrationView
 }
 
 @available(iOS 14.0, *)
@@ -20,7 +21,7 @@ enum Tab {
 class TabController: ObservableObject {
 
     @Published var activeTab: Tab = .loginView
-    var nextTab: Tab = .imageView
+    var nextTab: Tab = .calibrationView
 
     func open(_ tab: Tab) {
         activeTab = tab
@@ -46,6 +47,10 @@ struct SenseyeTabView: View {
 
                 SurveyView()
                     .tag(Tab.surveyView)
+                    .gesture(DragGesture())
+
+                CalibrationView()
+                    .tag(Tab.calibrationView)
                     .gesture(DragGesture())
 
                 RotatingImageView(fileUploadService: fileUploadService)

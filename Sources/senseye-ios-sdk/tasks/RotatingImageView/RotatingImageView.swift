@@ -43,8 +43,6 @@ struct RotatingImageView: View {
             }
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
-            // Dismiss Action
-        } content: {
             UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
                 viewModel.shouldShowConfirmationView.toggle()
                 if viewModel.finishedAllTasks {

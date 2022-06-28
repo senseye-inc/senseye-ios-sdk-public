@@ -19,9 +19,9 @@ class PLRViewModel: ObservableObject {
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         numberOfPLRShown += 1
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
-            self.currentInterval += 1
-            if (self.currentInterval <= 10) {
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+            currentInterval += 1
+            if currentInterval <= 10 {
                 DispatchQueue.main.async {
                     self.toggleColors()
                 }
@@ -29,7 +29,7 @@ class PLRViewModel: ObservableObject {
                 timer.invalidate()
                 Log.info("PLRView Timer Cancelled")
                 didFinishCompletion()
-                self.reset()
+                reset()
             }
         }
     }

@@ -65,11 +65,12 @@ class FileUploadAndPredictionService: ObservableObject {
     
     var isUploadOngoing: Bool = false
     private var fileManager: FileManager
-    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     init() {
         self.fileManager = FileManager.default
+        fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         self.setUserApiKey()
     }
     

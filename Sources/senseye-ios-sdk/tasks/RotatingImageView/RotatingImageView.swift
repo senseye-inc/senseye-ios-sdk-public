@@ -34,16 +34,18 @@ struct RotatingImageView: View {
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
+                cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 if viewModel.finishedAllTasks {
-                    cameraService.stopCaptureSession()
                     Log.info("Finsished all tasks")
                     tabController.open(.resultsView)
+                    cameraService.stopCaptureSession()
                 } else {
                     tabController.nextTab = .plrView
                     tabController.open(.cameraView)
                 }
             }, noAction: {
+                cameraService.clearLatestFileRecording()
                 viewModel.removeLastImageSet()
                 tabController.nextTab = .imageView
             })

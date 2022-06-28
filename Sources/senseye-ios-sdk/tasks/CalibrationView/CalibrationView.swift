@@ -34,10 +34,12 @@ struct CalibrationView: View {
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "Calibration", yesAction: {
+                cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 tabController.nextTab = .imageView
                 tabController.open(.cameraView)
             }, noAction: {
+                cameraService.clearLatestFileRecording()
                 tabController.nextTab = .calibrationView
             })
         }

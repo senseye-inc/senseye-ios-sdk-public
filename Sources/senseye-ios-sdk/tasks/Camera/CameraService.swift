@@ -26,6 +26,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     
+    private var latestFileUrl: URL?
+    
     init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionService) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
@@ -58,6 +60,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
+        
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }
@@ -69,8 +72,10 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.configureCameraForHighestFrameRate(device: frontCameraDevice)
 
         captureSession.beginConfiguration()
+        print("AV -- starting commiting configuration")
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
             print("videoDeviceInput error")
+            captureSession.commitConfiguration()
             return
         }
         captureSession.addInput(videoDeviceInput)
@@ -80,6 +85,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
         captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
         captureSession.commitConfiguration()
+        print("AV -- done commiting configuration")
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {
@@ -91,6 +97,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         videoPreviewLayer.connection?.videoOrientation = .portrait
         cameraPreview.layer.addSublayer(videoPreviewLayer)
         self.captureSession.startRunning()
+        print("AV -- setting up preview layer")
     }
     
     private func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
@@ -157,14 +164,26 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func stopCaptureSession() {
-        self.captureSession.stopRunning()
         fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
+        self.captureSession.stopRunning()
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         print("video output finish")
         print(outputFileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: outputFileURL)
+        latestFileUrl = outputFileURL
+    }
+    
+    func uploadLatestFile() {
+        if latestFileUrl != nil {
+            print("uploaded latest file")
+            fileUploadService.uploadData(fileUrl: latestFileUrl!)
+            latestFileUrl = nil
+        }
+    }
+    
+    func clearLatestFileRecording() {
+        latestFileUrl = nil
     }
 
     func goToSettings() {

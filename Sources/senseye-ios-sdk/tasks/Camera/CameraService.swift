@@ -26,6 +26,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     
+    private var latestFileUrl: URL?
+    
     init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionService) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
@@ -58,6 +60,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
+        
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }
@@ -70,7 +73,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
 
         captureSession.beginConfiguration()
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-            print("videoDeviceInput error")
+            Log.error("videoDeviceInput error")
+            captureSession.commitConfiguration()
             return
         }
         captureSession.addInput(videoDeviceInput)
@@ -157,14 +161,24 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func stopCaptureSession() {
-        self.captureSession.stopRunning()
         fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
+        self.captureSession.stopRunning()
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        print("video output finish")
-        print(outputFileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: outputFileURL)
+        Log.info("Video output finish \(outputFileURL.absoluteString)")
+        latestFileUrl = outputFileURL
+    }
+    
+    func uploadLatestFile() {
+        if latestFileUrl != nil {
+            fileUploadService.uploadData(fileUrl: latestFileUrl!)
+            latestFileUrl = nil
+        }
+    }
+    
+    func clearLatestFileRecording() {
+        latestFileUrl = nil
     }
 
     func goToSettings() {

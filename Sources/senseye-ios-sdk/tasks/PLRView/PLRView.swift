@@ -32,10 +32,12 @@ struct PLRView: View {
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "PLR", yesAction: {
+                cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 tabController.nextTab = .imageView
                 tabController.open(.cameraView)
             }, noAction: {
+                cameraService.clearLatestFileRecording()
                 tabController.nextTab = .plrView
             })
         }

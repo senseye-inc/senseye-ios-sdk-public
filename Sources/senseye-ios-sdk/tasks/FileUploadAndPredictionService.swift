@@ -270,19 +270,19 @@ class FileUploadAndPredictionService: ObservableObject {
             Amplify.Storage.downloadData(
                 key: imageS3Key,
                 progressListener: { progress in
-                    print("Progress: \(progress)")
+                    Log.info("Progress: \(progress)")
                 }, resultListener: { (event) in
                     switch event {
                     case let .success(data):
-                        print("Completed: \(data)")
+                        Log.info("Completed: \(data)")
                         do {
                             try data.write(to: filePath)
                             successfullCompletion()
                         } catch {
-                            print("Failed write")
+                            Log.error("Failed write")
                         }
                     case let .failure(storageError):
-                        print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
                 }
             })
         } else {

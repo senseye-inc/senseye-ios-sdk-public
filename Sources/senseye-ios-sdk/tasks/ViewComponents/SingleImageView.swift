@@ -7,13 +7,17 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
+@available(iOS 15.0, *)
 struct SingleImageView: View {
-    let imageName: String
+    let imageName: URL
     var body: some View {
-        Image(imageName)
-            .resizable()
-            .scaledToFit()
-            .edgesIgnoringSafeArea(.all)
+        AsyncImage(url: imageName) { image in
+            image.resizable()
+            image.scaledToFit()
+            image.edgesIgnoringSafeArea(.all)
+
+        } placeholder: {
+            ProgressView()
+        }
     }
 }

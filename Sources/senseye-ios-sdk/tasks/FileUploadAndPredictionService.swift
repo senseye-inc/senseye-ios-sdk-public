@@ -13,6 +13,7 @@ import SwiftyJSON
 protocol FileUploadAndPredictionServiceProtocol {
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void)
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -63,9 +64,13 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionJsonInputFile: Data? = nil
     
     var isUploadOngoing: Bool = false
+    private var fileManager: FileManager
+    private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     init() {
+        self.fileManager = FileManager.default
+        fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         self.setUserApiKey()
     }
     
@@ -251,6 +256,37 @@ class FileUploadAndPredictionService: ObservableObject {
                     timer.invalidate()
                 }
             }
+        }
+    }
+    
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
+        
+        guard let imageName = imageS3Key.split(separator: "/").last, let filePath = fileDestUrl?.appendingPathComponent("\(imageName)") else {
+            return
+        }
+        print(imageS3Key)
+        
+        if !self.fileManager.fileExists(atPath: filePath.path) {
+            Amplify.Storage.downloadData(
+                key: imageS3Key,
+                progressListener: { progress in
+                    Log.info("Progress: \(progress)")
+                }, resultListener: { (event) in
+                    switch event {
+                    case let .success(data):
+                        Log.info("Completed: \(data)")
+                        do {
+                            try data.write(to: filePath)
+                            successfullCompletion()
+                        } catch {
+                            Log.error("Failed write")
+                        }
+                    case let .failure(storageError):
+                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
+            })
+        } else {
+            successfullCompletion()
         }
     }
 }

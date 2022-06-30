@@ -53,7 +53,7 @@ struct SenseyeTabView: View {
                     .tag(Tab.calibrationView)
                     .gesture(DragGesture())
 
-                RotatingImageView()
+                RotatingImageView(fileUploadService: fileUploadService)
                     .tag(Tab.imageView)
                     .gesture(DragGesture())
 

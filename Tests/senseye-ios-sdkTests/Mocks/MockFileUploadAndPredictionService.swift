@@ -47,5 +47,8 @@ extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProt
         startPeriodicUpdatesOnPredictionIdWasCalled = true
         completed(result)
     }
+    
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
+    }
 }
 

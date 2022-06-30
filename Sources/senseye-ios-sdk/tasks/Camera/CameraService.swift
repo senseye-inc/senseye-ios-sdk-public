@@ -166,7 +166,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        Log.error("Video output finish \(outputFileURL.absoluteString)")
+        Log.info("Video output finish \(outputFileURL.absoluteString)")
         latestFileUrl = outputFileURL
     }
     

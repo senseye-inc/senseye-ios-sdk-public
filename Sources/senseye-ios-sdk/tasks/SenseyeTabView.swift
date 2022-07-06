@@ -34,11 +34,9 @@ struct SenseyeTabView: View {
     @EnvironmentObject var cameraService: CameraService
     @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
     @EnvironmentObject var authenticationService: AuthenticationService
-
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
-
         NavigationView {
             TabView(selection: $tabController.activeTab) {
                 LoginView(authenticationService: authenticationService)
@@ -75,7 +73,6 @@ struct SenseyeTabView: View {
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             .environmentObject(tabController)
             .environmentObject(cameraService)
-            .edgesIgnoringSafeArea(.all)
         }
     }
 }

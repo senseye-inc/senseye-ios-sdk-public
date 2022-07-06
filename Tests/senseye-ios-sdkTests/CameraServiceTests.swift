@@ -11,20 +11,23 @@ import CoreMotion
 import AVFoundation
 
 @available(iOS 13.0, *)
-class CameraServiceTests: XCTestCase {
+
+@MainActor class CameraServiceTests: XCTestCase {
     
     var cameraService: CameraService!
     var mockAVCaptureDevice: MockAVCaptureDevice!
     var mockAuthenticationService: MockAuthenticationService!
+    var mockFileUploadService: MockFileUploadAndPredictionService!
     
-    override func setUpWithError() throws {
+    @MainActor override func setUpWithError() throws {
         try super.setUpWithError()
         mockAuthenticationService = MockAuthenticationService()
         mockAVCaptureDevice = MockAVCaptureDevice()
-        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice, authenticationService: mockAuthenticationService)
+        mockFileUploadService = MockFileUploadAndPredictionService()
+        cameraService = CameraService(frontCameraDevice: mockAVCaptureDevice, authenticationService: mockAuthenticationService, fileUploadService: mockFileUploadService)
     }
     
-    override func tearDownWithError() throws {
+    @MainActor override func tearDownWithError() throws {
         cameraService = nil
         mockAuthenticationService = nil
         mockAVCaptureDevice = nil

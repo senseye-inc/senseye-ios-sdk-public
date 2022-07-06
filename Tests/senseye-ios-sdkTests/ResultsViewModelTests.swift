@@ -54,13 +54,13 @@ class ResultsViewModelTests: XCTestCase {
     
     func testGetPredictionResponseUpdatesPredictionStatus() {
         // Given
-        model.predictionStatus = "(Default Status)"
+        model.predictionStatus = .none
         
         // When
         model.getPredictionResponse()
         
         // Then
-        XCTAssertEqual(model.predictionStatus, "Starting predictions...")
+        XCTAssertEqual(model.predictionStatus, .none)
     }
     
     func testGetPredictionResponseStartPredictionForCurrentSessionUploadsShouldBeTrue() {
@@ -90,7 +90,7 @@ class ResultsViewModelTests: XCTestCase {
         
         // Then
         wait(for: [expectation], timeout: 1)
-        XCTAssertEqual(self.model.predictionStatus, "Prediction API request sent...")
+        XCTAssertEqual(self.model.predictionStatus, .apiRequestSent)
         }
     
     func testGetPredictionResponseFailureErrorIsNotNil() {
@@ -146,7 +146,7 @@ class ResultsViewModelTests: XCTestCase {
         // Then
         wait(for: [expectation], timeout: 1)
         let jobStatusAndResultResponse = response.status
-        XCTAssertEqual(self.model.predictionStatus, "Returned a result for prediction... \(jobStatusAndResultResponse)")
+        XCTAssertEqual(self.model.predictionStatus, .returnedPrediction(jobStatusAndResultResponse))
     }
     
     func testStartPeriodicPredictionsFailureErrorIsNotNil() {

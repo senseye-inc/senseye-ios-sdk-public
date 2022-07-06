@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import Combine
 @testable import senseye_ios_sdk
-
+@available(iOS 13.0, *)
 class MockFileUploadAndPredictionService {
     
     var result: Result<String, Error> = .failure(MockFileUploadAndPredictionServiceError.notInitialized)
@@ -36,7 +37,34 @@ enum MockFileUploadAndPredictionServiceError: Error {
     case notInitialized
 }
 
+@available(iOS 13.0, *)
 extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
+    func uploadData(fileUrl: URL) {
+
+    }
+
+    func createSessionInputJsonFile(surveyInput: [String : String], tasks: [String]) {
+        
+    }
+
+    var uploadProgress: Double {
+        0.0
+    }
+
+
+    var uploadProgressPublished: Published<Double> {
+        Published(initialValue: 0.0)
+    }
+
+    var uploadProgressPublisher: Published<Double>.Publisher {
+        var uploadProgressPublished = Published(initialValue: 0.0)
+        return uploadProgressPublished.projectedValue
+    }
+
+    var numberOfUploads: Double {
+        0.0
+    }
+
     
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void) {
         startPredictionForCurrentSessionUploadsWasCalled = true

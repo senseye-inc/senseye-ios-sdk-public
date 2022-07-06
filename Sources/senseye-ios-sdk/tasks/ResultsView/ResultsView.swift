@@ -11,6 +11,7 @@ import SwiftUI
 struct ResultsView: View {
     
     @StateObject var resultsViewModel: ResultsViewModel
+    @EnvironmentObject var tabController: TabController
 
     init(fileUploadService: FileUploadAndPredictionService) {
         _resultsViewModel = StateObject(wrappedValue: ResultsViewModel(fileUploadService: fileUploadService))
@@ -20,41 +21,37 @@ struct ResultsView: View {
         ZStack {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
-            VStack(alignment: .center) {
+            VStack(alignment: .center, spacing: 50) {
                 HeaderView()
-                Image(systemName: "checkmark.circle.fill")
-                    .resizable()
-                    .frame(width: 91, height: 91)
-                    .foregroundColor(.senseyeSecondary)
                     .padding()
-                VStack(alignment: .leading, spacing: 10) {
-                    ResultNameAndImageStack(resultName: "General Impairment", resultPassed: true, resultDescription: nil)
-                    ResultNameAndImageStack(resultName: "General Intoxication", resultPassed: false, resultDescription: nil)
-                        .padding(.bottom, 35)
-                    ResultNameAndImageStack(resultName: "Alcohol", resultPassed: true, resultDescription: "bac 0.2")
-                    ResultNameAndImageStack(resultName: "Fatigue", resultPassed: true, resultDescription: nil)
-                    ResultNameAndImageStack(resultName: "Marijuana", resultPassed: true, resultDescription: nil)
-                }
-                
-                Spacer()
-                Button {
-                    Log.debug("Button Tapped")
-                } label: {
-                    SenseyeButton(text: "Home", foregroundColor: .senseyeSecondary, fillColor: .senseyePrimary)
+
+                if !resultsViewModel.isUploadFinished {
+                    SenseyeProgressView(currentProgress: $resultsViewModel.uploadProgress)
                 }
 
-                Spacer()
-                
-                Text("Status: \(resultsViewModel.predictionStatus)")
-                    .foregroundColor(.senseyeTextColor)
-                
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.senseyePrimary)
+                        .padding()
+                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 20)
+                        .shadow(color: Color.black.opacity(0.7), radius: 10, x: 0, y: 5)
+
+                    VStack {
+                        Image("analyze_brain")
+                            .resizable()
+                            .frame(width: 91, height: 91)
+                            .padding()
+
+                        Text("You have completed the diagnostic, please speak with your health care provider for further information")
+                            .foregroundColor(.senseyeTextColor)
+                            .padding()
+                    }
+                    .padding()
+                }
+                .frame(width: 350, height: 350)
+
                 Spacer()
             }
-            
-            if resultsViewModel.isLoading {
-                ProcessingScreen()
-            }
-            
         }
         .onAppear {
             resultsViewModel.startPredictions()

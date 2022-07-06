@@ -18,7 +18,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
     private let authenticationService: AuthenticationServiceProtocol
-    private let fileUploadService: FileUploadAndPredictionService
+    private let fileUploadService: FileUploadAndPredictionServiceProtocol
 
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
@@ -28,7 +28,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     
     private var latestFileUrl: URL?
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionService) {
+    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
@@ -64,26 +64,33 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }
-        
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             Log.error("Error casting cameraRepresentable to AvCaptureDevice")
-            return
-        }
-        self.configureCameraForHighestFrameRate(device: frontCameraDevice)
-
-        captureSession.beginConfiguration()
-        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-            Log.error("videoDeviceInput error")
             captureSession.commitConfiguration()
             return
         }
-        captureSession.addInput(videoDeviceInput)
-        captureSession.sessionPreset = .high
-        captureSession.addOutput(captureOutput)
-        captureSession.addOutput(captureMovieFileOutput)
-        let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-        captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
-        captureSession.commitConfiguration()
+        
+        do {
+            self.configureCameraForHighestFrameRate(device: frontCameraDevice)
+
+            captureSession.beginConfiguration()
+            let videoDeviceInput = try AVCaptureDeviceInput(device: frontCameraDevice)
+            if captureSession.canAddInput(videoDeviceInput) {
+                captureSession.addInput(videoDeviceInput)
+            }
+
+            captureSession.sessionPreset = .high
+
+            if captureSession.canAddOutput(captureOutput), captureSession.canAddOutput(captureMovieFileOutput) {
+                captureSession.addOutput(captureOutput)
+                captureSession.addOutput(captureMovieFileOutput)
+            }
+            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
+            captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+            captureSession.commitConfiguration()
+        } catch {
+            Log.error("videoDeviceInput error")
+        }
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {

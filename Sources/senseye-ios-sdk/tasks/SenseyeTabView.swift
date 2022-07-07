@@ -37,9 +37,35 @@ extension Tab {
 class TabController: ObservableObject {
 
     @Published var activeTab: Tab = .loginView
-    var nextTab: Tab = .calibrationView
+    private var nextTab: Tab = .calibrationView
+    private var currentTabIndex = 0
 
-    func open(_ tab: Tab) {
+    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .resultsView]
+    
+    func areAllTabsComplete() {
+        return currentTabIndex = taskTabOrdering.count - 1
+    }
+    
+    func refreshSameTab() {
+        activeTab = nextTab
+    }
+    
+    func proceedToNextTab() {
+        currentTabIndex+=1
+        nextTab = taskTabOrdering[currentTabIndex]
+        openNextTab()
+    }
+    
+    func openNextTab() {
+        activeTab = nextTab
+    }
+    
+    func taskInfoForNextTab() -> (String, String) {
+        let nextTabIndex = currentTabIndex+1
+        return taskTabOrdering[nextTabIndex].retrieveTaskInfoForTab()
+    }
+    
+    private func open(_ tab: Tab) {
         activeTab = tab
     }
 }

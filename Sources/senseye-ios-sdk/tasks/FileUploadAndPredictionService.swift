@@ -9,10 +9,19 @@ import Foundation
 import Amplify
 import Alamofire
 import SwiftyJSON
+import Combine
 
+@available(iOS 13.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
     func startPredictionForCurrentSessionUploads(completed: @escaping (Result<String, Error>) -> Void)
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
+    var uploadProgress: Double { get }
+    var uploadProgressPublished: Published<Double> { get}
+    var uploadProgressPublisher: Published<Double>.Publisher { get }
+    var numberOfUploads: Double { get }
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void)
+    func uploadData(fileUrl: URL)
+    func createSessionInputJsonFile(surveyInput: [String: String], tasks: [String])
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -50,6 +59,12 @@ class FileUploadAndPredictionService: ObservableObject {
         var intoxication: String?
         var state: Int
     }
+
+    @Published var uploadProgress: Double = 0.0
+    var uploadProgressPublished: Published<Double> { _uploadProgress }
+    var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
+    var numberOfUploads: Double = 0.0
+    private var cancellables = Set<AnyCancellable>()
     
     private var accountUsername: String? = ""
     private var accountPassword: String? = ""
@@ -61,11 +76,15 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
     private var currentSessionJsonInputFile: Data? = nil
-    
+
     var isUploadOngoing: Bool = false
+    private var fileManager: FileManager
+    private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     init() {
+        self.fileManager = FileManager.default
+        fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         self.setUserApiKey()
     }
     
@@ -90,26 +109,33 @@ class FileUploadAndPredictionService: ObservableObject {
     
     private func uploadFile(fileNameKey: String, filename: URL) {
         isUploadOngoing = true
+        numberOfUploads += 1
         Log.debug("About to upload - video url: \(filename)")
-        
-        Amplify.Storage.uploadFile(
-            key: fileNameKey,
-            local: filename,
-            progressListener: { progress in
-                Log.info("Progress: \(progress)")
-            }, resultListener: { event in
-                switch event {
-                case let .success(data):
-                    Log.info("Completed: \(data)")
-                    self.currentSessionUploadFileKeys.append(fileNameKey)
-                    self.isUploadOngoing = false
-                    self.delegate?.didFinishUpload()
-                case let .failure(storageError):
-                    Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
-                    self.isUploadOngoing = false
-                }
+
+        let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
+
+        storageOperation.progressPublisher
+            .receive(on: DispatchQueue.main)
+            .scan(0.0, { previousValue, newValueFromPublisher in
+                let difference = (newValueFromPublisher.fractionCompleted - previousValue)
+                self.uploadProgress += difference
+                return newValueFromPublisher.fractionCompleted
+            })
+            .sink(receiveValue: { Log.info("Progress: " + $0.description) })
+            .store(in: &self.cancellables)
+
+        storageOperation.resultPublisher.sink {
+            if case let .failure(storageError) = $0 {
+                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
+                self.isUploadOngoing = false
             }
-        )
+        } receiveValue: { data in
+            print("Completed: \(data)")
+            self.currentSessionUploadFileKeys.append(fileNameKey)
+            self.isUploadOngoing = false
+            self.delegate?.didFinishUpload()
+        }
+        .store(in: &self.cancellables)
     }
     
     private func setUserApiKey() {
@@ -251,6 +277,37 @@ class FileUploadAndPredictionService: ObservableObject {
                     timer.invalidate()
                 }
             }
+        }
+    }
+    
+    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
+        
+        guard let imageName = imageS3Key.split(separator: "/").last, let filePath = fileDestUrl?.appendingPathComponent("\(imageName)") else {
+            return
+        }
+        print(imageS3Key)
+        
+        if !self.fileManager.fileExists(atPath: filePath.path) {
+            Amplify.Storage.downloadData(
+                key: imageS3Key,
+                progressListener: { progress in
+                    Log.info("Progress: \(progress)")
+                }, resultListener: { (event) in
+                    switch event {
+                    case let .success(data):
+                        Log.info("Completed: \(data)")
+                        do {
+                            try data.write(to: filePath)
+                            successfullCompletion()
+                        } catch {
+                            Log.error("Failed write")
+                        }
+                    case let .failure(storageError):
+                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                }
+            })
+        } else {
+            successfullCompletion()
         }
     }
 }

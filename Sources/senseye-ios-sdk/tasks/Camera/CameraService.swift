@@ -18,7 +18,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
     private let authenticationService: AuthenticationServiceProtocol
-    private let fileUploadService: FileUploadAndPredictionService
+    private let fileUploadService: FileUploadAndPredictionServiceProtocol
 
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
@@ -27,7 +27,9 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionService) {
+    private var latestFileUrl: URL?
+    
+    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
@@ -59,28 +61,37 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
+        
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }
-        
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             Log.error("Error casting cameraRepresentable to AvCaptureDevice")
+            captureSession.commitConfiguration()
             return
         }
-        self.configureCameraForHighestFrameRate(device: frontCameraDevice)
+        
+        do {
+            self.configureCameraForHighestFrameRate(device: frontCameraDevice)
 
-        captureSession.beginConfiguration()
-        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: frontCameraDevice), captureSession.canAddInput(videoDeviceInput) else {
-            print("videoDeviceInput error")
-            return
+            captureSession.beginConfiguration()
+            let videoDeviceInput = try AVCaptureDeviceInput(device: frontCameraDevice)
+            if captureSession.canAddInput(videoDeviceInput) {
+                captureSession.addInput(videoDeviceInput)
+            }
+
+            captureSession.sessionPreset = .high
+
+            if captureSession.canAddOutput(captureOutput), captureSession.canAddOutput(captureMovieFileOutput) {
+                captureSession.addOutput(captureOutput)
+                captureSession.addOutput(captureMovieFileOutput)
+            }
+            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
+            captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+            captureSession.commitConfiguration()
+        } catch {
+            Log.error("videoDeviceInput error")
         }
-        captureSession.addInput(videoDeviceInput)
-        captureSession.sessionPreset = .high
-        captureSession.addOutput(captureOutput)
-        captureSession.addOutput(captureMovieFileOutput)
-        let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-        captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
-        captureSession.commitConfiguration()
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {
@@ -158,14 +169,24 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func stopCaptureSession() {
-        self.captureSession.stopRunning()
         fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
+        self.captureSession.stopRunning()
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        print("video output finish")
-        print(outputFileURL.absoluteString)
-        fileUploadService.uploadData(fileUrl: outputFileURL)
+        Log.info("Video output finish \(outputFileURL.absoluteString)")
+        latestFileUrl = outputFileURL
+    }
+    
+    func uploadLatestFile() {
+        if latestFileUrl != nil {
+            fileUploadService.uploadData(fileUrl: latestFileUrl!)
+            latestFileUrl = nil
+        }
+    }
+    
+    func clearLatestFileRecording() {
+        latestFileUrl = nil
     }
 
     func goToSettings() {

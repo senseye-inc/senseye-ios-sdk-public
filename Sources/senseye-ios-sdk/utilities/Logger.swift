@@ -28,7 +28,7 @@ enum Log {
         }
     }
 
-    fileprivate struct Context {
+    fileprivate struct Context: CustomStringConvertible {
         let file: String
         let function: String
         let line: Int

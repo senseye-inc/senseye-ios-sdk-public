@@ -11,12 +11,10 @@ struct HeaderView: View {
     var body: some View {
         VStack(alignment: .trailing) {
             Image("whiteLogo")
-            Text("Fitness for duty".uppercased())
                 .foregroundColor(.senseyeSecondary)
                 .padding(.leading)
                 .font(.subheadline)
         }
-        
     }
 }
 

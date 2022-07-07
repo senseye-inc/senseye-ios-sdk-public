@@ -30,9 +30,6 @@ struct CameraView: View {
         }
         .onAppear {
             cameraService.start()
-            DispatchQueue.main.async {
-                cameraService.shouldDisplayPretaskTutorial = true
-            }
             Log.info("displayed cameraview")
         }
         .sheet(isPresented: $cameraService.shouldDisplayPretaskTutorial) {

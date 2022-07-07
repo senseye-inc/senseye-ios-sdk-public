@@ -20,11 +20,11 @@ extension Tab {
     func retrieveTaskInfoForTab() -> (String, String) {
         switch self {
         case .imageView:
-            return ("PTSD Image Set", "Rotating Images")
+            return ("PTSD Image Set", "8 different images will come across the screen. \n Note: Some of the images may be disturbing.")
         case .plrView:
-            return ("PLR", "Flashing")
+            return ("PLR", "Stare at the cross for the duration of the task.")
         case .calibrationView:
-            return ("Calibration", "This is a calibration")
+            return ("Calibration", "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")
         default:
             return ("","")
         }

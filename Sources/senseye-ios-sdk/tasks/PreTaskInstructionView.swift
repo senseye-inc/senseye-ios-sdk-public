@@ -10,6 +10,7 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct PreTaskInstructionView: View {
     
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var cameraService: CameraService
     @Binding var isPresented: Bool
     
@@ -24,19 +25,29 @@ struct PreTaskInstructionView: View {
     }
       
     var body: some View {
-        VStack(spacing: 50) {
-          Text(title)
-            .font(.largeTitle)
-            
-          Text(description)
-            .font(.body)
-            
-          Button(action: {
-            isPresented = false
-            cameraService.shouldDisplayPretaskTutorial = false
-          }, label: {
-            Label("Close", systemImage: "xmark.circle")
-          })
+        ZStack {
+            Color.senseyePrimary.edgesIgnoringSafeArea(.all)
+            VStack() {
+                Text(title)
+                  .font(.largeTitle)
+                  .foregroundColor(.white)
+                
+                Image("person_staring_image")
+                  .resizable()
+                  .frame(width: 150, height: 150)
+                
+                Text(description)
+                  .font(.body)
+                  .foregroundColor(.white)
+                
+                Button(action: {
+                  presentationMode.wrappedValue.dismiss()
+                  isPresented = false
+                }, label: {
+                  Label("Continue", systemImage: "checkmark.seal")
+                })
+              }.foregroundColor(.white)
         }
+        
     }
 }

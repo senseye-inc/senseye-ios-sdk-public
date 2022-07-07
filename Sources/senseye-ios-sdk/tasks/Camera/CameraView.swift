@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import Amplify
 
 @available(iOS 15.0, *)
 struct CameraView: View {
@@ -27,7 +28,15 @@ struct CameraView: View {
                 .disabled(!cameraService.shouldSetupCaptureSession)
             }
         }
-        .onAppear { cameraService.start() }
+        .onAppear {
+            cameraService.start()
+            cameraService.shouldDisplayPretaskTutorial = true
+            Log.info("displayed cameraview")
+        }
+        .sheet(isPresented: $cameraService.shouldDisplayPretaskTutorial) {
+            let taskInfo = tabController.nextTab.retrieveTaskInfoForTab()
+            PreTaskInstructionView(isPresented: $cameraService.shouldDisplayPretaskTutorial, title: taskInfo.0, description: taskInfo.1)
+        } 
         .edgesIgnoringSafeArea(.all)
         .alert("Need Camera Access", isPresented: $cameraService.shouldShowCameraPermissionsDeniedAlert) {
             Button("Go to settings") {
@@ -36,6 +45,7 @@ struct CameraView: View {
         } message: {
             Text("Change camera permissions in your settings.")
         }
+
     }
 }
 

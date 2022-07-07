@@ -16,6 +16,22 @@ enum Tab {
     case calibrationView
 }
 
+extension Tab {
+    func retrieveTaskInfoForTab() -> (String, String) {
+        switch self {
+        case .imageView:
+            return ("PTSD Image Set", "Rotating Images")
+        case .plrView:
+            return ("PLR", "Flashing")
+        case .calibrationView:
+            return ("Calibration", "This is a calibration")
+        default:
+            return ("","")
+        }
+        
+    }
+}
+
 @available(iOS 14.0, *)
 @MainActor
 class TabController: ObservableObject {

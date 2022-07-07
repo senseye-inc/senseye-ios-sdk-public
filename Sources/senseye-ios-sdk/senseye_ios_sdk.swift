@@ -5,6 +5,7 @@ import UIKit
 import Amplify
 import AWSS3StoragePlugin
 import AWSCognitoAuthPlugin
+import Firebase
 import SwiftUI
 
 protocol SenseyeTaskCompletionDelegate: AnyObject {
@@ -20,6 +21,7 @@ public class SenseyeSDK {
     public init() {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
+
     }
     
     public func initializeSDK() {
@@ -36,6 +38,9 @@ public class SenseyeSDK {
         } catch {
             Log.error("Failed to initialize Amplify with \(error)")
         }
+
+        // Use the Firebase library to configure APIs.
+        FirebaseApp.configure()
     }
     
     public func initialViewController() -> UIViewController { loginViewController() }

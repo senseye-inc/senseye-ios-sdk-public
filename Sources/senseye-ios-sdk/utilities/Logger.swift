@@ -4,7 +4,7 @@
 //
 //  Created by Bobby Srisan on 5/11/22.
 //
-
+import Firebase
 import Foundation
 import CocoaLumberjackSwift
 
@@ -17,13 +17,15 @@ enum Log {
         case info
         case warn
         case error
-        
+        case fatal
+
         fileprivate var prefix: String {
             switch self {
             case .debug:   return "DEBUG 👾"
             case .info:    return "INFO ℹ️"
             case .warn: return "WARN ⚠️"
-            case .error:   return "ALERT ❌"
+            case .error:   return "ERROR ❌"
+            case .fatal:   return "FATAL ERROR 💀"
             }
         }
     }
@@ -87,6 +89,19 @@ enum Log {
     }
 
     /**
+     Log level fatal error: Use for fatal errors that must force a shutdown of service or application to prevent data loss or corruption (or further data loss). This will also trasmit to Firebase console.
+     */
+    static func fatal(_ str: String, shouldLogContext: Bool = true, file: String = #file, function: String = #function, line: Int = #line) {
+        let context = Context(file: file, function: function, line: line)
+        Log.handleLog(level: .fatal, str: str, shouldLogContext: shouldLogContext, context: context) {
+            DDLogError($0)
+
+            // Also emit log to Firebase
+            fatalError($0)
+        }
+    }
+
+    /**
     Sets log level at run time.
     */
     static func setLogLevel(_ level: LogLevel) {
@@ -94,7 +109,7 @@ enum Log {
         case .debug:   dynamicLogLevel = .debug
         case .info:    dynamicLogLevel = .info
         case .warn:    dynamicLogLevel = .warning
-        case .error:   dynamicLogLevel = .error
+        case .error, .fatal:   dynamicLogLevel = .error
         }
     }
     

@@ -9,15 +9,26 @@ import SwiftUI
 struct SenseyeProgressView: View {
 
     @Binding var currentProgress: Double
+    private var isFinished: Bool {
+        currentProgress >= 1.0
+    }
 
     var body: some View {
         ZStack {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
             VStack {
-                ProgressBar(value: $currentProgress).frame(height: 10)
+                if isFinished {
+                    Image(systemName: "checkmark.circle.fill")
+                        .resizable()
+                        .foregroundColor(.senseyeSecondary)
+                        .frame(width: 100, height: 100)
+                } else {
+                    ProgressBar(value: $currentProgress).frame(height: 10)
+                }
             }
             .padding()
+            .animation(.easeInOut(duration: 0.25))
         }
     }
 }

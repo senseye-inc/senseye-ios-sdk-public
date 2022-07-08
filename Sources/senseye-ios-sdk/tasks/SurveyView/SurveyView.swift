@@ -11,35 +11,104 @@ import SwiftUI
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel = SurveyViewModel()
+    let authenticationService: AuthenticationService
+
+    init(authenticationService: AuthenticationService) {
+        self.authenticationService = authenticationService
+    }
     
     var body: some View {
-        Form {
-            Picker("Age", selection: $viewModel.selectedAge) {
+        ZStack {
+            Color.senseyePrimary
+                .edgesIgnoringSafeArea(.all)
+            VStack {
+                Spacer()
+
+                VStack {
+                    Text("Let's get started.")
+                        .font(.title)
+                        .foregroundColor(.senseyeSecondary)
+                        .bold()
+                    Text("First, please take a moment to log your recent activity.")
+                        .foregroundColor(.senseyeTextColor)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                }
+
+                Spacer()
+
+                agePicker
+
+                genderPicker
+
+                eyeColorPicker
+
+                Spacer()
+                Spacer()
+
+                HStack(spacing: 100) {
+                    Button {
+                        authenticationService.signOut {
+                            tabController.open(.loginView)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.left.circle.fill")
+                            .resizable()
+                            .frame(width: 50, height: 50)
+                            .foregroundColor(.senseyeTextColor)
+                            .padding()
+                    }
+
+                    Button {
+                        tabController.open(.cameraView)
+                    } label: {
+                        SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+extension SurveyView {
+
+    var agePicker: some View {
+        Menu {
+            Picker("", selection: $viewModel.selectedAge) {
                 ForEach(viewModel.ageRange, id: \.self) { age in
                     Text("\(age)")
                         .tag(Optional(age))
                 }
             }
-            Picker("Gender", selection: $viewModel.selectedGender) {
+        } label: {
+            SenseyePicker(title: "age", currentValue: viewModel.selectedAge.description)
+        }
+    }
+
+    var genderPicker: some View {
+        Menu {
+            Picker("", selection: $viewModel.selectedGender) {
                 ForEach(viewModel.genderOptions, id: \.self) { gender in
-                    Text(gender)
+                    Text("\(gender)")
                         .tag(Optional(gender))
                 }
             }
-            Picker("Eye Color", selection: $viewModel.selectedEyeColor) {
+        } label: {
+            SenseyePicker(title: "gender", currentValue: viewModel.selectedGender)
+        }
+    }
+
+    var eyeColorPicker: some View {
+        Menu {
+            Picker("", selection: $viewModel.selectedEyeColor) {
                 ForEach(viewModel.eyeColorOptions, id: \.self) { eyeColor in
-                    Text(eyeColor)
+                    Text("\(eyeColor)")
                         .tag(Optional(eyeColor))
                 }
             }
-            Section {
-                Button {
-                    tabController.open(.cameraView)
-                } label: {
-                    Text("Continue")
-                }
-            }
-            .disabled(!viewModel.surveyIsEmpty)
+        } label: {
+            SenseyePicker(title: "eye color", currentValue: viewModel.selectedEyeColor)
         }
     }
 }

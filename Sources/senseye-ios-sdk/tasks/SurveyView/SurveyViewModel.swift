@@ -14,7 +14,7 @@ class SurveyViewModel: ObservableObject {
     @AppStorage("selectedEyeColor") var selectedEyeColor: String = ""
     @AppStorage("selectedGender") var selectedGender: String = ""
 
-    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black"]
+    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"]
     var genderOptions: [String] = ["Male", "Female", "Other"]
     var ageRange: Range<Int> = (20..<100)
 

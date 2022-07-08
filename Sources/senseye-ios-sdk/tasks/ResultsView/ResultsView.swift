@@ -25,9 +25,7 @@ struct ResultsView: View {
                 HeaderView()
                     .padding()
 
-                if !resultsViewModel.isUploadFinished {
-                    SenseyeProgressView(currentProgress: $resultsViewModel.uploadProgress)
-                }
+                SenseyeProgressView(currentProgress: $resultsViewModel.uploadProgress)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
@@ -42,8 +40,9 @@ struct ResultsView: View {
                             .frame(width: 91, height: 91)
                             .padding()
 
-                        Text("You have completed the diagnostic, please speak with your health care provider for further information")
+                        Text("You have completed the diagnostic, please speak with your health care provider for further information.")
                             .foregroundColor(.senseyeTextColor)
+                            .multilineTextAlignment(.center)
                             .padding()
                     }
                     .padding()

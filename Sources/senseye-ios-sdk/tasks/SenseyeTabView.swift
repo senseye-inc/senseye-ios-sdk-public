@@ -40,7 +40,9 @@ class TabController: ObservableObject {
     var nextTab: Tab = .calibrationView
 
     func open(_ tab: Tab) {
-        activeTab = tab
+        DispatchQueue.main.async {
+            self.activeTab = tab
+        }
     }
 }
 
@@ -53,42 +55,41 @@ struct SenseyeTabView: View {
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
-        NavigationView {
-            TabView(selection: $tabController.activeTab) {
-                LoginView(authenticationService: authenticationService)
-                    .tag(Tab.loginView)
-                    .gesture(DragGesture())
+        TabView(selection: $tabController.activeTab) {
+            LoginView(authenticationService: authenticationService)
+                .tag(Tab.loginView)
+                .gesture(DragGesture())
 
-                SurveyView()
-                    .tag(Tab.surveyView)
-                    .gesture(DragGesture())
+            SurveyView(authenticationService: authenticationService)
+                .tag(Tab.surveyView)
+                .gesture(DragGesture())
 
-                CalibrationView()
-                    .tag(Tab.calibrationView)
-                    .gesture(DragGesture())
+            CalibrationView()
+                .tag(Tab.calibrationView)
+                .gesture(DragGesture())
 
-                RotatingImageView(fileUploadService: fileUploadService)
-                    .tag(Tab.imageView)
-                    .gesture(DragGesture())
+            RotatingImageView(fileUploadService: fileUploadService)
+                .tag(Tab.imageView)
+                .gesture(DragGesture())
 
-                PLRView()
-                    .tag(Tab.plrView)
-                    .gesture(DragGesture())
+            PLRView()
+                .tag(Tab.plrView)
+                .gesture(DragGesture())
 
-                ResultsView(fileUploadService: fileUploadService)
-                    .tag(Tab.resultsView)
-                    .gesture(DragGesture())
+            ResultsView(fileUploadService: fileUploadService)
+                .tag(Tab.resultsView)
+                .gesture(DragGesture())
 
-                CameraView()
-                    .tag(Tab.cameraView)
-                    .gesture(DragGesture())
-            }
-            .navigationBarHidden(true)
-            .navigationBarBackButtonHidden(true)
-            .statusBar(hidden: true)
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .environmentObject(tabController)
-            .environmentObject(cameraService)
+            CameraView()
+                .tag(Tab.cameraView)
+                .gesture(DragGesture())
         }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .edgesIgnoringSafeArea(.all)
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .statusBar(hidden: true)
+        .environmentObject(tabController)
+        .environmentObject(cameraService)
     }
 }

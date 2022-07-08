@@ -24,10 +24,6 @@ class ResultsViewModel: ObservableObject {
     @Published var error: Error?
     @Published var uploadProgress: Double = 0.0
 
-    var isUploadFinished: Bool {
-        uploadProgress >= 1.0
-    }
-
     func getUploadProgress() {
         fileUploadService.uploadProgressPublisher
             .sink { uploadProgress in

@@ -15,36 +15,57 @@ struct LoginView: View {
     @EnvironmentObject var tabController: TabController
 
     var body: some View {
-        Form {
-            Section {
-                TextField("User Name", text: $vm.username )
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                SecureField("Password", text: $vm.password )
-                Toggle("New Account?", isOn: $vm.isNewAccount.animation())
+        ZStack {
+            Color.senseyePrimary
+                .edgesIgnoringSafeArea(.all)
 
-                if (vm.isNewAccount) {
-                    SecureField("Verify Password", text: $vm.newPassword )
-                    SecureField("Temporary Password", text: $vm.temporaryPassword)
+            VStack(spacing: 20) {
+                headerView
+
+                VStack {
+                    usernameField
+
+                    passwordField
                 }
-            }
+                .padding()
 
-            Section {
-                // Programmatic navigation link
-                Button("Login") {
+                VStack {
+                    Toggle("New Account?", isOn: $vm.isNewAccount.animation())
+                        .foregroundColor(.senseyeTextColor)
+
+                    if (vm.isNewAccount) {
+                        Spacer()
+
+                        verifyPasswordView
+
+                        temporaryPasswordView
+                    }
+                }
+                .padding(.horizontal, 35)
+
+                Text("Having trouble logging in?")
+                    .foregroundColor(.senseyeTextColor)
+
+                Button(action: {
                     vm.login()
-                }
+                }, label: {
+                    SenseyeButton(text: "login", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                        .padding()
+                })
                 .disabled(vm.username.isEmpty || vm.password.isEmpty)
                 .alert("Verify passwords match and temporary password is provided.", isPresented: $vm.isShowingPasswordAlert) {
                     Button("OK", role: .cancel) { }
                 }
+                Spacer()
             }
         }
         .onAppear {
             vm.onAppear()
         }
-        .onChange(of: vm.isUserSignedIn) { _ in
-            tabController.open(.surveyView)
+        .onChange(of: vm.isUserSignedIn) { signedIn in
+            if signedIn {
+                tabController.open(.surveyView)
+            }
         }
     }
 }
@@ -54,14 +75,65 @@ extension LoginView {
     init(authenticationService: AuthenticationService) {
         _vm = StateObject(wrappedValue: ViewModel(authenticationService: authenticationService))
     }
-}
 
-@available(iOS 15.0.0, *)
-struct LoginView_Previews: PreviewProvider {
-    static let authenticationService = AuthenticationService()
-    static var previews: some View {
-        NavigationView {
-            LoginView(authenticationService: authenticationService)
+    var passwordField: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("password".uppercased())
+                .foregroundColor(.senseyeTextColor)
+            SecureField("", text: $vm.password)
+                .foregroundColor(.senseyeTextColor)
+            Divider()
+                .background(Color.senseyeTextColor)
+        }
+        .padding(.horizontal, 35)
+    }
+
+    var usernameField: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("username".uppercased())
+                .foregroundColor(.senseyeTextColor)
+            TextField("", text: $vm.username)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .foregroundColor(.senseyeTextColor)
+            Divider()
+                .background(Color.senseyeTextColor)
+        }
+        .padding(.horizontal, 35)
+    }
+
+    var headerView: some View {
+        VStack {
+            HeaderView()
+                .padding()
+            Image("holding_phone_icon")
+            Text("Login to get started")
+                .foregroundColor(.senseyeTextColor)
+                .padding()
+        }
+    }
+
+    var verifyPasswordView: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Verify Password".uppercased())
+                .foregroundColor(.senseyeTextColor)
+            SecureField("", text: $vm.newPassword )
+                .foregroundColor(.senseyeTextColor)
+            Divider()
+                .background(Color.senseyeTextColor)
+        }
+    }
+
+    var temporaryPasswordView: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("temporary password".uppercased())
+                .foregroundColor(.senseyeTextColor)
+            SecureField("", text: $vm.temporaryPassword )
+                .foregroundColor(.senseyeTextColor)
+            Divider()
+                .background(Color.senseyeTextColor)
         }
     }
 }
+
+

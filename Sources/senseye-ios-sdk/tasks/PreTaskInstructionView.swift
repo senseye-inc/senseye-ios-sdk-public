@@ -37,14 +37,16 @@ struct PreTaskInstructionView: View {
                   .frame(width: 150, height: 150)
                 
                 Text(description)
+                  .padding()
                   .font(.body)
                   .foregroundColor(.white)
+                  .multilineTextAlignment(.center)
                 
                 Button(action: {
                   presentationMode.wrappedValue.dismiss()
                   isPresented = false
                 }, label: {
-                  Label("Continue", systemImage: "checkmark.seal")
+                  Label("Continue", systemImage: "checkmark.seal").padding()
                 })
               }.foregroundColor(.white)
         }

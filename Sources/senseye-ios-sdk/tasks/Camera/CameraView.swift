@@ -23,7 +23,6 @@ struct CameraView: View {
                     CameraButtonOverlayView()
                         .onTapGesture(count: 2) {
                             tabController.proceedToNextTab()
-                            //tabController.open(tabController.nextTab)
                         }
                 }
                 .disabled(!cameraService.shouldSetupCaptureSession)
@@ -31,9 +30,6 @@ struct CameraView: View {
         }
         .onAppear {
             cameraService.start()
-            DispatchQueue.main.async {
-                cameraService.shouldDisplayPretaskTutorial = true
-            }
             Log.info("displayed cameraview")
         }
         .sheet(isPresented: $cameraService.shouldDisplayPretaskTutorial) {

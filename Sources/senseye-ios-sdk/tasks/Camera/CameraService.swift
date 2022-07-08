@@ -171,6 +171,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func stopCaptureSession() {
         fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
         self.captureSession.stopRunning()
+        Log.info("Capture session stopped")
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {

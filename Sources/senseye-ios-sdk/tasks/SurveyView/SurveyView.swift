@@ -49,7 +49,7 @@ struct SurveyView: View {
                 HStack(spacing: 100) {
                     Button {
                         authenticationService.signOut {
-                            tabController.openPreviousTab()
+                            tabController.proceedToPreviousTab()
                         }
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")

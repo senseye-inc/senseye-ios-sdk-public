@@ -63,7 +63,7 @@ class TabController: ObservableObject {
         }
     }
 
-    func openPreviousTab() {
+    func proceedToPreviousTab() {
         currentTabIndex-=1
         nextTab = taskTabOrdering[currentTabIndex]
         openNextTab()
@@ -120,6 +120,9 @@ struct SenseyeTabView: View {
                 .tag(Tab.cameraView)
                 .gesture(DragGesture())
         }
+        .onChange(of: tabController.areAllTabsComplete, perform: { _ in
+            cameraService.stopCaptureSession()
+        })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)
         .navigationBarHidden(true)

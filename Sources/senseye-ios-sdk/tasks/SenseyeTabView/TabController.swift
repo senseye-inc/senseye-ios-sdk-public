@@ -1,10 +1,11 @@
 //
-//  SenseyeTabView.swift
+//  TabController.swift
+//  
 //
-//  Created by Frank Oftring on 5/24/22.
+//  Created by Frank Oftring on 7/8/22.
 //
 
-import SwiftUI
+import Foundation
 
 enum Tab {
     case imageView
@@ -28,7 +29,6 @@ extension Tab {
         default:
             return ("","")
         }
-        
     }
 }
 
@@ -41,22 +41,22 @@ class TabController: ObservableObject {
     private var currentTabIndex = 0
 
     private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .resultsView]
-    
+
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1
     }
-    
+
     func refreshSameTab() {
         open(.cameraView)
         currentTabIndex-=1
     }
-    
+
     func proceedToNextTab() {
         currentTabIndex+=1
         nextTab = taskTabOrdering[currentTabIndex]
         openNextTab()
     }
-    
+
     func openNextTab() {
         DispatchQueue.main.async {
             self.activeTab = self.nextTab
@@ -69,66 +69,15 @@ class TabController: ObservableObject {
         openNextTab()
     }
 
-    
+
     func taskInfoForNextTab() -> (String, String) {
         let nextTabIndex = currentTabIndex+1
         return taskTabOrdering[nextTabIndex].retrieveTaskInfoForTab()
     }
-    
+
     private func open(_ tab: Tab) {
         DispatchQueue.main.async {
             self.activeTab = tab
         }
-    }
-}
-
-@available(iOS 15.0, *)
-struct SenseyeTabView: View {
-
-    @EnvironmentObject var cameraService: CameraService
-    @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
-    @EnvironmentObject var authenticationService: AuthenticationService
-    @StateObject var tabController: TabController = TabController()
-
-    var body: some View {
-        TabView(selection: $tabController.activeTab) {
-            LoginView(authenticationService: authenticationService)
-                .tag(Tab.loginView)
-                .gesture(DragGesture())
-
-            SurveyView(authenticationService: authenticationService)
-                .tag(Tab.surveyView)
-                .gesture(DragGesture())
-
-            CalibrationView()
-                .tag(Tab.calibrationView)
-                .gesture(DragGesture())
-
-            RotatingImageView(fileUploadService: fileUploadService)
-                .tag(Tab.imageView)
-                .gesture(DragGesture())
-
-            PLRView()
-                .tag(Tab.plrView)
-                .gesture(DragGesture())
-
-            ResultsView(fileUploadService: fileUploadService)
-                .tag(Tab.resultsView)
-                .gesture(DragGesture())
-
-            CameraView()
-                .tag(Tab.cameraView)
-                .gesture(DragGesture())
-        }
-        .onChange(of: tabController.areAllTabsComplete, perform: { _ in
-            cameraService.stopCaptureSession()
-        })
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .edgesIgnoringSafeArea(.all)
-        .navigationBarHidden(true)
-        .navigationBarBackButtonHidden(true)
-        .statusBar(hidden: true)
-        .environmentObject(tabController)
-        .environmentObject(cameraService)
     }
 }

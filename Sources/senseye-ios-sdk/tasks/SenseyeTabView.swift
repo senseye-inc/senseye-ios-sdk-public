@@ -79,7 +79,7 @@ struct SenseyeTabView: View {
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
-        NavigationView {
+//        NavigationView {
             TabView(selection: $tabController.activeTab) {
                 LoginView(authenticationService: authenticationService)
                     .tag(Tab.loginView)

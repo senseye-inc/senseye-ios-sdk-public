@@ -34,11 +34,13 @@ struct PLRView: View {
             UserConfirmationView(taskCompleted: "PLR", yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
-                tabController.nextTab = .imageView
-                tabController.open(.cameraView)
+                tabController.proceedToNextTab()
+                //tabController.nextTab = .imageView
+                //tabController.open(.cameraView)
             }, noAction: {
                 cameraService.clearLatestFileRecording()
-                tabController.nextTab = .plrView
+                tabController.refreshSameTab()
+                //tabController.nextTab = .plrView
             })
         }
     }

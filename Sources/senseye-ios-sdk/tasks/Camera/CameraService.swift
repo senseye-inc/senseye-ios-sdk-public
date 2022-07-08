@@ -37,9 +37,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     
     func start() {
         self.checkPermissions()
-        DispatchQueue.main.async {
-            self.shouldDisplayPretaskTutorial = true
-        }
     }
     
     private func checkPermissions() {

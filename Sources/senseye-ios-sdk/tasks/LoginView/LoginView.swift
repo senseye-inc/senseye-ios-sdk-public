@@ -64,7 +64,7 @@ struct LoginView: View {
         }
         .onChange(of: vm.isUserSignedIn) { signedIn in
             if signedIn {
-                tabController.open(.surveyView)
+                tabController.proceedToNextTab()
             }
         }
     }

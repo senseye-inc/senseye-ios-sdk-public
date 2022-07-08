@@ -24,15 +24,11 @@ class RotatingImageViewModel: ObservableObject {
     @Published var currentImageIndex: Int = 0
 
     var numberOfImagesShown = 0
-    var totalNumberOfImagesToBeShown: Int {
-        // Temporary measure until we download all images
-        // This will ensure that we show at least one PLR
-        affectiveImageNames.count * 2
-    }
+    var totalNumberOfImagesToBeShown = 24
     var numberOfImageSetsShown: Int = 1
 
     var finishedAllTasks: Bool {
-        numberOfImagesShown >= totalNumberOfImagesToBeShown
+        numberOfImagesShown >= affectiveImageNames.count
     }
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
@@ -43,7 +39,7 @@ class RotatingImageViewModel: ObservableObject {
     }
 
     var taskCompleted: String {
-        "PTSD \(numberOfImagesShown)/\(totalNumberOfImagesToBeShown)"
+        "PTSD \(numberOfImagesShown)/\(affectiveImageNames.count)"
     }
     
     private var fileManager: FileManager = FileManager.default

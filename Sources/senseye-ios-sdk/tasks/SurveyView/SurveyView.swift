@@ -34,7 +34,8 @@ struct SurveyView: View {
             }
             Section {
                 Button {
-                    tabController.open(.cameraView)
+                    tabController.proceedToNextTab()
+                    //tabController.open(.cameraView)
                 } label: {
                     Text("Continue")
                 }

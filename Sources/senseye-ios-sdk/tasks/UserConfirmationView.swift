@@ -39,7 +39,8 @@ struct UserConfirmationView: View {
                 HStack {
                     Button {
                         isShowingAlert = true
-                        tabController.open(.cameraView)
+                        tabController.proceedToNextTab()
+                        //tabController.open(.cameraView)
                     } label: {
                         SenseyeButton(text: "No", foregroundColor: .senseyePrimary, fillColor: .red)
                     }

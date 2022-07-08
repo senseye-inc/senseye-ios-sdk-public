@@ -16,14 +16,56 @@ enum Tab {
     case calibrationView
 }
 
+extension Tab {
+    func retrieveTaskInfoForTab() -> (String, String) {
+        switch self {
+        case .imageView:
+            return ("PTSD Image Set", "8 different images will come across the screen. \n Note: Some of the images may be disturbing.")
+        case .plrView:
+            return ("PLR", "Stare at the cross for the duration of the task.")
+        case .calibrationView:
+            return ("Calibration", "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")
+        default:
+            return ("","")
+        }
+        
+    }
+}
+
 @available(iOS 14.0, *)
 @MainActor
 class TabController: ObservableObject {
 
     @Published var activeTab: Tab = .loginView
-    var nextTab: Tab = .calibrationView
+    private var nextTab: Tab = .calibrationView
+    private var currentTabIndex = 0
 
-    func open(_ tab: Tab) {
+    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .resultsView]
+    
+    func areAllTabsComplete() {
+        return currentTabIndex = taskTabOrdering.count - 1
+    }
+    
+    func refreshSameTab() {
+        activeTab = nextTab
+    }
+    
+    func proceedToNextTab() {
+        currentTabIndex+=1
+        nextTab = taskTabOrdering[currentTabIndex]
+        openNextTab()
+    }
+    
+    func openNextTab() {
+        activeTab = nextTab
+    }
+    
+    func taskInfoForNextTab() -> (String, String) {
+        let nextTabIndex = currentTabIndex+1
+        return taskTabOrdering[nextTabIndex].retrieveTaskInfoForTab()
+    }
+    
+    private func open(_ tab: Tab) {
         activeTab = tab
     }
 }
@@ -37,7 +79,7 @@ struct SenseyeTabView: View {
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
-        NavigationView {
+//        NavigationView {
             TabView(selection: $tabController.activeTab) {
                 LoginView(authenticationService: authenticationService)
                     .tag(Tab.loginView)

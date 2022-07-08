@@ -46,18 +46,20 @@ struct RotatingImageView: View {
             UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
-                if viewModel.finishedAllTasks {
-                    Log.info("Finsished all tasks")
-                    tabController.open(.resultsView)
-                    cameraService.stopCaptureSession()
-                } else {
-                    tabController.nextTab = .plrView
-                    tabController.open(.cameraView)
-                }
+                tabController.proceedToNextTab()
+//                if viewModel.finishedAllTasks {
+//                    Log.info("Finsished all tasks")
+//                    tabController.open(.resultsView)
+//                    cameraService.stopCaptureSession()
+//                } else {
+//                    tabController.nextTab = .plrView
+//                    tabController.open(.cameraView)
+//                }
             }, noAction: {
                 cameraService.clearLatestFileRecording()
                 viewModel.removeLastImageSet()
-                tabController.nextTab = .imageView
+                tabController.refreshSameTab()
+                //tabController.nextTab = .imageView
             })
         }
     }

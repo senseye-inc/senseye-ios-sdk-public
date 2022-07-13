@@ -64,7 +64,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     private func setupCaptureSession() {
-        
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }

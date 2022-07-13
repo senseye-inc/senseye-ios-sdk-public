@@ -7,18 +7,16 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
+@available(iOS 15.0, *)
 struct PreTaskInstructionView: View {
     
-    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var cameraService: CameraService
-    @Binding var isPresented: Bool
+    @Environment(\.dismiss) private var dismiss
     
     private var title: String
     private var description: String
     
-    init(isPresented: Binding<Bool>, title: String, description: String) {
-        _isPresented = isPresented
+    init(title: String, description: String) {
         self.title = title
         self.description = description
         
@@ -41,8 +39,9 @@ struct PreTaskInstructionView: View {
                   .foregroundColor(.white)
                 
                 Button(action: {
-                  presentationMode.wrappedValue.dismiss()
-                  isPresented = false
+                    DispatchQueue.main.async {
+                        dismiss()
+                    }
                 }, label: {
                   Label("Continue", systemImage: "checkmark.seal")
                 })

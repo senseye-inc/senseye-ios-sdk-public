@@ -35,15 +35,17 @@ struct PreTaskInstructionView: View {
                   .frame(width: 150, height: 150)
                 
                 Text(description)
+                  .padding()
                   .font(.body)
                   .foregroundColor(.white)
+                  .multilineTextAlignment(.center)
                 
                 Button(action: {
                     DispatchQueue.main.async {
                         dismiss()
                     }
                 }, label: {
-                  Label("Continue", systemImage: "checkmark.seal")
+                  Label("Continue", systemImage: "checkmark.seal").padding()
                 })
               }.foregroundColor(.white)
         }

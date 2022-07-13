@@ -10,7 +10,7 @@ struct SenseyeProgressView: View {
 
     @Binding var currentProgress: Double
     private var isFinished: Bool {
-        currentProgress >= 1.0
+        currentProgress >= 0.99
     }
 
     var body: some View {

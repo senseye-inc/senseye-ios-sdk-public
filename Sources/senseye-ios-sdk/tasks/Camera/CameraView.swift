@@ -23,7 +23,7 @@ struct CameraView: View {
                 Button { } label: {
                     CameraButtonOverlayView()
                         .onTapGesture(count: 2) {
-                            tabController.open(tabController.nextTab)
+                            tabController.proceedToNextTab()
                         }
                 }
                 .disabled(!cameraService.shouldSetupCaptureSession)
@@ -44,7 +44,7 @@ struct CameraView: View {
         .sheet(isPresented: $cameraService.shouldDisplayPretaskTutorial, onDismiss: {
             dismissAllSheets()
         }, content: {
-            let taskInfo = tabController.nextTab.retrieveTaskInfoForTab()
+            let taskInfo = tabController.taskInfoForNextTab()
             PreTaskInstructionView(title: taskInfo.0, description: taskInfo.1)
         })
 

@@ -49,7 +49,7 @@ struct SurveyView: View {
                 HStack(spacing: 100) {
                     Button {
                         authenticationService.signOut {
-                            tabController.open(.loginView)
+                            tabController.proceedToPreviousTab()
                         }
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")
@@ -60,7 +60,7 @@ struct SurveyView: View {
                     }
 
                     Button {
-                        tabController.open(.cameraView)
+                        tabController.proceedToNextTab()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }

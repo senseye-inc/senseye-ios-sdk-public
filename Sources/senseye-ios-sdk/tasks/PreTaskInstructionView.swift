@@ -47,7 +47,9 @@ struct PreTaskInstructionView: View {
                 }, label: {
                   Label("Continue", systemImage: "checkmark.seal").padding()
                 })
-              }.foregroundColor(.white)
+              }
+            .foregroundColor(.white)
+            .interactiveDismissDisabled()
         }
         
     }

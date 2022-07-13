@@ -14,7 +14,6 @@ struct CameraView: View {
     
     @EnvironmentObject var cameraService: CameraService
     @EnvironmentObject var tabController: TabController
-    @State private var showingInstructionSheet = false
 
     var body: some View {
         ZStack {
@@ -52,6 +51,7 @@ struct CameraView: View {
     
     func dismissAllSheets() {
         Log.info("dismissed the sheet")
+        cameraService.shouldDisplayPretaskTutorial = false
     }
 }
 

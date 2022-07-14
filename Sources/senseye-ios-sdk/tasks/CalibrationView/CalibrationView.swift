@@ -36,11 +36,10 @@ struct CalibrationView: View {
             UserConfirmationView(taskCompleted: "Calibration", yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
-                tabController.nextTab = .imageView
-                tabController.open(.cameraView)
+                tabController.proceedToNextTab()
             }, noAction: {
                 cameraService.clearLatestFileRecording()
-                tabController.nextTab = .calibrationView
+                tabController.refreshSameTab()
             })
         }
     }

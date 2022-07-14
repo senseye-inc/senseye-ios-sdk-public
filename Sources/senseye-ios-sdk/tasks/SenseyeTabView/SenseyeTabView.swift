@@ -6,46 +6,6 @@
 
 import SwiftUI
 
-enum Tab {
-    case imageView
-    case plrView
-    case resultsView
-    case cameraView
-    case loginView
-    case surveyView
-    case calibrationView
-}
-
-extension Tab {
-    func retrieveTaskInfoForTab() -> (String, String) {
-        switch self {
-        case .imageView:
-            return ("PTSD Image Set", "8 different images will come across the screen. \n Note: Some of the images may be disturbing.")
-        case .plrView:
-            return ("PLR", "Stare at the cross for the duration of the task.")
-        case .calibrationView:
-            return ("Calibration", "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")
-        default:
-            return ("","")
-        }
-        
-    }
-}
-
-@available(iOS 14.0, *)
-@MainActor
-class TabController: ObservableObject {
-
-    @Published var activeTab: Tab = .loginView
-    var nextTab: Tab = .calibrationView
-
-    func open(_ tab: Tab) {
-        DispatchQueue.main.async {
-            self.activeTab = tab
-        }
-    }
-}
-
 @available(iOS 15.0, *)
 struct SenseyeTabView: View {
 
@@ -84,6 +44,9 @@ struct SenseyeTabView: View {
                 .tag(Tab.cameraView)
                 .gesture(DragGesture())
         }
+        .onChange(of: tabController.areAllTabsComplete, perform: { _ in
+            cameraService.stopCaptureSession()
+        })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)
         .navigationBarHidden(true)

@@ -45,6 +45,9 @@ struct UserConfirmationView: View {
                     }
                     Button {
                         yesAction()
+                        DispatchQueue.main.async {
+                            dismiss()
+                        }
                     } label: {
                         SenseyeButton(text: "Yes", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }
@@ -52,9 +55,13 @@ struct UserConfirmationView: View {
             }
         }
         .alert(isPresented: $isShowingAlert) {
-            Alert(title: Text("Thank You"), message: Text("Please tap return to restart the task"), dismissButton: .default(Text("Return"), action: {
-                dismiss()
-                noAction()
+            Alert(title: Text("Thank You"),
+                  message: Text("Please tap return to restart the task"),
+                  dismissButton: .default(Text("Return"), action: {
+                    noAction()
+                    DispatchQueue.main.async {
+                        dismiss()
+                    }
             }))
         }
     }

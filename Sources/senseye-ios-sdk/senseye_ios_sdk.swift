@@ -42,34 +42,12 @@ public class SenseyeSDK {
         // Use the Firebase library to configure APIs.
         FirebaseApp.configure()
     }
-    
-    public func initialViewController() -> UIViewController { loginViewController() }
-    
-    public func surveyViewController() -> UIViewController {
-        if let surveyViewController: SurveyViewController = Bundle.module.loadNibNamed("SurveyViewController", owner: nil, options: nil)?.first as? SurveyViewController {
-            return surveyViewController
-        }
-        return UIViewController()
-    }
-    
-    public func taskViewControllerForTasks() -> UIViewController {
-        if let taskViewController: TaskViewController = Bundle.module.loadNibNamed("TaskViewController", owner: nil, options: nil)?.first as? TaskViewController {
-            taskViewController.taskIdsToComplete = self.tasks
-            return taskViewController
-        }
-        return UIViewController()
-    }
-    
-    /**
-    Provides compatibility for UIKit-based applications. LoginView is a SwiftUI view, so we use UIHostController wrapper to let it become UIViewController
-     */
-    public func loginViewController() -> UIViewController {
-        return UIHostingController(rootView: LoginView(authenticationService: AuthenticationService()))
-    }
 
     @MainActor public func senseyeTabView() -> some View {
+        var username = ""
         let authenticationService = AuthenticationService()
-        let fileUploadService = FileUploadAndPredictionService()
+        authenticationService.getUsername(completion: { username = $0 })
+        let fileUploadService = FileUploadAndPredictionService(username: username)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         return SenseyeTabView()
             .environmentObject(authenticationService)

@@ -52,9 +52,6 @@ struct ResultsView: View {
                 Spacer()
             }
         }
-        .onAppear {
-            resultsViewModel.startPredictions()
-        }
     }
 }
 

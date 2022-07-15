@@ -14,9 +14,9 @@ class SurveyViewModel: ObservableObject {
     @AppStorage("selectedEyeColor") var selectedEyeColor: String = ""
     @AppStorage("selectedGender") var selectedGender: String = ""
 
-    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"]
+    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"].sorted().reversed()
     var genderOptions: [String] = ["Male", "Female", "Other"]
-    var ageRange: Range<Int> = (20..<100)
+    var ageRange: Range<Int> = (18..<66)
 
     var surveyIsEmpty: Bool {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""

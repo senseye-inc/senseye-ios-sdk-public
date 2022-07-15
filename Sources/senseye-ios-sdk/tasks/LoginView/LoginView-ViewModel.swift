@@ -43,6 +43,10 @@ extension LoginView {
             )
         }
 
+        var appVersion: String? {
+            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        }
+
         /**
          On any  view load, any current user is signed out.
          */

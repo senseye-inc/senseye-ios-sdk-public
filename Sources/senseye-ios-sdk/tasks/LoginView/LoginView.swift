@@ -57,6 +57,13 @@ struct LoginView: View {
                     Button("OK", role: .cancel) { }
                 }
                 Spacer()
+
+                HStack {
+                    Spacer()
+                    Text("Version: " + (vm.appVersion ?? "Version Number Error"))
+                        .foregroundColor(.senseyeTextColor)
+                        .padding(.trailing)
+                }
             }
         }
         .onAppear {

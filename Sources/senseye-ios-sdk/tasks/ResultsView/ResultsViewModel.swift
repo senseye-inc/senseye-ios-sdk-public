@@ -19,7 +19,6 @@ class ResultsViewModel: ObservableObject {
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     var cancellables = Set<AnyCancellable>()
     
-    @Published var predictionStatus: PredictionStatus = .none
     @Published var error: Error?
     @Published var uploadProgress: Double = 0.0
 

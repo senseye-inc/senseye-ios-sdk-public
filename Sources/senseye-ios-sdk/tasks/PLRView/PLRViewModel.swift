@@ -19,7 +19,7 @@ class PLRViewModel: ObservableObject {
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         numberOfPLRShown += 1
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] timer in
             currentInterval += 1
             if currentInterval <= 10 {
                 DispatchQueue.main.async {

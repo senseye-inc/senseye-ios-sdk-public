@@ -43,8 +43,10 @@ extension LoginView {
             )
         }
 
-        var appVersion: String? {
-            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        var versionAndBuildNumber: String {
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+            return "\(version ?? "Error getting version") (\(build ?? "Error getting build"))"
         }
 
         /**

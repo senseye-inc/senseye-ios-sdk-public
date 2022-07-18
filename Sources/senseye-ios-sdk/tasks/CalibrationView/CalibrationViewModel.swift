@@ -19,7 +19,7 @@ class CalibrationViewModel: ObservableObject {
     let calibrationPath: [(CGFloat, CGFloat)] = [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)]
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1

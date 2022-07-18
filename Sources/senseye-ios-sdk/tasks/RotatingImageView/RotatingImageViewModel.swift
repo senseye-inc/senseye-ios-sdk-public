@@ -62,7 +62,7 @@ class RotatingImageViewModel: ObservableObject {
 
     func showImages(didFinishCompletion: @escaping () -> Void) {
         numberOfImageSetsShown += 1
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             numberOfImagesShown += 1
             if currentImageIndex < affectiveImageNames.count - 1 {
                 currentImageIndex += 1

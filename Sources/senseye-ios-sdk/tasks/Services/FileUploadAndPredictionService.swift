@@ -170,15 +170,19 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func createSessionInputJsonFile(surveyInput: [String: String]) {
         var sessionInputJson = JSON()
-        sessionInputJson["versionName"].string = "0.0.0"
-        sessionInputJson["versionCode"].string = "0"
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        
+        sessionInputJson["versionName"].string = version
+        sessionInputJson["versionCode"].string = build
+        
         for inputItem in surveyInput {
             sessionInputJson[inputItem.key].string = inputItem.value
         }
         self.currentSessionJsonInputFile = sessionInputJson
     }
     
-    func `addTaskRelatedInfoToSessionJson`(taskId: String, taskTimestamps: [Int64]) {
+    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64]) {
         var newTaskJsonObject = JSON()
         newTaskJsonObject["taskId"].string = taskId
         let timestampList = taskTimestamps.map { JSON($0)}

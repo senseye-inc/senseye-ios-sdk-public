@@ -85,10 +85,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         currentImageIndex = 0
     }
     
-    
     func addTaskInfoToJson() {
         fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "ptsd_image_set", taskTimestamps: timestampsOfImageSwap)
     }
 }
-
-

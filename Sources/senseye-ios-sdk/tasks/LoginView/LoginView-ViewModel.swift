@@ -43,6 +43,12 @@ extension LoginView {
             )
         }
 
+        var versionAndBuildNumber: String {
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+            return "\(version ?? "Error getting version") (\(build ?? "Error getting build"))"
+        }
+
         /**
          On any  view load, any current user is signed out.
          */

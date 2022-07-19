@@ -30,7 +30,7 @@ struct CalibrationView: View {
             }
         }
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "calibration")
+            cameraService.startRecordingForTask(taskId: "calibration_\(viewModel.numberOfCalibrationShown)")
             viewModel.startCalibration {
                 cameraService.stopRecording()
                 viewModel.shouldShowConfirmationView.toggle()

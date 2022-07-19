@@ -22,7 +22,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
 
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
-    @Published var shouldDisplayPretaskTutorial: Bool = false
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
@@ -37,9 +36,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     
     func start() {
         self.checkPermissions()
-        DispatchQueue.main.async {
-            self.shouldDisplayPretaskTutorial = true
-        }
     }
     
     private func checkPermissions() {

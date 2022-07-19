@@ -54,9 +54,6 @@ struct ResultsView: View {
         }.onAppear {
             resultsViewModel.uploadJsonSessionFile()
         }
-        .onAppear {
-            resultsViewModel.startPredictions()
-        }
     }
 }
 

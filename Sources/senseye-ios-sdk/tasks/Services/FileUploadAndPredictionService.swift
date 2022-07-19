@@ -72,6 +72,11 @@ class FileUploadAndPredictionService: ObservableObject {
     private var temporaryPassword: String? = ""
     private let hostApi =  "https://apeye.senseye.co"
     private var hostApiKey: String? = nil
+    private var sessionTimeStamp: Int64
+    private var username: String
+    private var s3FolderName: String {
+        return "\(username)_\(sessionTimeStamp)"
+    }
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
     private var currentSessionUploadFileKeys: [String] = []
@@ -83,9 +88,11 @@ class FileUploadAndPredictionService: ObservableObject {
     private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
-    init() {
+    init(username: String) {
         self.fileManager = FileManager.default
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+        self.sessionTimeStamp = Date().currentTimeMillis()
+        self.username = username
         self.setUserApiKey()
     }
     
@@ -98,7 +105,7 @@ class FileUploadAndPredictionService: ObservableObject {
      - fileUrl: URL of the video file to upload
      */
     func uploadData(fileUrl: URL) {
-        let fileNameKey = fileUrl.lastPathComponent
+        let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
         let filename = fileUrl
         
         guard let _ = self.hostApiKey else {
@@ -175,12 +182,13 @@ class FileUploadAndPredictionService: ObservableObject {
     }
     
     func `addTaskRelatedInfoToSessionJson`(taskId: String, taskTimestamps: [Int64]) {
-        var taskJsonObject = JSON()
-        taskJsonObject["taskId"].string = taskId
+        var newTaskJsonObject = JSON()
+        newTaskJsonObject["taskId"].string = taskId
         let timestampList = taskTimestamps.map { JSON($0)}
         let taskTimestampJsonObject = JSON(timestampList)
-        taskJsonObject["timestamps"] = taskTimestampJsonObject
-        self.currentSessionJsonInputFile?["tasks"] = [taskJsonObject]
+        newTaskJsonObject["timestamps"] = taskTimestampJsonObject
+        let previousTasksObjects = self.currentSessionJsonInputFile?["tasks"]
+        self.currentSessionJsonInputFile?["tasks"] = [previousTasksObjects!,newTaskJsonObject]
         Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
     }
     

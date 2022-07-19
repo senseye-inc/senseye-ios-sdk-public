@@ -9,7 +9,7 @@ import SwiftUI
 
 @available(iOS 13.0, *)
 @MainActor
-class CalibrationViewModel: ObservableObject {
+class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
     var taskCompleted: String = "Calibration"
     @Published var xCoordinate: CGFloat = 0
@@ -17,6 +17,7 @@ class CalibrationViewModel: ObservableObject {
     @Published var shouldShowConfirmationView: Bool = false
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
+    var numberOfCalibrationShown: Int = 1
     let calibrationPath: [(CGFloat, CGFloat)] = [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)]
     private var timestampsOfStimuli: [Int64] = []
     
@@ -25,7 +26,8 @@ class CalibrationViewModel: ObservableObject {
     }
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+        numberOfCalibrationShown += 1
+        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1

@@ -84,7 +84,7 @@ extension SurveyView {
                 }
             }
         } label: {
-            SenseyePicker(title: "age", currentValue: viewModel.selectedAge.description)
+            SenseyePicker(title: "age", currentValue: viewModel.selectedAge?.description)
         }
     }
 

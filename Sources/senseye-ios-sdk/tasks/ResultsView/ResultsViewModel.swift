@@ -19,8 +19,6 @@ class ResultsViewModel: ObservableObject {
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     var cancellables = Set<AnyCancellable>()
     
-    @Published var predictionStatus: PredictionStatus = .none
-    @Published var isLoading: Bool = false
     @Published var error: Error?
     @Published var uploadProgress: Double = 0.0
 
@@ -32,29 +30,6 @@ class ResultsViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func startPredictions() {
-        isLoading = true
-        DispatchQueue.main.async {
-            self.startPeriodicPredictions()
-        }
-    }
-    
-    func startPeriodicPredictions() {
-        fileUploadService.startPeriodicUpdatesOnPredictionId { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let jobStatusAndResultResponse):
-                    Log.info("Success from view model: \(jobStatusAndResultResponse)")
-                    self.predictionStatus = .returnedPrediction(jobStatusAndResultResponse)
-                case .failure(let error):
-                    Log.error("Error from \(#function): \(error.localizedDescription)")
-                    self.error = error
-                }
-                self.isLoading = false
-            }
-        }
-    }
-
     enum PredictionStatus: Equatable {
         case none
         case startingPredictions

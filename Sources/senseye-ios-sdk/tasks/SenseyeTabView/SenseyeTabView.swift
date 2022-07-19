@@ -32,7 +32,7 @@ struct SenseyeTabView: View {
                 .tag(Tab.imageView)
                 .gesture(DragGesture())
 
-            PLRView()
+            PLRView(fileUploadService: fileUploadService)
                 .tag(Tab.plrView)
                 .gesture(DragGesture())
 

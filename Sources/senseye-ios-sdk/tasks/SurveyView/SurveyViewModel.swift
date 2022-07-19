@@ -10,9 +10,9 @@ import SwiftUI
 @available(iOS 14.0, *)
 class SurveyViewModel: ObservableObject {
     
-    @AppStorage("selectedAge") var selectedAge: Int = 0
-    @AppStorage("selectedEyeColor") var selectedEyeColor: String = ""
-    @AppStorage("selectedGender") var selectedGender: String = ""
+    @AppStorage("selectedAge") var selectedAge: Int?
+    @AppStorage("selectedEyeColor") var selectedEyeColor: String?
+    @AppStorage("selectedGender") var selectedGender: String?
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     
@@ -20,9 +20,9 @@ class SurveyViewModel: ObservableObject {
         self.fileUploadService = fileUploadService
     }
 
-    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"]
+    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"].sorted().reversed()
     var genderOptions: [String] = ["Male", "Female", "Other"]
-    var ageRange: Range<Int> = (20..<100)
+    var ageRange: Range<Int> = (18..<66)
 
     var surveyIsEmpty: Bool {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""

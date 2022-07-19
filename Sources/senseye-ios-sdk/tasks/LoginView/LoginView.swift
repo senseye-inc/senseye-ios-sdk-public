@@ -36,9 +36,11 @@ struct LoginView: View {
                     if (vm.isNewAccount) {
                         Spacer()
 
-                        verifyPasswordView
-
-                        temporaryPasswordView
+                        VStack {
+                            verifyPasswordView
+                            temporaryPasswordView
+                        }
+                        .keyboardAdaptive()
                     }
                 }
                 .padding(.horizontal, 35)
@@ -56,7 +58,15 @@ struct LoginView: View {
                 .alert("Verify passwords match and temporary password is provided.", isPresented: $vm.isShowingPasswordAlert) {
                     Button("OK", role: .cancel) { }
                 }
+                
                 Spacer()
+
+                HStack {
+                    Spacer()
+                    Text(vm.versionAndBuildNumber)
+                        .foregroundColor(.senseyeTextColor)
+                        .padding(.trailing)
+                }
             }
         }
         .onAppear {
@@ -135,5 +145,3 @@ extension LoginView {
         }
     }
 }
-
-

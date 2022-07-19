@@ -8,9 +8,14 @@ import SwiftUI
 @available(iOS 15.0, *)
 struct PLRView: View {
 
-    @StateObject var viewModel: PLRViewModel = PLRViewModel()
+    @StateObject var viewModel: PLRViewModel
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
+    
+    
+    init(fileUploadService: FileUploadAndPredictionService) {
+        _viewModel = StateObject(wrappedValue: PLRViewModel(fileUploadService: fileUploadService))
+    }
 
     var body: some View {
         ZStack {
@@ -34,6 +39,7 @@ struct PLRView: View {
             UserConfirmationView(taskCompleted: "PLR", yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
+                viewModel.addTaskInfoToJson()
                 tabController.proceedToNextTab()
             }, noAction: {
                 cameraService.clearLatestFileRecording()

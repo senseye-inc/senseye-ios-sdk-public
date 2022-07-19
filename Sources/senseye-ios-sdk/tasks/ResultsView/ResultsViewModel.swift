@@ -30,26 +30,6 @@ class ResultsViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    enum PredictionStatus: Equatable {
-        case none
-        case startingPredictions
-        case apiRequestSent
-        case returnedPrediction(String)
-
-        var status: String {
-            switch self {
-            case .none:
-                return "Default Status"
-            case .startingPredictions:
-                return "Starting predictions..."
-            case .apiRequestSent:
-                return "Prediction API request sent..."
-            case .returnedPrediction(let jobStatusAndResultResponse):
-                return "Returned a result for prediction... \(jobStatusAndResultResponse)"
-            }
-        }
-    }
-    
     func uploadJsonSessionFile() {
         self.fileUploadService.uploadSessionJsonFile()
     }

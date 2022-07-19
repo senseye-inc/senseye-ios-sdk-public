@@ -38,8 +38,6 @@ let package = Package(
             resources: [
                 .process("Resources/amplifyconfiguration.json"),
                 .process("Resources/awsconfiguration.json"),
-                .process("Resources/SingleTaskViewController.xib"),
-                .process("Resources/SurveyViewController.xib"),
                 .process("Resources/GoogleService-Info.plist")
             ]),
         .testTarget(

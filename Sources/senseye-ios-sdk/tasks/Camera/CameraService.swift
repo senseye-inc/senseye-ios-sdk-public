@@ -155,15 +155,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func startCaptureSession() {
         self.captureSession.startRunning()
     }
-
-    func getSurveyResults() {
-        let age = UserDefaults.standard.value(forKey: "selectedAge") as! Int
-        let eyeColor = UserDefaults.standard.value(forKey: "selectedEyeColor") as! String
-        let gender = UserDefaults.standard.value(forKey: "selectedGender") as! String
-        surveyInput["age"] = String(age)
-        surveyInput["gender"] = gender
-        surveyInput["eyeColor"] = eyeColor
-    }
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()

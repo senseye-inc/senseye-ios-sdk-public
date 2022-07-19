@@ -67,9 +67,6 @@ class FileUploadAndPredictionService: ObservableObject {
     var numberOfUploads: Double = 0.0
     private var cancellables = Set<AnyCancellable>()
     
-    private var accountUsername: String? = ""
-    private var accountPassword: String? = ""
-    private var temporaryPassword: String? = ""
     private let hostApi =  "https://apeye.senseye.co"
     private var hostApiKey: String? = nil
     private var sessionTimeStamp: Int64
@@ -82,6 +79,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
     private var currentSessionJsonInputFile: JSON? = nil
+    private var hasUploadedJsonFile: Bool = false
 
     var isUploadOngoing: Bool = false
     private var fileManager: FileManager
@@ -177,7 +175,6 @@ class FileUploadAndPredictionService: ObservableObject {
         for inputItem in surveyInput {
             sessionInputJson[inputItem.key].string = inputItem.value
         }
-        sessionInputJson["tasks"] = []
         self.currentSessionJsonInputFile = sessionInputJson
     }
     
@@ -187,8 +184,19 @@ class FileUploadAndPredictionService: ObservableObject {
         let timestampList = taskTimestamps.map { JSON($0)}
         let taskTimestampJsonObject = JSON(timestampList)
         newTaskJsonObject["timestamps"] = taskTimestampJsonObject
-        let previousTasksObjects = self.currentSessionJsonInputFile?["tasks"]
-        self.currentSessionJsonInputFile?["tasks"] = [previousTasksObjects!,newTaskJsonObject]
+        
+        let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array
+        if !(previousTaskObjects?.isEmpty ?? true) {
+            var taskObjectList: [JSON] = []
+            for previousTaskObject in previousTaskObjects! {
+                taskObjectList.append(previousTaskObject)
+            }
+            taskObjectList.append(newTaskJsonObject)
+            self.currentSessionJsonInputFile?["tasks"] = JSON(taskObjectList)
+        } else {
+            self.currentSessionJsonInputFile?["tasks"] = [newTaskJsonObject]
+        }
+        
         Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
     }
     
@@ -196,6 +204,11 @@ class FileUploadAndPredictionService: ObservableObject {
      Upload JSON file for the current session
      */
     func uploadSessionJsonFile() {
+        
+        if hasUploadedJsonFile {
+            return
+        }
+        
         do {
             guard let sessionJsonFile = try currentSessionJsonInputFile?.rawData() else {
                 Log.error("Error in json parsing for input file")
@@ -209,8 +222,7 @@ class FileUploadAndPredictionService: ObservableObject {
             }
             
             let currentTimeStamp = Date().currentTimeMillis()
-            let jsonFileName = "\(s3FolderName)/\(currentTimeStamp)_ios_input.json"
-            let s3JsonFileName = "\(s3HostBucketUrl)\(jsonFileName)"
+            let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
             Amplify.Storage.uploadData(
                 key: jsonFileName,
                 data: sessionJsonFile,
@@ -220,6 +232,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     switch event {
                     case let .success(data):
                         Log.debug("Uploaded json file - data: \(data)")
+                        self.hasUploadedJsonFile = true
                     case let .failure(storageError):
                         Log.warn("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
                     }

@@ -96,4 +96,7 @@ class ResultsViewModel: ObservableObject {
         }
     }
     
+    func uploadJsonSessionFile() {
+        self.fileUploadService.uploadSessionJsonFile()
+    }
 }

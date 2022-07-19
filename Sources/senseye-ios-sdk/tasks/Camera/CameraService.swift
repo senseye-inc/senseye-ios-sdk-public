@@ -143,7 +143,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
 
     func startRecordingForTask(taskId: String) {
-        getSurveyResults()
         authenticationService.getUsername { [self] username in
             let currentTimeStamp = Date().currentTimeMillis()
             guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
@@ -171,7 +170,6 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
     
     func stopCaptureSession() {
-        fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: [])
         self.captureSession.stopRunning()
         Log.info("Capture session stopped")
     }

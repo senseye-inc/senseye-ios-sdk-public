@@ -15,8 +15,14 @@ class CalibrationViewModel: ObservableObject {
     @Published var xCoordinate: CGFloat = 0
     @Published var yCoordinate: CGFloat = 0
     @Published var shouldShowConfirmationView: Bool = false
-
+    
+    let fileUploadService: FileUploadAndPredictionServiceProtocol
     let calibrationPath: [(CGFloat, CGFloat)] = [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)]
+    private var timestampsOfStimuli: [Int64] = []
+    
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+        self.fileUploadService = fileUploadService
+    }
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
@@ -24,6 +30,7 @@ class CalibrationViewModel: ObservableObject {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1
                 pathIndex += 1
+                timestampsOfStimuli.append(Date().currentTimeMillis())
             } else {
                 timer.invalidate()
                 Log.info("Calibration Timer Cancelled")
@@ -35,5 +42,9 @@ class CalibrationViewModel: ObservableObject {
 
     func reset() {
         pathIndex = 0
+    }
+    
+    func addTaskInfoToJson() {
+        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "calibration", taskTimestamps: timestampsOfStimuli)
     }
 }

@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 @available(iOS 13.0, *)
-class RotatingImageViewModel: ObservableObject {
+class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.fileUploadService = fileUploadService
@@ -43,6 +43,7 @@ class RotatingImageViewModel: ObservableObject {
     }
     
     private var fileManager: FileManager = FileManager.default
+    private var timestampsOfImageSwap: [Int64] = []
     
     func downloadPtsdImageSetsIfRequired(didFinishDownloadingAssets: @escaping () -> Void) {
         let dispatchGroup = DispatchGroup()
@@ -65,6 +66,7 @@ class RotatingImageViewModel: ObservableObject {
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             numberOfImagesShown += 1
             if currentImageIndex < affectiveImageNames.count - 1 {
+                timestampsOfImageSwap.append(Date().currentTimeMillis())
                 currentImageIndex += 1
             } else {
                 timer.invalidate()
@@ -82,6 +84,8 @@ class RotatingImageViewModel: ObservableObject {
     private func reset() {
         currentImageIndex = 0
     }
+    
+    func addTaskInfoToJson() {
+        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "ptsd_image_set", taskTimestamps: timestampsOfImageSwap)
+    }
 }
-
-

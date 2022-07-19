@@ -20,11 +20,11 @@ struct SenseyeTabView: View {
                 .tag(Tab.loginView)
                 .gesture(DragGesture())
 
-            SurveyView(authenticationService: authenticationService)
+            SurveyView(authenticationService: authenticationService, fileUploadAndPredictionService: fileUploadService)
                 .tag(Tab.surveyView)
                 .gesture(DragGesture())
 
-            CalibrationView()
+            CalibrationView(fileUploadAndPredictionService: fileUploadService)
                 .tag(Tab.calibrationView)
                 .gesture(DragGesture())
 
@@ -32,7 +32,7 @@ struct SenseyeTabView: View {
                 .tag(Tab.imageView)
                 .gesture(DragGesture())
 
-            PLRView()
+            PLRView(fileUploadService: fileUploadService)
                 .tag(Tab.plrView)
                 .gesture(DragGesture())
 

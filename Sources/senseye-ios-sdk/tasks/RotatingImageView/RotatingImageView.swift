@@ -46,6 +46,7 @@ struct RotatingImageView: View {
             UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
+                viewModel.addTaskInfoToJson()
                 tabController.proceedToNextTab()
             }, noAction: {
                 cameraService.clearLatestFileRecording()

@@ -13,6 +13,12 @@ class SurveyViewModel: ObservableObject {
     @AppStorage("selectedAge") var selectedAge: Int?
     @AppStorage("selectedEyeColor") var selectedEyeColor: String?
     @AppStorage("selectedGender") var selectedGender: String?
+    
+    var fileUploadService: FileUploadAndPredictionServiceProtocol
+    
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+        self.fileUploadService = fileUploadService
+    }
 
     var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"].sorted().reversed()
     var genderOptions: [String] = ["Male", "Female", "Other"]
@@ -20,5 +26,13 @@ class SurveyViewModel: ObservableObject {
 
     var surveyIsEmpty: Bool {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""
+    }
+        
+    func createSessionJsonFile() {
+        var surveyInput : [String: String] = [:]
+        surveyInput["age"] = String(selectedAge ?? -1)
+        surveyInput["gender"] = selectedEyeColor
+        surveyInput["eyeColor"] = selectedGender
+        fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
     }
 }

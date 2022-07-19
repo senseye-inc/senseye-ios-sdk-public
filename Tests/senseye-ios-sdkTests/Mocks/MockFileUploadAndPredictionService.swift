@@ -43,7 +43,7 @@ extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProt
 
     }
 
-    func createSessionInputJsonFile(surveyInput: [String : String], tasks: [String]) {
+    func createSessionInputJsonFile(surveyInput: [String : String]) {
         
     }
 
@@ -77,6 +77,13 @@ extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProt
     }
     
     func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
+    }
+    
+    func uploadSessionJsonFile() {
+    }
+    
+    
+    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64]) {
     }
 }
 

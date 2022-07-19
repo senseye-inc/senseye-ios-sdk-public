@@ -10,11 +10,12 @@ import SwiftUI
 @available(iOS 15.0, *)
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
-    @StateObject var viewModel = SurveyViewModel()
+    @StateObject var viewModel : SurveyViewModel
     let authenticationService: AuthenticationService
 
-    init(authenticationService: AuthenticationService) {
+    init(authenticationService: AuthenticationService, fileUploadAndPredictionService: FileUploadAndPredictionService) {
         self.authenticationService = authenticationService
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService))
     }
     
     var body: some View {
@@ -61,6 +62,7 @@ struct SurveyView: View {
 
                     Button {
                         tabController.proceedToNextTab()
+                        viewModel.createSessionJsonFile()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }

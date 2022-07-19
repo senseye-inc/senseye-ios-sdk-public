@@ -29,4 +29,8 @@ class ResultsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    func uploadJsonSessionFile() {
+        self.fileUploadService.uploadSessionJsonFile()
+    }
 }

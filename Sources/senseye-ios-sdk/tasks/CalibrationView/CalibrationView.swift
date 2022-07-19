@@ -10,9 +10,13 @@ import SwiftUI
 @available(iOS 15.0, *)
 struct CalibrationView: View {
 
-    @StateObject var viewModel = CalibrationViewModel()
+    @StateObject var viewModel: CalibrationViewModel
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
+    
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
+        _viewModel = StateObject(wrappedValue: CalibrationViewModel(fileUploadService: fileUploadAndPredictionService))
+    }
 
     var body: some View {
         ZStack {
@@ -36,6 +40,7 @@ struct CalibrationView: View {
             UserConfirmationView(taskCompleted: "Calibration", yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
+                viewModel.addTaskInfoToJson()
                 tabController.proceedToNextTab()
             }, noAction: {
                 cameraService.clearLatestFileRecording()

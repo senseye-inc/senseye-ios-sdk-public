@@ -51,6 +51,8 @@ struct ResultsView: View {
 
                 Spacer()
             }
+        }.onAppear {
+            resultsViewModel.uploadJsonSessionFile()
         }
     }
 }

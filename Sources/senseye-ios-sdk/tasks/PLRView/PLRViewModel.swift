@@ -8,7 +8,7 @@ import Foundation
 import SwiftUI
 
 @available(iOS 13.0, *)
-class PLRViewModel: ObservableObject {
+class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
     @Published var backgroundColor: Color = .white
     @Published var xMarkColor: Color = .black
@@ -16,6 +16,13 @@ class PLRViewModel: ObservableObject {
 
     var currentInterval: Int = 0
     var numberOfPLRShown: Int = 1
+    private var timestampsOfBackgroundSwap: [Int64] = []
+    private let fileUploadService: FileUploadAndPredictionServiceProtocol
+    
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+        self.fileUploadService = fileUploadService
+    }
+    
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         numberOfPLRShown += 1
@@ -25,6 +32,7 @@ class PLRViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.toggleColors()
                 }
+                timestampsOfBackgroundSwap.append(Date().currentTimeMillis())
             } else {
                 timer.invalidate()
                 Log.info("PLRView Timer Cancelled")
@@ -41,5 +49,9 @@ class PLRViewModel: ObservableObject {
 
     private func reset() {
         currentInterval = 0
+    }
+    
+    func addTaskInfoToJson() {
+        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "plr", taskTimestamps: timestampsOfBackgroundSwap)
     }
 }

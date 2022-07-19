@@ -31,8 +31,8 @@ class SurveyViewModel: ObservableObject {
     func createSessionJsonFile() {
         var surveyInput : [String: String] = [:]
         surveyInput["age"] = String(selectedAge ?? -1)
-        surveyInput["gender"] = selectedEyeColor
-        surveyInput["eyeColor"] = selectedGender
+        surveyInput["gender"] = selectedGender
+        surveyInput["eyeColor"] = selectedEyeColor
         fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
     }
 }

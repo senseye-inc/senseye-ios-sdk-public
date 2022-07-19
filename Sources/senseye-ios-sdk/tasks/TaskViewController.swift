@@ -226,7 +226,7 @@ extension TaskViewController: CAAnimationDelegate {
             currentPathTitle.text = "Task Complete! Uploading..."
             toggleCameraPreviewVisibility(isHidden: true)
             self.cameraService.stopCaptureSession()
-            fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput, tasks: taskIdsToComplete)
+            fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
         } else {
             currentPathTitle.text = currentTask?.title
         }
@@ -240,9 +240,6 @@ extension TaskViewController: FileUploadAndPredictionServiceDelegate {
     func didFinishUpload() {
         if (fileUploadService.isUploadOngoing != true && self.shouldShowResultsView) {
             DispatchQueue.main.async {
-                self.fileUploadService.startPredictionForCurrentSessionUploads { result in
-                    Log.info("Result from TaskVC \(result)")
-                }
                 let resultsView = ResultsView(fileUploadService: self.fileUploadService)
                 self.present(UIHostingController(rootView: resultsView), animated: true)
                 self.currentPathTitle.text = "Starting predictions..."

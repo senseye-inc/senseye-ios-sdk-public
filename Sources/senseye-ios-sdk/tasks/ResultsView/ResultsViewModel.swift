@@ -35,28 +35,7 @@ class ResultsViewModel: ObservableObject {
     func startPredictions() {
         isLoading = true
         DispatchQueue.main.async {
-            self.getPredictionResponse()
             self.startPeriodicPredictions()
-        }
-    }
-    
-    func getPredictionResponse() {
-        fileUploadService.startPredictionForCurrentSessionUploads { result in
-            Log.info("Starting predictions")
-            DispatchQueue.main.async {
-                self.predictionStatus = .startingPredictions
-                switch result {
-                case .success(let predictionJobResponse):
-                    Log.debug("entering success completion")
-                    Log.info("Prediction Job Response: \(predictionJobResponse)")
-                    self.predictionStatus = .apiRequestSent
-                    
-                case .failure(let predictionError):
-                    Log.debug("entering failure completion")
-                    Log.info("Error from \(#function): \(predictionError.localizedDescription)")
-                    self.error = predictionError
-                }
-            }
         }
     }
     

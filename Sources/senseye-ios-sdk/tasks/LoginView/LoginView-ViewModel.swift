@@ -15,11 +15,7 @@ extension LoginView {
     class ViewModel: ObservableObject {
         @AppStorage("username") var username: String = ""
         @Published var password: String = ""
-        @Published var newPassword: String = ""
-        @Published var temporaryPassword: String = ""
-        @Published var isNewAccount = false
         @Published var isUserSignedIn = false
-        @Published var isShowingPasswordAlert = false
 
         private var authenticationService: AuthenticationServiceProtocol
 
@@ -28,18 +24,9 @@ extension LoginView {
         }
         
         func login() {
-            if (self.isNewAccount && !self.isValidNewPasswordSubmission()) {
-                isShowingPasswordAlert = true
-                return
-            } else {
-                self.newPassword = ""
-                self.temporaryPassword = ""
-            }
-            
-            self.authenticationService.authenticateSession(
+            self.authenticationService.signIn(
                 accountUsername: self.username,
-                accountPassword: self.password,
-                temporaryPassword: self.temporaryPassword
+                accountPassword: self.password
             )
         }
 
@@ -50,29 +37,25 @@ extension LoginView {
         }
 
         /**
-         On any  view load, any current user is signed out.
+         On any view load, any current user is signed out
+         # TODO: handle signout at a previous load state or make signout dependent on last account activity idle time
          */
         func onAppear() {
             authenticationService.delegate = self
             if (self.isUserSignedIn) {
                 self.authenticationService.signOut(completeSignOut: nil)
             }
-            Log.debug("Login view appears! isSignedIn is \(self.isUserSignedIn)")
+            Log.debug("isSignedIn is \(self.isUserSignedIn)")
         }
         
-        func isMatchingNewPassword() -> Bool { self.password == self.newPassword }
-                
-        func isValidNewPasswordSubmission() -> Bool {
-            isMatchingNewPassword() && !temporaryPassword.isEmpty
-        }
     }
 
 
 }
 @available(iOS 15.0.0, *)
 extension LoginView.ViewModel: AuthenticationServiceDelegate {
-    func didConfirmSignInWithNewPassword() {
-        Log.info("New account password set.")
+    func didConfirmNewUser() {
+        Log.info("Attempted sign in for new user")
     }
     
     func didSuccessfullySignIn() {

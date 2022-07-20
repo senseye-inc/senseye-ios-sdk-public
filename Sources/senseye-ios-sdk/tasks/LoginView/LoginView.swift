@@ -1,6 +1,5 @@
 //
 //  LoginVIew.swift
-//  senseye-ios-sdk-app
 //
 //  Created by Bobby Srisan on 4/3/22.
 //
@@ -29,22 +28,6 @@ struct LoginView: View {
                 }
                 .padding()
 
-                VStack {
-                    Toggle("New Account?", isOn: $vm.isNewAccount.animation())
-                        .foregroundColor(.senseyeTextColor)
-
-                    if (vm.isNewAccount) {
-                        Spacer()
-
-                        VStack {
-                            verifyPasswordView
-                            temporaryPasswordView
-                        }
-                        .keyboardAdaptive()
-                    }
-                }
-                .padding(.horizontal, 35)
-
                 Text("Having trouble logging in?")
                     .foregroundColor(.senseyeTextColor)
 
@@ -55,9 +38,6 @@ struct LoginView: View {
                         .padding()
                 })
                 .disabled(vm.username.isEmpty || vm.password.isEmpty)
-                .alert("Verify passwords match and temporary password is provided.", isPresented: $vm.isShowingPasswordAlert) {
-                    Button("OK", role: .cancel) { }
-                }
                 
                 Spacer()
 
@@ -72,8 +52,8 @@ struct LoginView: View {
         .onAppear {
             vm.onAppear()
         }
-        .onChange(of: vm.isUserSignedIn) { signedIn in
-            if signedIn {
+        .onChange(of: vm.isUserSignedIn) { _ in
+            if vm.isUserSignedIn {
                 tabController.proceedToNextTab()
             }
         }
@@ -120,28 +100,6 @@ extension LoginView {
             Text("Login to get started")
                 .foregroundColor(.senseyeTextColor)
                 .padding()
-        }
-    }
-
-    var verifyPasswordView: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("Verify Password".uppercased())
-                .foregroundColor(.senseyeTextColor)
-            SecureField("", text: $vm.newPassword )
-                .foregroundColor(.senseyeTextColor)
-            Divider()
-                .background(Color.senseyeTextColor)
-        }
-    }
-
-    var temporaryPasswordView: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("temporary password".uppercased())
-                .foregroundColor(.senseyeTextColor)
-            SecureField("", text: $vm.temporaryPassword )
-                .foregroundColor(.senseyeTextColor)
-            Divider()
-                .background(Color.senseyeTextColor)
         }
     }
 }

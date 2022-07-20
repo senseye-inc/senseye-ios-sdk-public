@@ -10,13 +10,13 @@ import Foundation
 
 protocol AuthenticationServiceProtocol {
     func signOut(completeSignOut: (()->())? )
-    func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?)
+    func signIn(accountUsername: String, accountPassword: String)
     func getUsername(completion: @escaping ((String) -> Void))
     var delegate: AuthenticationServiceDelegate? { get set }
 }
 
 protocol AuthenticationServiceDelegate: AnyObject {
-    func didConfirmSignInWithNewPassword()
+    func didConfirmNewUser()
     func didSuccessfullySignIn()
     func didSuccessfullySignOut()
 }
@@ -31,32 +31,28 @@ public class AuthenticationService: ObservableObject {
     
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
-    private var temporaryPassword: String? = nil
-    
+
     /**
-     Authenticates the user session and fetches api key to allow for uploading and processing files. Use
-     didAuthenticateSession to dispatch another action if authorization is successful. This function handles all sign in flows.
-     
-     TODO: Add optional completion action.
-     
+     Authenticates the user session and handles subsequent all sign in flows.
+
      - Parameters:
      - accountUsername: User name credential
      - accountPassword: Primary name credential. In a new account flow, this is the desired new password for the user.
-     - temporaryPassword: In a new account flow, the temporary password is initially provided to complete a new password change for the account.
      */
     
-    public func authenticateSession(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
+    public func signIn(accountUsername: String, accountPassword: String) {
         
         self.setCredentials(
             accountUsername: accountUsername,
-            accountPassword: accountPassword,
-            temporaryPassword: temporaryPassword
+            accountPassword: accountPassword
         )
         
         Amplify.Auth.fetchAuthSession { result in
             switch result {
             case .success(let session):
-                self.synchronizeLogin(to: session)
+                self.synchronizeLogin(to: session) {
+                    self._signIn()
+                }
             case .failure(let error):
                 Log.error("Fetch session failed with error \(error)")
             }
@@ -101,48 +97,40 @@ public class AuthenticationService: ObservableObject {
     /**
      Convenience function.
      */
-    private func setCredentials(accountUsername: String, accountPassword: String, temporaryPassword: String?) {
+    private func setCredentials(accountUsername: String, accountPassword: String) {
         self.accountUsername = accountUsername
         self.accountPassword = accountPassword
-        self.temporaryPassword = temporaryPassword
     }
     
     /**
-     Routine to sign in with credentials. If a different previous username is found or any session is signed in, it will be signed out before attempting
+     Precheck routine before sign in. If a different previous username is found or any session is signed in, it will be signed out before attempting
      to sign in with assigned credentials.
      */
-    private func synchronizeLogin(to currentSession: AuthSession) {
-        guard let username = self.accountUsername, let password = self.accountPassword else {
-            Log.warn("Need accountUsername or accountPassword")
-            return
-        }
-        
+    private func synchronizeLogin(to currentSession: AuthSession, completion: @escaping (()->())) {
         let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username
         Log.debug("current signed in user: \(String(describing: currentSignedInUser))")
-        let doesUserMatchCurrentSignIn = currentSignedInUser == username
+        let doesUserMatchCurrentSignIn = currentSignedInUser == self.accountUsername
         
         if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
-            self.signOut(completeSignOut:  {
-                self.signIn(username: username, password: password, temporaryPassword: self.temporaryPassword)
-            })
+            self.signOut {
+                completion()
+            }
         } else {
-            self.signIn(username: username, password: password, temporaryPassword: self.temporaryPassword)
+            completion()
         }
     }
     
     /**
      Sign in with handling cases for different account states.
      */
-    private func signIn(username: String, password: String, temporaryPassword: String?) {
-        let signInPassword: String
-        
-        if (temporaryPassword == nil || temporaryPassword == "") {
-            signInPassword = password
-        } else {
-            signInPassword = temporaryPassword!
+    private func _signIn() {
+
+        guard let username = self.accountUsername, let password = self.accountPassword else {
+            Log.error("No account username or account password set")
+            return
         }
-        
-        Amplify.Auth.signIn(username: username, password: signInPassword) { result in
+
+        Amplify.Auth.signIn(username: username, password: password) { [self] result in
             do {
                 let signinResult = try result.get()
                 switch signinResult.nextStep {
@@ -155,19 +143,18 @@ public class AuthenticationService: ObservableObject {
                     Log.debug("Custom challenge, additional info \(String(describing: info))")
                     // TODO: Prompt the user to enter custom challenge answer
                     // Then invoke `confirmSignIn` api with the answer
-                case .confirmSignInWithNewPassword(let info):
-                    // Replace temporary password user's desired password
-                    // Then invoke `confirmSignIn` api with new password
-                    // TODO: Do double password entries
-                    Log.debug("New password additional info \(String(describing: info))")
+                case .confirmSignInWithNewPassword(_):
+                    // Continue to reuse existing password
+                    // Then invoke `confirmSignIn` api with password
+                    self.delegate?.didConfirmNewUser()
+
                     Amplify.Auth.confirmSignIn(challengeResponse: password, options: nil) { confirmSignInResult in
                         switch confirmSignInResult {
                         case .success(let confirmedResult):
-                            Log.debug("Confirmed \(confirmedResult) sign in w new password.")
-                            self.delegate?.didConfirmSignInWithNewPassword()
+                            Log.debug("Confirmed \(confirmedResult) sign in w existing password.")
                             self.delegate?.didSuccessfullySignIn()
                         case .failure(let authError):
-                            Log.warn("Sign in w new password failed \(authError)")
+                            Log.error("Sign in with existing password failed \(authError)")
                         }
                     }
                 case .resetPassword(let info):
@@ -203,6 +190,8 @@ public class AuthenticationService: ObservableObject {
         }
         completion(currentSignedInUser)
     }
+
+
 }
 
 @available(iOS 13.0, *)

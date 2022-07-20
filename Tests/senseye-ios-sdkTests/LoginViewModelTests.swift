@@ -27,33 +27,6 @@ class LoginViewModelTests: XCTestCase {
     
     // MARK: - login
     
-    func testLoginWithNewAccountAndInvalidPasswordSubmissionShowsPasswordAlert() {
-        // Given
-        model.isNewAccount = true
-        let validSubmission = model.isValidNewPasswordSubmission()
-        
-        // When
-        model.login()
-        
-        // Then
-        if !validSubmission {
-            XCTAssertTrue(model.isShowingPasswordAlert)
-        }
-    }
-    
-    func testLoginWithExistingAccountShowsNoPasswordAlert() {
-        // Given
-        model.isNewAccount = false
-        
-        // When
-        model.login()
-        
-        // Then
-        XCTAssertTrue(model.newPassword == "")
-        XCTAssertTrue(model.temporaryPassword == "")
-        XCTAssertFalse(model.isShowingPasswordAlert)
-    }
-    
     func testLoginCallsAuthenticationServiceAuthenticateSession() {
         //  When
         model.login()

@@ -75,6 +75,12 @@ class FileUploadAndPredictionService: ObservableObject {
         return "\(username)_\(sessionTimeStamp)"
     }
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
+    private var usernamesToIgnore: [String] = [
+        "ios_tester_account_1"
+    ]
+    private var shouldSkipUpload: Bool {
+        usernamesToIgnore.contains(where: { $0 != username })
+    }
     
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
@@ -106,7 +112,8 @@ class FileUploadAndPredictionService: ObservableObject {
         let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
         let filename = fileUrl
         
-        guard let _ = self.hostApiKey else {
+        guard let _ = self.hostApiKey, shouldSkipUpload else {
+            Log.info("Skipping data upload")
             return
         }
         
@@ -208,6 +215,11 @@ class FileUploadAndPredictionService: ObservableObject {
      Upload JSON file for the current session
      */
     func uploadSessionJsonFile() {
+
+        guard shouldSkipUpload else {
+            Log.info("Skipping JSON Upload")
+            return
+        }
         
         if hasUploadedJsonFile {
             return

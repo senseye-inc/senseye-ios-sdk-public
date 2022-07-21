@@ -9,6 +9,7 @@ import Foundation
 import Amplify
 import UIKit
 import SwiftUI
+import Combine
 
 @available(iOS 15.0.0, *)
 extension LoginView {
@@ -16,11 +17,27 @@ extension LoginView {
         @AppStorage("username") var username: String = ""
         @Published var password: String = ""
         @Published var isUserSignedIn = false
+        @Published var isShowingAlert = false
+        var alertItem: AlertItem?
 
         private var authenticationService: AuthenticationServiceProtocol
+        private var cancellables = Set<AnyCancellable>()
 
         init(authenticationService: AuthenticationServiceProtocol) {
             self.authenticationService = authenticationService
+            addSubscribers()
+        }
+
+        func addSubscribers() {
+            authenticationService.authErrorPublisher
+                .drop(while: { $0 == nil })
+                .receive(on: DispatchQueue.main)
+                .sink { alertItem in
+                    Log.error("AuthError!")
+                    self.isShowingAlert = true
+                    self.alertItem = alertItem
+                }
+                .store(in: &cancellables)
         }
         
         func login() {

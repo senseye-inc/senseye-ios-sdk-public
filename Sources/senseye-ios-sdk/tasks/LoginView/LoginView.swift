@@ -38,6 +38,11 @@ struct LoginView: View {
                         .padding()
                 })
                 .disabled(vm.username.isEmpty || vm.password.isEmpty)
+                .alert(vm.alertItem?.title ?? "", isPresented: $vm.isShowingAlert) {
+                    Button(vm.alertItem?.alertButtonText ?? "") { }
+                } message: {
+                    Text(vm.alertItem?.message ?? "")
+                }
                 
                 Spacer()
 

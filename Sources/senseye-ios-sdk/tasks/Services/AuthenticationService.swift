@@ -6,13 +6,18 @@
 //
 
 import Amplify
+import SwiftUI
 import Foundation
 
+@available(iOS 13.0, *)
 protocol AuthenticationServiceProtocol {
     func signOut(completeSignOut: (()->())? )
     func signIn(accountUsername: String, accountPassword: String)
     func getUsername(completion: @escaping ((String) -> Void))
     var delegate: AuthenticationServiceDelegate? { get set }
+    var authError: AlertItem? { get }
+    var authErrorPublished: Published<AlertItem?> { get}
+    var authErrorPublisher: Published<AlertItem?>.Publisher { get }
 }
 
 protocol AuthenticationServiceDelegate: AnyObject {
@@ -28,6 +33,9 @@ protocol AuthenticationServiceDelegate: AnyObject {
 public class AuthenticationService: ObservableObject {
     
     weak var delegate: AuthenticationServiceDelegate?
+    @Published var authError: AlertItem? = nil
+    var authErrorPublished: Published<AlertItem?> { _authError }
+    var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
     
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
@@ -176,9 +184,26 @@ public class AuthenticationService: ObservableObject {
                     self.delegate?.didSuccessfullySignIn()
                     Log.info("Signin complete")
                 }
-            } catch {
+            } catch(let error) {
                 // TODO: Insert delegate or completion handler for failed sign in.
                 Log.error("Sign in failed \(error)")
+                guard let error = error as? AuthError else { return }
+                DispatchQueue.main.async {
+                    switch error {
+                    case .notAuthorized(_, _, _):
+                        self.authError = AlertContext.invalidLogin
+                    case
+                    .configuration(_, _, _),
+                    .service(_, _, _),
+                    .unknown(_, _),
+                    .validation(_, _, _, _),
+                    .invalidState(_, _, _),
+                    .signedOut(_, _, _),
+                    .sessionExpired(_, _, _):
+                        Log.error("Error: \(error)", shouldLogContext: true)
+                        self.authError = AlertContext.defaultAlert
+                    }
+                }
             }
         }
     }

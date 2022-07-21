@@ -33,6 +33,6 @@ class SurveyViewModel: ObservableObject {
         surveyInput["age"] = String(selectedAge ?? -1)
         surveyInput["gender"] = selectedGender
         surveyInput["eyeColor"] = selectedEyeColor
-        fileUploadService.createSessionInputJsonFile(surveyInput: surveyInput)
+        fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: surveyInput)
     }
 }

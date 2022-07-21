@@ -8,8 +8,9 @@
 import Foundation
 import AVFoundation
 import UIKit
+import SwiftUI
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 @MainActor
 class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate, ObservableObject {
     
@@ -22,6 +23,7 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
 
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
+    @AppStorage("username") var username: String = ""
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
@@ -139,13 +141,11 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     }
 
     func startRecordingForTask(taskId: String) {
-        authenticationService.getUsername { [self] username in
-            let currentTimeStamp = Date().currentTimeMillis()
-            guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
-                return
-            }
-            self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+        let currentTimeStamp = Date().currentTimeMillis()
+        guard let fileUrl = fileDestUrl?.appendingPathComponent("\(self.username)_\(currentTimeStamp)_\(taskId).mp4") else {
+            return
         }
+        self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
     }
     
     func stopRecording() {

@@ -44,10 +44,8 @@ public class SenseyeSDK {
     }
 
     @MainActor public func senseyeTabView() -> some View {
-        var username = ""
         let authenticationService = AuthenticationService()
-        authenticationService.getUsername(completion: { username = $0 })
-        let fileUploadService = FileUploadAndPredictionService(username: username)
+        let fileUploadService = FileUploadAndPredictionService()
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         return SenseyeTabView()
             .environmentObject(authenticationService)

@@ -10,6 +10,7 @@ import Amplify
 import Alamofire
 import SwiftyJSON
 import Combine
+import SwiftUI
 
 @available(iOS 13.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
@@ -20,7 +21,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     var numberOfUploads: Double { get }
     func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void)
     func uploadData(fileUrl: URL)
-    func createSessionInputJsonFile(surveyInput: [String: String])
+    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
     func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64])
 }
@@ -34,7 +35,7 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 /**
  FileUploadAndPredictionService is responsible for communicating with backend service.
  */
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 class FileUploadAndPredictionService: ObservableObject {
     
     private struct PredictRequestParameters: Encodable {
@@ -70,7 +71,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private let hostApi =  "https://apeye.senseye.co"
     private var hostApiKey: String? = nil
     private var sessionTimeStamp: Int64
-    private var username: String
+    @AppStorage("username") var username: String = ""
     private var s3FolderName: String {
         return "\(username)_\(sessionTimeStamp)"
     }
@@ -92,12 +93,10 @@ class FileUploadAndPredictionService: ObservableObject {
     private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
     
-    init(username: String) {
+    init() {
         self.fileManager = FileManager.default
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         self.sessionTimeStamp = Date().currentTimeMillis()
-        self.username = username
-        self.setUserApiKey()
     }
     
     
@@ -175,7 +174,8 @@ class FileUploadAndPredictionService: ObservableObject {
      - surveyInput: Array of responses from demographic survey
      - tasks: Array of experiment tasks that are performed during the session
      */
-    func createSessionInputJsonFile(surveyInput: [String: String]) {
+    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
+        self.setUserApiKey()
         var sessionInputJson = JSON()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
@@ -332,5 +332,5 @@ class FileUploadAndPredictionService: ObservableObject {
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol { }

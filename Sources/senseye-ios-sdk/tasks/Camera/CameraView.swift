@@ -53,7 +53,7 @@ struct CameraView: View {
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 struct CameraPreview: UIViewRepresentable {
     
     let cameraService: CameraService

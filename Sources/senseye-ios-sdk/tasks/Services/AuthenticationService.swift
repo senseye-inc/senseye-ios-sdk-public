@@ -215,8 +215,6 @@ public class AuthenticationService: ObservableObject {
         }
         completion(currentSignedInUser)
     }
-
-
 }
 
 @available(iOS 13.0, *)

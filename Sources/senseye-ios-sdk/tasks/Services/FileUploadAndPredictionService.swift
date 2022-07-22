@@ -76,12 +76,7 @@ class FileUploadAndPredictionService: ObservableObject {
         return "\(username)_\(sessionTimeStamp)"
     }
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
-    private var usernamesToIgnore: [String] = [
-        "ios_tester_account_1"
-    ]
-    private var shouldSkipUpload: Bool {
-        usernamesToIgnore.contains(where: { $0 != username })
-    }
+    private var shouldSkipUpload: Bool = false
     
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
@@ -111,7 +106,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
         let filename = fileUrl
         
-        guard let _ = self.hostApiKey, shouldSkipUpload else {
+        guard let _ = self.hostApiKey, !shouldSkipUpload else {
             Log.info("Skipping data upload")
             return
         }
@@ -150,15 +145,19 @@ class FileUploadAndPredictionService: ObservableObject {
         .store(in: &self.cancellables)
     }
     
-    private func setUserApiKey() {
+    private func setUserAttributes() {
         Amplify.Auth.fetchUserAttributes() { result in
             switch result {
             case .success(let attributes):
-                if let attribute = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
-                    self.hostApiKey = attribute.value
+                if let apiKey = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
+                    self.hostApiKey = apiKey.value
                     Log.debug("Found and set senseye_api_token")
                 } else {
                     Log.warn("unable to set api key")
+                }
+                if attributes.contains(where: { $0.key == AuthUserAttributeKey.custom("skip_uploads")}) {
+                    Log.debug("Found and set skip_uploads. Skipping Upload.")
+                    self.shouldSkipUpload = true
                 }
                 Log.debug("Host api key: \(String(describing: self.hostApiKey))")
             case .failure(let authError):
@@ -175,7 +174,7 @@ class FileUploadAndPredictionService: ObservableObject {
      - tasks: Array of experiment tasks that are performed during the session
      */
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
-        self.setUserApiKey()
+        self.setUserAttributes()
         var sessionInputJson = JSON()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String

@@ -36,8 +36,8 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
         if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
-            let deviceType = cameraInfo.deviceType.rawValue
-            fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": deviceType])
+            let cameraType = cameraInfo.deviceType.rawValue
+            fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": cameraType])
         }
     }
     

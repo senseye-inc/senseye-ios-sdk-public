@@ -178,9 +178,13 @@ class FileUploadAndPredictionService: ObservableObject {
         var sessionInputJson = JSON()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let deviceType = UIDevice().type
+        let currentTiemzone = TimeZone.current
         
         sessionInputJson["versionName"].string = version
         sessionInputJson["versionCode"].string = build
+        sessionInputJson["deviceType"].string = deviceType.rawValue
+        sessionInputJson["timezone"].string = currentTiemzone.identifier
         
         for inputItem in surveyInput {
             sessionInputJson[inputItem.key].string = inputItem.value

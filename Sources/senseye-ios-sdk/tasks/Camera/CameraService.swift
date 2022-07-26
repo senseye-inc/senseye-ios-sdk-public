@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 import UIKit
 import SwiftUI
+import SwiftyJSON
 
 @available(iOS 14.0, *)
 @MainActor
@@ -34,6 +35,10 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         self.frontCameraDevice = frontCameraDevice
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
+        if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
+            let deviceType = cameraInfo.deviceType.rawValue
+            fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": deviceType])
+        }
     }
     
     func start() {

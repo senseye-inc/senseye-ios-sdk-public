@@ -46,7 +46,7 @@ struct SenseyeInfoOverlay: View {
                         showingOverlay.toggle()
                     }
                 }, label: {
-                    Label("Continue", systemImage: "checkmark.seal").padding()
+                    SenseyeButton(text: "Continue", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                 })
                 .foregroundColor(.white)
                 .interactiveDismissDisabled()

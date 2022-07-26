@@ -21,13 +21,14 @@ struct CalibrationView: View {
     var body: some View {
         ZStack {
             Color.black
+                .edgesIgnoringSafeArea(.all)
             GeometryReader { _ in
-
                 Circle()
                     .fill(.white)
                     .frame(width: 50, height: 50)
                     .offset(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
+            .padding(10)
         }
         .onAppear {
             cameraService.startRecordingForTask(taskId: "calibration_\(viewModel.numberOfCalibrationShown)")

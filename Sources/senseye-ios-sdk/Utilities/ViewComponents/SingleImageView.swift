@@ -12,12 +12,15 @@ struct SingleImageView: View {
     let imageName: URL
     var body: some View {
         AsyncImage(url: imageName) { image in
-            image.resizable()
-            image.scaledToFit()
-            image.edgesIgnoringSafeArea(.all)
-
+            image
+                .resizable()
+                .edgesIgnoringSafeArea(.all)
         } placeholder: {
-            ProgressView()
+            ProgressView("Downloading image sets…")
+                .scaleEffect(1.5, anchor: .center)
+                .progressViewStyle(.circular)
+                .tint(.senseyeSecondary)
+                .foregroundColor(.senseyeSecondary)
         }
     }
 }

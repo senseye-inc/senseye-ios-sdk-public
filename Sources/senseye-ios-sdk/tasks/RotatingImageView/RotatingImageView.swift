@@ -24,22 +24,19 @@ struct RotatingImageView: View {
                 .edgesIgnoringSafeArea(.all)
 
             GeometryReader { geometry in
-                HStack(spacing: 0) {
-                    SingleImageView(imageName: viewModel.currentImageName!)
-                }
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
-                .onAppear {
-                    viewModel.downloadPtsdImageSetsIfRequired {
-                        DispatchQueue.main.async {
-                            cameraService.startRecordingForTask(taskId: "PTSD_\(viewModel.numberOfImageSetsShown)")
-                            viewModel.showImages {
-                                cameraService.stopRecording()
-                                viewModel.shouldShowConfirmationView.toggle()
+                SingleImageView(imageName: viewModel.currentImageName!)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .onAppear {
+                        viewModel.downloadPtsdImageSetsIfRequired {
+                            DispatchQueue.main.async {
+                                cameraService.startRecordingForTask(taskId: "aiv_\(viewModel.numberOfImageSetsShown)")
+                                viewModel.showImages {
+                                    cameraService.stopRecording()
+                                    viewModel.shouldShowConfirmationView.toggle()
+                                }
                             }
                         }
                     }
-                    
-                }
             }
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {

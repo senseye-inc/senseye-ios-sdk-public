@@ -14,17 +14,15 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 @available(iOS 15.0, *)
 public class SenseyeSDK {
     
-    let tasks: [String] = ["plr", "calibration", "smoothPursuit"]
-    
     weak var delegate: SenseyeTaskCompletionDelegate?
     
     public init() {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
-
+        initializeSDK()
     }
     
-    public func initializeSDK() {
+    private func initializeSDK() {
         do {
             guard let configurationURL = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
                 Log.error("Unable to load amplifyconfiguration.")

@@ -12,6 +12,40 @@ import SwiftyJSON
 import Combine
 import SwiftUI
 
+// MARK: - SessionInfo
+struct SessionInfo: Codable {
+    let versionCode, age, eyeColor, versionName: String
+    let gender: String
+    let tasks: [SenseyeTask]
+}
+
+// MARK: - Task
+struct SenseyeTask: Codable {
+    let taskID: String
+    let timestamps: [Int64]?
+    let eventXLOC, eventYLOC: [Int]?
+    let eventImageID: [String]?
+    let eventBackgroundColor: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case taskID = "taskId"
+        case timestamps
+        case eventXLOC = "event_x_loc"
+        case eventYLOC = "event_y_loc"
+        case eventImageID = "event_image_id"
+        case eventBackgroundColor = "event_background_color"
+    }
+
+    init(taskID: String, timestamps: [Int64]? = nil, eventXLOC: [Int]? = nil, eventYLOC: [Int]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil) {
+        self.taskID = taskID
+        self.timestamps = timestamps
+        self.eventXLOC = eventXLOC
+        self.eventYLOC = eventYLOC
+        self.eventImageID = eventImageID
+        self.eventBackgroundColor = eventBackgroundColor
+    }
+}
+
 @available(iOS 13.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
     func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
@@ -24,6 +58,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
     func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64])
+    func addTaskRelatedInfoTo(taskInfo: SenseyeTask)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -191,7 +226,58 @@ class FileUploadAndPredictionService: ObservableObject {
         }
         self.currentSessionJsonInputFile = sessionInputJson
     }
-    
+
+    func addTaskRelatedInfoTo(taskInfo: SenseyeTask) {
+        var newTaskJsonObject = JSON()
+
+
+        // taskID
+        newTaskJsonObject["taskId"].string = taskInfo.taskID
+
+        // timeStamps
+        let timestamps = jsonFor(taskInfo.timestamps)
+        newTaskJsonObject["timestamps"] = timestamps
+
+        // eventXLOC
+        let eventXLOC = jsonFor(taskInfo.eventXLOC)
+        newTaskJsonObject["eventXLOC"] = eventXLOC
+
+        // eventYLOC
+        let eventYLOC = jsonFor(taskInfo.eventYLOC)
+        newTaskJsonObject["eventYLOC"] = eventYLOC
+
+        // eventImageID
+        let eventImageID = jsonFor(taskInfo.eventImageID)
+        newTaskJsonObject["eventImageID"] = eventImageID
+
+        // eventBackgroundColor
+        let eventBackgroundColor = jsonFor(taskInfo.eventBackgroundColor)
+        newTaskJsonObject["eventBackgroundColor"] = eventBackgroundColor
+
+
+        let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array
+        if !(previousTaskObjects?.isEmpty ?? true) {
+            var taskObjectList: [JSON] = []
+            for previousTaskObject in previousTaskObjects! {
+                taskObjectList.append(previousTaskObject)
+            }
+            taskObjectList.append(newTaskJsonObject)
+            self.currentSessionJsonInputFile?["tasks"] = JSON(taskObjectList)
+        } else {
+            self.currentSessionJsonInputFile?["tasks"] = [newTaskJsonObject]
+        }
+
+        Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
+        
+    }
+
+    func jsonFor<T>(_ taskInfo: T?) -> JSON {
+        let list = taskInfo.map { JSON($0) }
+        let object = JSON(list ?? [])
+        return object
+    }
+
+
     func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64]) {
         var newTaskJsonObject = JSON()
         newTaskJsonObject["taskId"].string = taskId
@@ -327,8 +413,8 @@ class FileUploadAndPredictionService: ObservableObject {
                         }
                     case let .failure(storageError):
                         Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                }
-            })
+                    }
+                })
         } else {
             successfullCompletion()
         }

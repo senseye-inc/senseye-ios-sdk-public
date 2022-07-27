@@ -28,7 +28,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         numberOfPLRShown += 1
         Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] timer in
-            eventBackgroundColor.append(xMarkColor.toHex() ?? "")
             currentInterval += 1
             if currentInterval <= 10 {
                 DispatchQueue.main.async {
@@ -47,6 +46,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     private func toggleColors() {
         backgroundColor = (backgroundColor == .white ? .black : .white)
         xMarkColor = (xMarkColor == .black ? .white : .black)
+        eventBackgroundColor.append(xMarkColor.toHex() ?? "")
     }
 
     private func reset() {
@@ -55,7 +55,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     
     func addTaskInfoToJson() {
         let taskInfo = SenseyeTask(taskID: "plr", timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor)
-//        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "plr", taskTimestamps: timestampsOfBackgroundSwap)
         fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
     }
 }

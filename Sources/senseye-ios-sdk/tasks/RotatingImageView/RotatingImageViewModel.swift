@@ -21,11 +21,17 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     let affectiveImageNames: [String] = ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]
 
     @Published var shouldShowConfirmationView: Bool = false
-    @Published var currentImageIndex: Int = 0
+    @Published var currentImageIndex: Int = 0 {
+        willSet {
+            eventImageID.append(affectiveImageNames[currentImageIndex])
+        }
+    }
 
     var numberOfImagesShown = 0
     var totalNumberOfImagesToBeShown = 24
     var numberOfImageSetsShown: Int = 1
+    private var eventImageID: [String] = []
+    private var timestampsOfImageSwap: [Int64] = []
 
     var finishedAllTasks: Bool {
         numberOfImagesShown >= affectiveImageNames.count
@@ -43,7 +49,6 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     private var fileManager: FileManager = FileManager.default
-    private var timestampsOfImageSwap: [Int64] = []
     
     func downloadPtsdImageSetsIfRequired(didFinishDownloadingAssets: @escaping () -> Void) {
         let dispatchGroup = DispatchGroup()
@@ -65,8 +70,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         numberOfImageSetsShown += 1
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             numberOfImagesShown += 1
+            timestampsOfImageSwap.append(Date().currentTimeMillis())
             if currentImageIndex < affectiveImageNames.count - 1 {
-                timestampsOfImageSwap.append(Date().currentTimeMillis())
                 currentImageIndex += 1
             } else {
                 timer.invalidate()
@@ -86,6 +91,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "ptsd_image_set", taskTimestamps: timestampsOfImageSwap)
+        let taskInfo = SenseyeTask(taskID: "ptsd_image_set", timestamps: timestampsOfImageSwap, eventImageID: eventImageID)
+        fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
     }
 }

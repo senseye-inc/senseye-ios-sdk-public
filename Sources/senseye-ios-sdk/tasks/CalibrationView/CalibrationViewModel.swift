@@ -47,6 +47,9 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
+        let eventXLOC: [Int] = []
+        let yventXLOC: [Int] = []
+        let taskInfo = SenseyeTask(taskID: "calibration", eventXLOC: <#T##[Int]?#>)
         fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "calibration", taskTimestamps: timestampsOfStimuli)
     }
 }

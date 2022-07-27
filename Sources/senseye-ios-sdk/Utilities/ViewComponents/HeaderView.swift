@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-@available(iOS 13.0.0, *)
+@available(iOS 14.0.0, *)
 struct HeaderView: View {
     var body: some View {
         VStack(alignment: .trailing) {
@@ -14,17 +14,6 @@ struct HeaderView: View {
                 .foregroundColor(.senseyeSecondary)
                 .padding(.leading)
                 .font(.subheadline)
-        }
-    }
-}
-
-@available(iOS 13.0.0, *)
-struct HeaderView_Previews: PreviewProvider {
-    static var previews: some View {
-        ZStack {
-            Color.senseyePrimary
-                .edgesIgnoringSafeArea(.all)
-            HeaderView()
         }
     }
 }

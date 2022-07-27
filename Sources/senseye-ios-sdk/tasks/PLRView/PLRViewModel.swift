@@ -7,7 +7,7 @@
 import Foundation
 import SwiftUI
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
     @Published var backgroundColor: Color = .white
@@ -17,6 +17,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     var currentInterval: Int = 0
     var numberOfPLRShown: Int = 1
     private var timestampsOfBackgroundSwap: [Int64] = []
+    private var eventBackgroundColor: [String] = []
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
@@ -27,6 +28,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         numberOfPLRShown += 1
         Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] timer in
+            eventBackgroundColor.append(xMarkColor.toHex() ?? "")
             currentInterval += 1
             if currentInterval <= 10 {
                 DispatchQueue.main.async {
@@ -52,6 +54,8 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "plr", taskTimestamps: timestampsOfBackgroundSwap)
+        let taskInfo = SenseyeTask(taskID: "plr", timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor)
+//        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "plr", taskTimestamps: timestampsOfBackgroundSwap)
+        fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
     }
 }

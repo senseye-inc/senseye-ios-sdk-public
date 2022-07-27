@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-@available(iOS 13.0.0, *)
+@available(iOS 14.0.0, *)
 struct CameraButtonOverlayView: View {
 
     var body: some View {

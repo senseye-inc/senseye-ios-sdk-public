@@ -92,6 +92,6 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     func addTaskInfoToJson() {
         let taskInfo = SenseyeTask(taskID: "ptsd_image_set", timestamps: timestampsOfImageSwap, eventImageID: eventImageID)
-        fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

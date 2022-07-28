@@ -23,8 +23,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func uploadData(fileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
-    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64])
-    func addTaskRelatedInfoTo(taskInfo: SenseyeTask)
+    func addTaskRelatedInfo(for taskInfo: SenseyeTask)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -193,7 +192,7 @@ class FileUploadAndPredictionService: ObservableObject {
         self.currentSessionJsonInputFile = sessionInputJson
     }
 
-    func addTaskRelatedInfoTo(taskInfo: SenseyeTask) {
+    func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
         var newTaskJsonObject = JSON()
 
         // taskID
@@ -238,36 +237,11 @@ class FileUploadAndPredictionService: ObservableObject {
         }
 
         Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
-        
     }
 
     func jsonFor<T>(_ taskInfo: T?) -> JSON? {
         let list = taskInfo.map { JSON($0) }
-//        let object = JSON(list)
         return list
-    }
-
-
-    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64]) {
-        var newTaskJsonObject = JSON()
-        newTaskJsonObject["taskId"].string = taskId
-        let timestampList = taskTimestamps.map { JSON($0)}
-        let taskTimestampJsonObject = JSON(timestampList)
-        newTaskJsonObject["timestamps"] = taskTimestampJsonObject
-        
-        let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array
-        if !(previousTaskObjects?.isEmpty ?? true) {
-            var taskObjectList: [JSON] = []
-            for previousTaskObject in previousTaskObjects! {
-                taskObjectList.append(previousTaskObject)
-            }
-            taskObjectList.append(newTaskJsonObject)
-            self.currentSessionJsonInputFile?["tasks"] = JSON(taskObjectList)
-        } else {
-            self.currentSessionJsonInputFile?["tasks"] = [newTaskJsonObject]
-        }
-        
-        Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
     }
     
     /**

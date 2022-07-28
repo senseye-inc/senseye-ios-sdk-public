@@ -56,6 +56,6 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
             eventYLOC.append(yCoordinate)
         }
         let taskInfo = SenseyeTask(taskID: "calibration", timestamps: timestampsOfStimuli, eventXLOC: eventXLOC, eventYLOC: eventYLOC)
-        fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

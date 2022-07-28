@@ -55,6 +55,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     
     func addTaskInfoToJson() {
         let taskInfo = SenseyeTask(taskID: "plr", timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor)
-        fileUploadService.addTaskRelatedInfoTo(taskInfo: taskInfo)
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

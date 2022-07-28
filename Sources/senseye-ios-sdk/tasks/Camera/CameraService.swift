@@ -12,15 +12,21 @@ import SwiftUI
 
 @available(iOS 14.0, *)
 @MainActor
-class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureFileOutputRecordingDelegate, ObservableObject {
+class CameraService: NSObject, ObservableObject {
     
-    private var captureOutput = AVCaptureVideoDataOutput()
-    private var captureMovieFileOutput = AVCaptureMovieFileOutput()
+    private var captureVideoDataOutput = AVCaptureVideoDataOutput()
+    
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
+    private var startedTaskRecording = false
+    private var videoWriter: AVAssetWriter!
+    private var videoWriterInput: AVAssetWriterInput!
+    private var sessionAtSourceTime: CMTime?
+    
     private let authenticationService: AuthenticationServiceProtocol
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
 
+    @Published var frame: CGImage?
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @AppStorage("username") var username: String = ""
@@ -82,19 +88,26 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
 
             captureSession.sessionPreset = .high
 
-            if captureSession.canAddOutput(captureOutput), captureSession.canAddOutput(captureMovieFileOutput) {
-                captureSession.addOutput(captureOutput)
-                captureSession.addOutput(captureMovieFileOutput)
+            if captureSession.canAddOutput(captureVideoDataOutput) {
+                captureSession.addOutput(captureVideoDataOutput)
+                Log.info("added all the output sessions")
             }
-            let videoQueue = DispatchQueue(label: "videoQueue", qos: .userInteractive)
-            captureOutput.setSampleBufferDelegate(self, queue: videoQueue)
+            let videoOutputQueue = DispatchQueue(label: "videoOutputQueue")
+            captureVideoDataOutput.setSampleBufferDelegate(self, queue: videoOutputQueue)
+            guard let connection = captureVideoDataOutput.connection(with: AVFoundation.AVMediaType.video) else { return }
+            guard connection.isVideoOrientationSupported else { return }
+            guard connection.isVideoMirroringSupported else { return }
+            connection.videoOrientation = .portrait
+            connection.isVideoMirrored = true
             captureSession.commitConfiguration()
+            self.captureSession.startRunning()
         } catch {
             Log.error("videoDeviceInput error")
         }
     }
     
     func setupVideoPreviewLayer(for cameraPreview: UIView) {
+        Log.info("setting up camera preview")
         var videoPreviewLayer = AVCaptureVideoPreviewLayer()
         videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         videoPreviewLayer.connection?.videoOrientation = .portrait
@@ -145,25 +158,20 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
         guard let fileUrl = fileDestUrl?.appendingPathComponent("\(self.username)_\(currentTimeStamp)_\(taskId).mp4") else {
             return
         }
-        self.captureMovieFileOutput.startRecording(to: fileUrl, recordingDelegate: self)
+        setupTaskRecordingToStart() {
+            self.setupWriter(url: fileUrl)
+        }
     }
     
     func stopRecording() {
-        self.captureMovieFileOutput.stopRecording()
-    }
-    
-    func startCaptureSession() {
-        self.captureSession.startRunning()
+        self.stopCurrentTaskRecordingAndSaveFile() {
+            self.captureSession.stopRunning()
+        }
     }
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()
         Log.info("Capture session stopped")
-    }
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        Log.info("Video output finish \(outputFileURL.absoluteString)")
-        latestFileUrl = outputFileURL
     }
     
     func uploadLatestFile() {
@@ -180,5 +188,96 @@ class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVC
     func goToSettings() {
         let settingsAppURL = URL(string: UIApplication.openSettingsURLString)!
         UIApplication.shared.open(settingsAppURL, options: [:], completionHandler: nil)
+    }
+    
+    private func setupWriter(url: URL) {
+      do {
+          videoWriter = try AVAssetWriter(url: url, fileType: AVFileType.mp4)
+          
+          //Add video input
+          videoWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: [
+                  AVVideoCodecKey: AVVideoCodecType.h264,
+                  AVVideoWidthKey: 1080,
+                  AVVideoHeightKey: 1920,
+              ])
+          videoWriterInput.expectsMediaDataInRealTime = true //Make sure we are exporting data at realtime
+          if videoWriter.canAdd(videoWriterInput) {
+              videoWriter.add(videoWriterInput)
+          }
+          
+          videoWriter.startWriting() //Means ready to write down the file 
+      }
+      catch let error {
+          debugPrint(error.localizedDescription)
+      }
+    }
+}
+
+@available(iOS 14.0, *)
+extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
+    
+    internal func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    
+        let writable = canWrite()
+        
+        guard writable else {
+            //Use latest image for preview
+            guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+            let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+            let context = CIContext()
+            self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+            return
+        }
+        
+        if writable,
+             sessionAtSourceTime == nil {
+            //Start writing
+            sessionAtSourceTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            videoWriter.startSession(atSourceTime: sessionAtSourceTime!)
+            Log.info("frame output on recording.. writing was started)")
+          }
+
+        if output == captureVideoDataOutput {
+            //Your old code when make the overlay here
+            if videoWriterInput.isReadyForMoreMediaData {
+                //Write video buffer
+                videoWriterInput.append(sampleBuffer)
+                Log.info("frame output on recording.. additional buffer was added")
+            }
+        }
+        
+    }
+    
+}
+
+@available(iOS 14.0, *)
+extension CameraService {
+    private func canWrite() -> Bool {
+        return startedTaskRecording
+            && videoWriter != nil
+            && videoWriter.status == .writing
+    }
+    private func setupTaskRecordingToStart(onComplete: () -> Void) {
+        guard !startedTaskRecording else { return }
+        startedTaskRecording = true
+        sessionAtSourceTime = nil
+        onComplete()
+    }
+    
+    func stopCurrentTaskRecordingAndSaveFile(onComplete: @escaping () -> Void) {
+        guard startedTaskRecording else { return }
+        startedTaskRecording = false
+        videoWriter.finishWriting { [weak self] in 
+            self?.sessionAtSourceTime = nil
+            guard let url = self?.videoWriter.outputURL else { return }
+            let asset = AVURLAsset(url: url)
+            Log.info("Video output finish \(url.absoluteString)")
+            self?.latestFileUrl = url
+            onComplete()
+        }
+    }
+    
+    func getLatestUrl() -> URL {
+        return self.latestFileUrl ?? URL(fileURLWithPath: "")
     }
 }

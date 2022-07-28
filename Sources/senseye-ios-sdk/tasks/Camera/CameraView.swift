@@ -19,7 +19,7 @@ struct CameraView: View {
     var body: some View {
         GeometryReader { _ in
             ZStack {
-                CameraPreview(cameraService: cameraService)
+                FrameView(image: $cameraService.frame)
                 VStack {
                     Button { } label: {
                         CameraButtonOverlayView()

@@ -34,8 +34,8 @@ class CameraService: NSObject, ObservableObject {
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
-    
     private var latestFileUrl: URL?
+    private var frameTimestampsForTask: [Int64] = []
     
     init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.frontCameraDevice = frontCameraDevice
@@ -183,6 +183,7 @@ class CameraService: NSObject, ObservableObject {
         if latestFileUrl != nil {
             fileUploadService.uploadData(fileUrl: latestFileUrl!)
             latestFileUrl = nil
+            frameTimestampsForTask = []
         }
     }
     
@@ -249,6 +250,8 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             if videoWriterInput.isReadyForMoreMediaData {
                 //Write video buffer
                 videoWriterInput.append(sampleBuffer)
+                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).value
+                frameTimestampsForTask.append(bufferTimestamp)
                 Log.info("frame output on recording.. additional buffer was added")
             }
         }
@@ -279,6 +282,7 @@ extension CameraService {
             guard let url = self?.videoWriter.outputURL else { return }
             Log.info("Video output finish \(url.absoluteString)")
             self?.latestFileUrl = url
+            self?.fileUploadService.setLatestFrameTimestampArray(frameTimestamps: self?.frameTimestampsForTask)
             onComplete()
         }
     }

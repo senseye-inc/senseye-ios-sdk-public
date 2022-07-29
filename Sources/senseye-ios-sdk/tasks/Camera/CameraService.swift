@@ -111,18 +111,6 @@ class CameraService: NSObject, ObservableObject {
         }
     }
     
-    func setupVideoPreviewLayer(for cameraPreview: UIView) {
-        Log.info("setting up camera preview")
-        var videoPreviewLayer = AVCaptureVideoPreviewLayer()
-        videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        videoPreviewLayer.frame.size =  cameraPreview.frame.size
-        videoPreviewLayer.videoGravity = .resizeAspectFill
-        videoPreviewLayer.connection?.videoOrientation = .portrait
-        cameraPreview.layer.addSublayer(videoPreviewLayer)
-        self.captureSession.startRunning()
-    }
-    
     private func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
         var bestFormat: AVCaptureDevice.Format?
         var bestFrameRateRange: AVFrameRateRange?
@@ -200,21 +188,20 @@ class CameraService: NSObject, ObservableObject {
       do {
           videoWriter = try AVAssetWriter(url: url, fileType: AVFileType.mp4)
           
-          //Add video input
           videoWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: [
                   AVVideoCodecKey: AVVideoCodecType.h264,
                   AVVideoWidthKey: 1080,
                   AVVideoHeightKey: 1920,
               ])
-          videoWriterInput.expectsMediaDataInRealTime = true //Make sure we are exporting data at realtime
+          videoWriterInput.expectsMediaDataInRealTime = true
           if videoWriter.canAdd(videoWriterInput) {
               videoWriter.add(videoWriterInput)
           }
           
-          videoWriter.startWriting() //Means ready to write down the file 
+          videoWriter.startWriting()
       }
       catch let error {
-          debugPrint(error.localizedDescription)
+          Log.error("Video Writer error --> \(error.localizedDescription)")
       }
     }
 }
@@ -226,6 +213,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
         let writable = canWrite()
         
+        //Task has not started --> Display Camera Preview frames
         guard writable else {
             //Use latest image for preview
             guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
@@ -237,22 +225,19 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             return
         }
         
-        if writable,
-             sessionAtSourceTime == nil {
-            //Start writing
+        //Task has started --> start up the VideoWriter
+        if writable, sessionAtSourceTime == nil {
             sessionAtSourceTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
             videoWriter.startSession(atSourceTime: sessionAtSourceTime!)
             Log.info("frame output on recording.. writing was started)")
-          }
+        }
 
+        //Task has completed --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
-            //Your old code when make the overlay here
             if videoWriterInput.isReadyForMoreMediaData {
-                //Write video buffer
                 videoWriterInput.append(sampleBuffer)
                 let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).value
                 frameTimestampsForTask.append(bufferTimestamp)
-                Log.info("frame output on recording.. additional buffer was added")
             }
         }
         
@@ -280,7 +265,7 @@ extension CameraService {
         videoWriter.finishWriting { [weak self] in 
             self?.sessionAtSourceTime = nil
             guard let url = self?.videoWriter.outputURL else { return }
-            Log.info("Video output finish \(url.absoluteString)")
+            Log.info("Video output finish --> \(url.absoluteString)")
             self?.latestFileUrl = url
             self?.fileUploadService.setLatestFrameTimestampArray(frameTimestamps: self?.frameTimestampsForTask)
             onComplete()

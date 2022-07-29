@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import AVKit
 
 @available(iOS 15.0, *)
 struct CalibrationView: View {

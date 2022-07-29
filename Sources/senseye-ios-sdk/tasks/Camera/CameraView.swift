@@ -52,17 +52,3 @@ struct CameraView: View {
         .animation(.easeIn(duration: 0.5))
     }
 }
-
-@available(iOS 14.0, *)
-struct CameraPreview: UIViewRepresentable {
-    
-    let cameraService: CameraService
-    
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: UIScreen.main.bounds)
-        cameraService.setupVideoPreviewLayer(for: view)
-        return view
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) { }
-}

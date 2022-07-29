@@ -204,7 +204,6 @@ class FileUploadAndPredictionService: ObservableObject {
     }
 
     func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
-        
         var newTaskJsonObject = JSON()
 
         // taskID
@@ -239,7 +238,6 @@ class FileUploadAndPredictionService: ObservableObject {
             newTaskJsonObject["frameTimestamps"] = eventFrameTimestamps
         }
 
-
         var taskObjectList: [JSON] = []
         if let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array {
             for previousTaskObject in previousTaskObjects {
@@ -256,8 +254,7 @@ class FileUploadAndPredictionService: ObservableObject {
     }
 
     func jsonFor<T>(_ taskInfo: T?) -> JSON? {
-        let list = taskInfo.map { JSON($0) }
-        return list
+        taskInfo.map { JSON($0) }
     }
     
     /**

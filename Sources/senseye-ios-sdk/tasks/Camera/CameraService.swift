@@ -225,7 +225,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             let ciImage = CIImage(cvPixelBuffer: imageBuffer)
             let context = CIContext()
-            self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+            DispatchQueue.main.async {
+                self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+            }
             return
         }
         
@@ -270,7 +272,6 @@ extension CameraService {
         videoWriter.finishWriting { [weak self] in 
             self?.sessionAtSourceTime = nil
             guard let url = self?.videoWriter.outputURL else { return }
-            let asset = AVURLAsset(url: url)
             Log.info("Video output finish \(url.absoluteString)")
             self?.latestFileUrl = url
             onComplete()

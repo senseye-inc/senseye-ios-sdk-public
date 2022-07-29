@@ -24,6 +24,8 @@ protocol FileUploadAndPredictionServiceProtocol {
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
+    func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
+    func getLatestFrameTimestampArray() -> [Int64]
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -81,6 +83,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionUploadFileKeys: [String] = []
     private var currentSessionPredictionId: String = ""
     private var currentSessionJsonInputFile: JSON? = nil
+    private var currentTaskFrameTimestamps: [Int64]? = []
     private var hasUploadedJsonFile: Bool = false
 
     var isUploadOngoing: Bool = false
@@ -191,6 +194,14 @@ class FileUploadAndPredictionService: ObservableObject {
         }
         self.currentSessionJsonInputFile = sessionInputJson
     }
+    
+    func setLatestFrameTimestampArray(frameTimestamps: [Int64]?) {
+        self.currentTaskFrameTimestamps = frameTimestamps
+    }
+    
+    func getLatestFrameTimestampArray() -> [Int64] {
+        return currentTaskFrameTimestamps ?? []
+    }
 
     func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
         var newTaskJsonObject = JSON()
@@ -222,7 +233,10 @@ class FileUploadAndPredictionService: ObservableObject {
         if let eventBackgroundColor = jsonFor(taskInfo.eventBackgroundColor) {
             newTaskJsonObject["eventBackgroundColor"] = eventBackgroundColor
         }
-
+        
+        if let eventFrameTimestamps = jsonFor(taskInfo.frameTimestamps) {
+            newTaskJsonObject["frameTimestamps"] = eventFrameTimestamps
+        }
 
         var taskObjectList: [JSON] = []
         if let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array {

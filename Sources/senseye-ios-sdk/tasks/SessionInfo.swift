@@ -21,6 +21,7 @@ struct SenseyeTask: Codable {
     let eventXLOC, eventYLOC: [CGFloat]?
     let eventImageID: [String]?
     let eventBackgroundColor: [String]?
+    let frameTimestamps: [Int64]?
 
     enum CodingKeys: String, CodingKey {
         case taskID = "taskId"
@@ -29,14 +30,16 @@ struct SenseyeTask: Codable {
         case eventYLOC = "event_y_loc"
         case eventImageID = "event_image_id"
         case eventBackgroundColor = "event_background_color"
+        case frameTimestamps
     }
 
-    init(taskID: String, timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil) {
+    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil) {
         self.taskID = taskID
         self.timestamps = timestamps
         self.eventXLOC = eventXLOC
         self.eventYLOC = eventYLOC
         self.eventImageID = eventImageID
         self.eventBackgroundColor = eventBackgroundColor
+        self.frameTimestamps = frameTimestamps
     }
 }

@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 struct SenseyeProgressView: View {
 
     @Binding var currentProgress: Double
@@ -33,7 +33,7 @@ struct SenseyeProgressView: View {
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 struct ProgressBar: View {
     @Binding var value: Double
 

@@ -10,10 +10,10 @@ import SwiftUI
 @available(iOS 13.0, *)
 @MainActor
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
-    var pathIndex: Int = 0
+    var pathIndex: Int = 1
     var taskCompleted: String = "Calibration"
-    @Published var xCoordinate: CGFloat = 0
-    @Published var yCoordinate: CGFloat = 0
+    @Published var xCoordinate: CGFloat
+    @Published var yCoordinate: CGFloat
     @Published var shouldShowConfirmationView: Bool = false
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -23,16 +23,18 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.fileUploadService = fileUploadService
+        self.xCoordinate = calibrationPath[0].0
+        self.yCoordinate = calibrationPath[0].1
     }
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
         numberOfCalibrationShown += 1
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
+            timestampsOfStimuli.append(Date().currentTimeMillis())
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1
                 pathIndex += 1
-                timestampsOfStimuli.append(Date().currentTimeMillis())
             } else {
                 timer.invalidate()
                 Log.info("Calibration Timer Cancelled")
@@ -47,6 +49,13 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "calibration", taskTimestamps: timestampsOfStimuli)
+        var eventXLOC: [CGFloat] = []
+        var eventYLOC: [CGFloat] = []
+        for (xCoordinate, yCoordinate) in calibrationPath {
+            eventXLOC.append(xCoordinate)
+            eventYLOC.append(yCoordinate)
+        }
+        let taskInfo = SenseyeTask(taskID: "calibration", timestamps: timestampsOfStimuli, eventXLOC: eventXLOC, eventYLOC: eventYLOC)
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

@@ -23,7 +23,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func uploadData(fileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
-    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64])
+    func addTaskRelatedInfo(for taskInfo: SenseyeTask)
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -178,36 +178,70 @@ class FileUploadAndPredictionService: ObservableObject {
         var sessionInputJson = JSON()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let deviceType = UIDevice().type
+        let currentTiemzone = TimeZone.current
         
         sessionInputJson["versionName"].string = version
         sessionInputJson["versionCode"].string = build
+        sessionInputJson["deviceType"].string = deviceType.rawValue
+        sessionInputJson["timezone"].string = currentTiemzone.identifier
         
         for inputItem in surveyInput {
             sessionInputJson[inputItem.key].string = inputItem.value
         }
         self.currentSessionJsonInputFile = sessionInputJson
     }
-    
-    func addTaskRelatedInfoToSessionJson(taskId: String, taskTimestamps: [Int64]) {
+
+    func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
         var newTaskJsonObject = JSON()
-        newTaskJsonObject["taskId"].string = taskId
-        let timestampList = taskTimestamps.map { JSON($0)}
-        let taskTimestampJsonObject = JSON(timestampList)
-        newTaskJsonObject["timestamps"] = taskTimestampJsonObject
-        
-        let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array
-        if !(previousTaskObjects?.isEmpty ?? true) {
-            var taskObjectList: [JSON] = []
-            for previousTaskObject in previousTaskObjects! {
+
+        // taskID
+        newTaskJsonObject["taskId"].string = taskInfo.taskID
+
+        // timeStamps
+        if let timestamps = jsonFor(taskInfo.timestamps) {
+            newTaskJsonObject["timestamps"] = timestamps
+        }
+
+        // eventXLOC
+        if let eventXLOC = jsonFor(taskInfo.eventXLOC) {
+            newTaskJsonObject["eventXLOC"] = eventXLOC
+        }
+
+        // eventYLOC
+        if let eventYLOC = jsonFor(taskInfo.eventYLOC) {
+            newTaskJsonObject["eventYLOC"] = eventYLOC
+        }
+
+        // eventImageID
+        if let eventImageID = jsonFor(taskInfo.eventImageID) {
+            newTaskJsonObject["eventImageID"] = eventImageID
+        }
+
+        // eventBackgroundColor
+        if let eventBackgroundColor = jsonFor(taskInfo.eventBackgroundColor) {
+            newTaskJsonObject["eventBackgroundColor"] = eventBackgroundColor
+        }
+
+
+        var taskObjectList: [JSON] = []
+        if let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array {
+            for previousTaskObject in previousTaskObjects {
                 taskObjectList.append(previousTaskObject)
             }
             taskObjectList.append(newTaskJsonObject)
             self.currentSessionJsonInputFile?["tasks"] = JSON(taskObjectList)
-        } else {
+        }
+        else {
             self.currentSessionJsonInputFile?["tasks"] = [newTaskJsonObject]
         }
-        
+
         Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
+    }
+
+    func jsonFor<T>(_ taskInfo: T?) -> JSON? {
+        let list = taskInfo.map { JSON($0) }
+        return list
     }
     
     /**
@@ -215,7 +249,7 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func uploadSessionJsonFile() {
 
-        guard shouldSkipUpload else {
+        guard !shouldSkipUpload else {
             Log.info("Skipping JSON Upload")
             return
         }
@@ -323,8 +357,8 @@ class FileUploadAndPredictionService: ObservableObject {
                         }
                     case let .failure(storageError):
                         Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                }
-            })
+                    }
+                })
         } else {
             successfullCompletion()
         }

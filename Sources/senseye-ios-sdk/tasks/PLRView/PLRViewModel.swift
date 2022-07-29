@@ -7,7 +7,7 @@
 import Foundation
 import SwiftUI
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
     @Published var backgroundColor: Color = .white
@@ -17,6 +17,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     var currentInterval: Int = 0
     var numberOfPLRShown: Int = 1
     private var timestampsOfBackgroundSwap: [Int64] = []
+    private var eventBackgroundColor: [String] = []
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
@@ -45,6 +46,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     private func toggleColors() {
         backgroundColor = (backgroundColor == .white ? .black : .white)
         xMarkColor = (xMarkColor == .black ? .white : .black)
+        eventBackgroundColor.append(xMarkColor.toHex() ?? "")
     }
 
     private func reset() {
@@ -52,6 +54,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        fileUploadService.addTaskRelatedInfoToSessionJson(taskId: "plr", taskTimestamps: timestampsOfBackgroundSwap)
+        let taskInfo = SenseyeTask(taskID: "plr", timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor)
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

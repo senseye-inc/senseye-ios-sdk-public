@@ -23,6 +23,7 @@ class CameraService: NSObject, ObservableObject {
     private var videoWriter: AVAssetWriter!
     private var videoWriterInput: AVAssetWriterInput!
     private var sessionAtSourceTime: CMTime?
+    private var startOfTaskMillis: Int64?
     
     private let authenticationService: AuthenticationServiceProtocol
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -228,6 +229,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         //Task has started --> start up the VideoWriter
         if writable, sessionAtSourceTime == nil {
             sessionAtSourceTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            startOfTaskMillis = Date().currentTimeMillis()
             videoWriter.startSession(atSourceTime: sessionAtSourceTime!)
             Log.info("frame output on recording.. writing was started)")
         }
@@ -236,8 +238,26 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoWriterInput.append(sampleBuffer)
-                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).value
-                frameTimestampsForTask.append(bufferTimestamp)
+                guard let sourceTime = sessionAtSourceTime, let startTaskTime = startOfTaskMillis else {
+                    return
+                }
+                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
+                let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
+                
+                let currentTime = Date().currentTimeMillis()
+                let diffOfStartTaskAndCurrentTime = currentTime - startTaskTime
+                
+                let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
+                
+                Log.info("buffer output diff -> \(diffOfBufferAndSessionStart)")
+                Log.info("buffer output diff in millis -> \(diffInMillis)")
+                Log.info("epoch timestamp diff -> \(diffOfStartTaskAndCurrentTime)")
+                
+                Log.info("current time buffer output   -> \(currentTime)")
+                Log.info("time calc from buffer output -> \(outputBufferTimestampAsMillis)")
+                
+                frameTimestampsForTask.append(outputBufferTimestampAsMillis)
             }
         }
         

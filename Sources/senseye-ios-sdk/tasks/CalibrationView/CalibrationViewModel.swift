@@ -30,7 +30,9 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
         numberOfCalibrationShown += 1
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
-            timestampsOfStimuli.append(Date().currentTimeMillis())
+            let timestamp = Date().currentTimeMillis()
+            timestampsOfStimuli.append(timestamp)
+            Log.info("-----------   calibration timestamp \(timestamp) ----------- ")
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1

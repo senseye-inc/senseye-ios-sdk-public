@@ -70,8 +70,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         numberOfImageSetsShown += 1
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             numberOfImagesShown += 1
-            timestampsOfImageSwap.append(Date().currentTimeMillis())
             if currentImageIndex < affectiveImageNames.count - 1 {
+                addTimestampOfStimuliDisplay()
                 currentImageIndex += 1
             } else {
                 timer.invalidate()
@@ -80,6 +80,13 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
                 didFinishCompletion()
             }
         }
+        addTimestampOfImageDisplay()
+    }
+    
+    private func addTimestampOfImageDisplay() {
+        let timestamp = Date().currentTimeMillis()
+        timestampsOfImageSwap.append(timestamp)
+        Log.info("-----------   Rotating Image timestamp \(timestamp) (\(currentImageIndex)) ----------- ")
     }
 
     func removeLastImageSet() {

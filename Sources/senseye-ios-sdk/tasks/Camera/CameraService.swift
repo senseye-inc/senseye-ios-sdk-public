@@ -33,6 +33,8 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @AppStorage("username") var username: String = ""
     
+    @Published var startedCameraRecording: Bool = false
+    
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     private var latestFileUrl: URL?
@@ -234,7 +236,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             Log.info("frame output on recording.. writing was started)")
         }
 
-        //Task has completed --> start writing buffers to VideoWriter
+        //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoWriterInput.append(sampleBuffer)
@@ -244,20 +246,15 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
                 let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
                 let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
-                
-                let currentTime = Date().currentTimeMillis()
-                let diffOfStartTaskAndCurrentTime = currentTime - startTaskTime
-                
                 let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
                 
-                Log.info("buffer output diff -> \(diffOfBufferAndSessionStart)")
-                Log.info("buffer output diff in millis -> \(diffInMillis)")
-                Log.info("epoch timestamp diff -> \(diffOfStartTaskAndCurrentTime)")
-                
-                Log.info("current time buffer output   -> \(currentTime)")
                 Log.info("time calc from buffer output -> \(outputBufferTimestampAsMillis)")
-                
                 frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                if (!startedCameraRecording) {
+                    DispatchQueue.main.async {
+                        self.startedCameraRecording = true
+                    }
+                }
             }
         }
         

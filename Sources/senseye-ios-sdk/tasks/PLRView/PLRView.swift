@@ -26,14 +26,16 @@ struct PLRView: View {
                 .foregroundColor(viewModel.xMarkColor)
                 .scaledToFit()
                 .frame(width: 30, height: 25.5)
+                .onReceive(self.cameraService.$startedCameraRecording) { isStarted in
+                    viewModel.showPLR {
+                        cameraService.stopRecording()
+                        viewModel.shouldShowConfirmationView.toggle()
+                    }
+                }
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
             cameraService.startRecordingForTask(taskId: "PLR_\(viewModel.numberOfPLRShown)")
-            viewModel.showPLR {
-                cameraService.stopRecording()
-                viewModel.shouldShowConfirmationView.toggle()
-            }
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "PLR", yesAction: {

@@ -86,7 +86,6 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     private func addTimestampOfImageDisplay() {
         let timestamp = Date().currentTimeMillis()
         timestampsOfImageSwap.append(timestamp)
-        Log.info("-----------   Rotating Image timestamp \(timestamp) (\(currentImageIndex)) ----------- ")
     }
 
     func removeLastImageSet() {

@@ -248,7 +248,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
                 let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
                 
-                Log.info("time calc from buffer output -> \(outputBufferTimestampAsMillis)")
                 frameTimestampsForTask.append(outputBufferTimestampAsMillis)
                 if (!startedCameraRecording) {
                     DispatchQueue.main.async {

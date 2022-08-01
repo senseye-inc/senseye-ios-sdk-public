@@ -48,6 +48,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     private func addTimestampOfStimuliDisplay() {
         let timestamp = Date().currentTimeMillis()
         timestampsOfStimuli.append(timestamp)
+        Log.info("Adding calibration event timestamp \(pathIndex) --- \(timestamp)")
     }
 
     func reset() {

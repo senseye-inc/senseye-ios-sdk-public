@@ -23,6 +23,7 @@ class CameraService: NSObject, ObservableObject {
     private var videoWriter: AVAssetWriter!
     private var videoWriterInput: AVAssetWriterInput!
     private var sessionAtSourceTime: CMTime?
+    private var startOfTaskMillis: Int64?
     
     private let authenticationService: AuthenticationServiceProtocol
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -31,6 +32,8 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @AppStorage("username") var username: String = ""
+    
+    @Published var startedCameraRecording: Bool = false
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
@@ -228,16 +231,29 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         //Task has started --> start up the VideoWriter
         if writable, sessionAtSourceTime == nil {
             sessionAtSourceTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            startOfTaskMillis = Date().currentTimeMillis()
             videoWriter.startSession(atSourceTime: sessionAtSourceTime!)
             Log.info("frame output on recording.. writing was started)")
         }
 
-        //Task has completed --> start writing buffers to VideoWriter
+        //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoWriterInput.append(sampleBuffer)
-                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).value
-                frameTimestampsForTask.append(bufferTimestamp)
+                guard let sourceTime = sessionAtSourceTime, let startTaskTime = startOfTaskMillis else {
+                    return
+                }
+                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
+                let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
+                let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
+                
+                frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                if (!startedCameraRecording) {
+                    DispatchQueue.main.async {
+                        self.startedCameraRecording = true
+                    }
+                }
             }
         }
         

@@ -31,7 +31,7 @@ struct CalibrationView: View {
             }
             .padding(10)
             .onReceive(self.cameraService.$startedCameraRecording) { isStarted in
-                if (!hasStartedTask && self.cameraService.startedCameraRecording) {
+                if (!hasStartedTask && isStarted) {
                     self.hasStartedTask = true
                     viewModel.startCalibration {
                         cameraService.stopRecording()

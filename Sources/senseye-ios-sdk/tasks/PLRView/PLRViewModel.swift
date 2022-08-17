@@ -10,8 +10,8 @@ import SwiftUI
 @available(iOS 14.0, *)
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
-    @Published var backgroundColor: Color = .white
-    @Published var xMarkColor: Color = .black
+    @Published var backgroundColor: Color = .black
+    @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
 
     var currentInterval: Int = 0

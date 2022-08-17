@@ -40,7 +40,7 @@ class TabController: ObservableObject {
     private var nextTab: Tab = .calibrationView
     private var currentTabIndex = 0
 
-    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .resultsView]
+    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .cameraView, .calibrationView, .resultsView]
 
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1

@@ -13,7 +13,6 @@ struct CalibrationView: View {
     @StateObject var viewModel: CalibrationViewModel
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
-    @State var hasStartedTask = false
     
     init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
         _viewModel = StateObject(wrappedValue: CalibrationViewModel(fileUploadService: fileUploadAndPredictionService))
@@ -30,9 +29,8 @@ struct CalibrationView: View {
                     .offset(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
             .padding(10)
-            .onReceive(self.cameraService.$startedCameraRecording) { isStarted in
-                if (!hasStartedTask && isStarted) {
-                    self.hasStartedTask = true
+            .onReceive(self.cameraService.$startedCameraRecording) { hasStartedRecording in
+                if (!viewModel.hasStartedTask && hasStartedRecording) {
                     viewModel.startCalibration {
                         cameraService.stopRecording()
                         viewModel.shouldShowConfirmationView.toggle()
@@ -42,6 +40,9 @@ struct CalibrationView: View {
         }
         .onAppear {
             cameraService.startRecordingForTask(taskId: "calibration")
+        }
+        .onDisappear {
+            viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "Calibration", yesAction: {

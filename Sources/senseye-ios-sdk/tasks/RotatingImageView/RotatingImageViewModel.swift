@@ -12,72 +12,62 @@ import SwiftUI
 @available(iOS 14.0, *)
 class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
+        self.imageService = imageService
+        addSubscribers()
     }
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
+    let imageService: ImageService
     
-    let affectiveImageNames: [String] = ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]
-
     @Published var shouldShowConfirmationView: Bool = false
+    @Published var isLoading: Bool = true
+    @Published var images: [Image?] = []
+    @Published var isFinished: Bool = false
     @Published var currentImageIndex: Int = 0 {
         willSet {
-            eventImageID.append(affectiveImageNames[currentImageIndex])
+            eventImageID.append(imageService.affectiveImageNames[currentImageIndex])
         }
     }
-
+    
+    private var cancellables = Set<AnyCancellable>()
+    private var fileManager: FileManager = FileManager.default
+    private var timestampsOfImageSwap: [Int64] = []
+    private var eventImageID: [String] = []
+    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+    
     var numberOfImagesShown = 0
     var totalNumberOfImagesToBeShown = 24
-    var numberOfImageSetsShown: Int = 1
-    private var eventImageID: [String] = []
-    private var timestampsOfImageSwap: [Int64] = []
+    var currentImage: Image?
 
     var finishedAllTasks: Bool {
-        numberOfImagesShown >= affectiveImageNames.count
+        numberOfImagesShown >= affectiveImagesCount
     }
     
-    private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-    var currentImageName: URL? {
-        let imageKey = affectiveImageNames[currentImageIndex]
-        let fullFileName = fileDestUrl?.appendingPathComponent("\(imageKey).png")
-        return fullFileName
-    }
-
     var taskCompleted: String {
-        "PTSD \(numberOfImagesShown)/\(affectiveImageNames.count)"
+        "PTSD \(numberOfImagesShown)/\(affectiveImagesCount)"
     }
     
-    private var fileManager: FileManager = FileManager.default
-    
-    func downloadPtsdImageSetsIfRequired(didFinishDownloadingAssets: @escaping () -> Void) {
-        let dispatchGroup = DispatchGroup()
-        for imageKey in affectiveImageNames {
-            dispatchGroup.enter()
-            //public/ptsd_image_sets/acorns_1.png
-            let s3imageKey = "ptsd_image_sets/\(imageKey).png"
-            fileUploadService.downloadIndividualImageAssets(imageS3Key: s3imageKey) {
-                dispatchGroup.leave()
-            }
-        }
-        dispatchGroup.notify(queue: DispatchQueue.global()) {
-            Log.debug("All ptsd assets are downloaded")
-            didFinishDownloadingAssets()
-        }
+    var affectiveImagesCount: Int {
+        imageService.affectiveImageNames.count
     }
-
-    func showImages(didFinishCompletion: @escaping () -> Void) {
-        numberOfImageSetsShown += 1
+    
+    func showImages() {
+        isLoading = false
+        updateCurrentImage()
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             numberOfImagesShown += 1
-            if currentImageIndex < affectiveImageNames.count - 1 {
+            if currentImageIndex < affectiveImagesCount - 1 {
                 currentImageIndex += 1
                 addTimestampOfImageDisplay()
+                updateCurrentImage()
             } else {
                 timer.invalidate()
+                self.shouldShowConfirmationView.toggle()
+                self.isFinished.toggle()
                 Log.info("RotatingImageViewModel Timer Cancelled")
                 reset()
-                didFinishCompletion()
             }
         }
         addTimestampOfImageDisplay()
@@ -88,11 +78,11 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         timestampsOfImageSwap.append(timestamp)
         Log.info("Adding image swap event timestamp \(currentImageIndex) --- \(timestamp)")
     }
-
+    
     func removeLastImageSet() {
-        self.numberOfImagesShown -= (self.affectiveImageNames.count)
+        self.numberOfImagesShown -= (affectiveImagesCount)
     }
-
+    
     private func reset() {
         currentImageIndex = 0
     }
@@ -101,4 +91,32 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         let taskInfo = SenseyeTask(taskID: "ptsd_image_set", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfImageSwap, eventImageID: eventImageID)
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
+    
+    func updateCurrentImage() {
+        currentImage = images[currentImageIndex]
+    }
+    
+    func addSubscribers() {
+        imageService.$senseyeImages
+            .receive(on: DispatchQueue.main)
+            .map({ senseyeImages -> [Image] in
+                let images = senseyeImages.map {
+                    Image(uiImage: $0.image)
+                }
+                return images
+            })
+            .sink(receiveCompletion: { completion in
+                Log.info("Completed from \(#function): \(completion)")
+                self.showImages()
+            }, receiveValue: { images in
+                self.images = images
+                guard self.images.count == self.affectiveImagesCount else {
+                    return
+                }
+                Log.info("Showing images")
+                self.showImages()
+            })
+            .store(in: &cancellables)
+    }
+    
 }

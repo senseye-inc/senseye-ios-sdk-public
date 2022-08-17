@@ -35,7 +35,7 @@ struct PLRView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "PLR_\(viewModel.numberOfPLRShown)")
+            cameraService.startRecordingForTask(taskId: "PLR")
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "PLR", yesAction: {

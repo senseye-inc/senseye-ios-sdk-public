@@ -17,7 +17,6 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var shouldShowConfirmationView: Bool = false
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
-    var numberOfCalibrationShown: Int = 1
     let calibrationPath: [(CGFloat, CGFloat)] = [(300, 75), (75,600), (200, 500), (75, 200), (300, 600), (75, 600), (150, 200), (200, 500), (250, 200), (250, 600)]
     private var timestampsOfStimuli: [Int64] = []
     
@@ -28,7 +27,6 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     }
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
-        numberOfCalibrationShown += 1
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0

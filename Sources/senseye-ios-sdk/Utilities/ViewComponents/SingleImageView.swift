@@ -9,18 +9,21 @@ import SwiftUI
 
 @available(iOS 15.0, *)
 struct SingleImageView: View {
-    let imageName: URL
+
+    @Binding var isLoading: Bool
+    var image: Image?
+
     var body: some View {
-        AsyncImage(url: imageName) { image in
-            image
-                .resizable()
-                .edgesIgnoringSafeArea(.all)
-        } placeholder: {
-            ProgressView("Downloading image sets…")
-                .scaleEffect(1.5, anchor: .center)
-                .progressViewStyle(.circular)
-                .tint(.senseyeSecondary)
-                .foregroundColor(.senseyeSecondary)
+        ZStack {
+            if isLoading {
+                ProgressView("Downloading image sets…")
+                    .progressViewStyle(.circular)
+                    .foregroundColor(.senseyeSecondary)
+            } else if let image = image {
+                image
+                    .resizable()
+                    .edgesIgnoringSafeArea(.all)
+            }
         }
     }
 }

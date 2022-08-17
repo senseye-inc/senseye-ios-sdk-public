@@ -12,6 +12,7 @@ struct SenseyeTabView: View {
     @EnvironmentObject var cameraService: CameraService
     @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
     @EnvironmentObject var authenticationService: AuthenticationService
+    var imageService: ImageService = ImageService()
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
@@ -28,7 +29,7 @@ struct SenseyeTabView: View {
                 .tag(Tab.calibrationView)
                 .gesture(DragGesture())
 
-            RotatingImageView(fileUploadService: fileUploadService)
+            RotatingImageView(fileUploadService: fileUploadService, imageService: imageService)
                 .tag(Tab.imageView)
                 .gesture(DragGesture())
 

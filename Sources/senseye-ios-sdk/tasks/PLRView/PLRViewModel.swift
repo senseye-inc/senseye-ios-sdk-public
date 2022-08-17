@@ -15,7 +15,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var shouldShowConfirmationView: Bool = false
 
     var currentInterval: Int = 0
-    var numberOfPLRShown: Int = 1
     private var timestampsOfBackgroundSwap: [Int64] = []
     private var eventBackgroundColor: [String] = []
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -26,7 +25,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
-        numberOfPLRShown += 1
         Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] timer in
             currentInterval += 1
             if currentInterval <= 10 {

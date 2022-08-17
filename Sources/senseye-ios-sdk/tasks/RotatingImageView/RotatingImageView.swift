@@ -8,40 +8,29 @@ import SwiftUI
 
 @available(iOS 15.0, *)
 struct RotatingImageView: View {
-
+    
     @StateObject var viewModel: RotatingImageViewModel
     @State var hasStartedTask = false
     
-    init(fileUploadService: FileUploadAndPredictionService) {
-        _viewModel = StateObject(wrappedValue: RotatingImageViewModel(fileUploadService: fileUploadService))
+    init(fileUploadService: FileUploadAndPredictionService, imageService: ImageService) {
+        _viewModel = StateObject(wrappedValue: RotatingImageViewModel(fileUploadService: fileUploadService, imageService: imageService))
     }
     
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
-
+    
     var body: some View {
         ZStack {
-            Color.black
-                .edgesIgnoringSafeArea(.all)
-
             GeometryReader { geometry in
-                SingleImageView(imageName: viewModel.currentImageName!)
+                SingleImageView(isLoading: $viewModel.isLoading, image: viewModel.currentImage)
                     .frame(width: geometry.size.width, height: geometry.size.height)
-                    .onReceive(self.cameraService.$startedCameraRecording) { isStarted in
-                        if (!hasStartedTask && self.cameraService.startedCameraRecording) {
-                            self.hasStartedTask = true
-                            viewModel.downloadPtsdImageSetsIfRequired {
-                                DispatchQueue.main.async {
-                                    viewModel.showImages {
-                                        cameraService.stopRecording()
-                                        viewModel.shouldShowConfirmationView.toggle()
-                                    }
-                                }
-                            }
+                    .onAppear {
+                        DispatchQueue.main.async {
+                            cameraService.startRecordingForTask(taskId: "aiv")
                         }
                     }
-                    .onAppear {
-                        cameraService.startRecordingForTask(taskId: "aiv_\(viewModel.numberOfImageSetsShown)")
+                    .onChange(of: viewModel.isFinished) { _ in
+                        cameraService.stopRecording()
                     }
             }
         }

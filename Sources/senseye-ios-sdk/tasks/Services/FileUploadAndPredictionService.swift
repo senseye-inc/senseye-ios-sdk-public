@@ -14,12 +14,10 @@ import SwiftUI
 
 @available(iOS 13.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
-    func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void)
     var uploadProgress: Double { get }
     var uploadProgressPublished: Published<Double> { get}
     var uploadProgressPublisher: Published<Double>.Publisher { get }
     var numberOfUploads: Double { get }
-    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void)
     func uploadData(fileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func uploadSessionJsonFile()
@@ -39,34 +37,8 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
  */
 @available(iOS 14.0, *)
 class FileUploadAndPredictionService: ObservableObject {
-    
-    private struct PredictRequestParameters: Encodable {
-        var video_urls: [String]
-        var threshold: Double
-        var json_metadata_url: String
-    }
-    private struct SubmitPredictionJobResponseCodable: Decodable {
-        var id: String
-    }
-    private struct PredictionJobStatusAndResultCodable: Decodable {
-        var id: String
-        var status: String
-        var result: PredictionJobStatusResultCodable?
-    }
-    
-    private struct PredictionJobStatusResultCodable: Decodable {
-        var prediction: PreditionJobStatusPredictionCodable
-    }
-    
-    private struct PreditionJobStatusPredictionCodable: Decodable {
-        var fatigue: String?
-        var intoxication: String?
-        var state: Int
-    }
 
     @Published var uploadProgress: Double = 0.0
-    var uploadProgressPublished: Published<Double> { _uploadProgress }
-    var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
     var numberOfUploads: Double = 0.0
     private var cancellables = Set<AnyCancellable>()
     
@@ -78,10 +50,9 @@ class FileUploadAndPredictionService: ObservableObject {
         return "\(username)_\(sessionTimeStamp)"
     }
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
-    private var shouldSkipUpload: Bool = false
+    private var shouldUpload: Bool = true
     
     private var currentSessionUploadFileKeys: [String] = []
-    private var currentSessionPredictionId: String = ""
     private var currentSessionJsonInputFile: JSON? = nil
     private var currentTaskFrameTimestamps: [Int64]? = []
     private var hasUploadedJsonFile: Bool = false
@@ -95,6 +66,7 @@ class FileUploadAndPredictionService: ObservableObject {
         self.fileManager = FileManager.default
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         self.sessionTimeStamp = Date().currentTimeMillis()
+        Log.debug("ShouldUpload: \(shouldUpload)")
     }
     
     
@@ -109,7 +81,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
         let filename = fileUrl
         
-        guard let _ = self.hostApiKey, !shouldSkipUpload else {
+        guard let _ = self.hostApiKey, shouldUpload else {
             Log.info("Skipping data upload")
             return
         }
@@ -160,7 +132,7 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
                 if attributes.contains(where: { $0.key == AuthUserAttributeKey.custom("skip_uploads")}) {
                     Log.debug("Found and set skip_uploads. Skipping Upload.")
-                    self.shouldSkipUpload = true
+                    self.shouldUpload = false
                 }
                 Log.debug("Host api key: \(String(describing: self.hostApiKey))")
             case .failure(let authError):
@@ -262,7 +234,7 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func uploadSessionJsonFile() {
 
-        guard !shouldSkipUpload else {
+        guard shouldUpload else {
             Log.info("Skipping JSON Upload")
             return
         }
@@ -305,78 +277,10 @@ class FileUploadAndPredictionService: ObservableObject {
             Log.error("Error in json parsing for input file")
         }
     }
-    
-    /**
-     Periodically checks the prediction job id's status from the server until a result is available. On success or failure of newtork response, a completion closure will run.
-     Additionally, an optional delegate action may be run on a 'completed' or 'failed' job response.
-     - Parameters:
-     - completed: Optional completion action for success or failure of a a network response.
-     */
-    func startPeriodicUpdatesOnPredictionId(completed: @escaping (Result<String, Error>) -> Void) {
-        
-        guard let apiKey = hostApiKey else {
-            return
-        }
-        
-        let headers: HTTPHeaders = [
-            "x-api-key": apiKey,
-            "Accept": "application/json"
-        ]
-        let params: PredictRequestParameters? = nil
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [self] timer in
-            AF.request(self.hostApi+"/predict/"+self.currentSessionPredictionId, method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: headers).responseDecodable(of: PredictionJobStatusAndResultCodable.self) { response in
-                switch response.result {
-                case let .success(jobStatusAndResultResponse):
-                    if (jobStatusAndResultResponse.status == "completed" || jobStatusAndResultResponse.status == "failed") {
-                        Log.info("Prediction periodic request success and result retrieved! \(jobStatusAndResultResponse)")
-                        completed(.success(jobStatusAndResultResponse.status))
-                        self.delegate?.didReturnResultForPrediction(status: jobStatusAndResultResponse.status)
-                        timer.invalidate()
-                    } else {
-                        Log.info("Prediction periodic request not done yet, will try again. \(jobStatusAndResultResponse)")
-                    }
-                case let .failure(failure):
-                    Log.warn("Prediction periodic request failure \(failure)")
-                    
-                    // Failure to return a prediction
-                    completed(.failure(failure))
-                    timer.invalidate()
-                }
-            }
-        }
-    }
-    
-    func downloadIndividualImageAssets(imageS3Key: String, successfullCompletion: @escaping () -> Void) {
-        
-        guard let imageName = imageS3Key.split(separator: "/").last, let filePath = fileDestUrl?.appendingPathComponent("\(imageName)") else {
-            return
-        }
-        print(imageS3Key)
-        
-        if !self.fileManager.fileExists(atPath: filePath.path) {
-            Amplify.Storage.downloadData(
-                key: imageS3Key,
-                progressListener: { progress in
-                    Log.info("Progress: \(progress)")
-                }, resultListener: { (event) in
-                    switch event {
-                    case let .success(data):
-                        Log.info("Completed: \(data)")
-                        do {
-                            try data.write(to: filePath)
-                            successfullCompletion()
-                        } catch {
-                            Log.error("Failed write")
-                        }
-                    case let .failure(storageError):
-                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                    }
-                })
-        } else {
-            successfullCompletion()
-        }
-    }
 }
 
 @available(iOS 14.0, *)
-extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol { }
+extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
+    var uploadProgressPublished: Published<Double> { _uploadProgress }
+    var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
+}

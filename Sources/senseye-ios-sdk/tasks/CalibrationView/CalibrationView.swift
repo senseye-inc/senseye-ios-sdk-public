@@ -41,7 +41,7 @@ struct CalibrationView: View {
             }
         }
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "calibration_\(viewModel.numberOfCalibrationShown)")
+            cameraService.startRecordingForTask(taskId: "calibration")
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
             UserConfirmationView(taskCompleted: "Calibration", yesAction: {

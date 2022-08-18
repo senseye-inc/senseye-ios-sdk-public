@@ -26,9 +26,8 @@ struct CalibrationView: View {
                 Circle()
                     .fill(.white)
                     .frame(width: 50, height: 50)
-                    .offset(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
+                    .position(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
-            .padding(10)
             .onReceive(cameraService.$startedCameraRecording) { hasStartedRecording in
                 if (!viewModel.hasStartedTask && hasStartedRecording) {
                     viewModel.startCalibration {

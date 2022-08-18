@@ -19,7 +19,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var shouldShowConfirmationView: Bool = false
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
-    let calibrationPath: [(CGFloat, CGFloat)] = [(325, 725), (25, 550), (25, 300), (175, 400), (175, 150), (325, 50), (25, 725), (325, 550), (325, 300), (175, 650), (25, 50)]
+    let calibrationPath: [(CGFloat, CGFloat)] = [(80,325), (200, 675), (320,740), (80,75), (80,575), (200, 425), (320, 575), (80,740), (320, 325), (200, 175), (320, 75)]
     private var timestampsOfStimuli: [Int64] = []
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {

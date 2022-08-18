@@ -29,7 +29,7 @@ struct CalibrationView: View {
                     .offset(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
             .padding(10)
-            .onReceive(self.cameraService.$startedCameraRecording) { hasStartedRecording in
+            .onReceive(cameraService.$startedCameraRecording) { hasStartedRecording in
                 if (!viewModel.hasStartedTask && hasStartedRecording) {
                     viewModel.startCalibration {
                         cameraService.stopRecording()
@@ -42,6 +42,7 @@ struct CalibrationView: View {
             cameraService.startRecordingForTask(taskId: "calibration")
         }
         .onDisappear {
+            print("onDisappear triggered")
             viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {

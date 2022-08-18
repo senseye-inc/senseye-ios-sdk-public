@@ -10,7 +10,6 @@ import SwiftUI
 struct RotatingImageView: View {
     
     @StateObject var viewModel: RotatingImageViewModel
-    @State var hasStartedTask = false
     
     init(fileUploadService: FileUploadAndPredictionService, imageService: ImageService) {
         _viewModel = StateObject(wrappedValue: RotatingImageViewModel(fileUploadService: fileUploadService, imageService: imageService))
@@ -25,12 +24,18 @@ struct RotatingImageView: View {
                 SingleImageView(isLoading: $viewModel.isLoading, image: viewModel.currentImage)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .onAppear {
+                        viewModel.checkForImages()
                         DispatchQueue.main.async {
                             cameraService.startRecordingForTask(taskId: "aiv")
                         }
                     }
-                    .onChange(of: viewModel.isFinished) { _ in
-                        cameraService.stopRecording()
+                    .onChange(of: viewModel.isFinished) { isFinished in
+                        if isFinished {
+                            cameraService.stopRecording()
+                        }
+                    }
+                    .onDisappear {
+                        viewModel.reset()
                     }
             }
         }

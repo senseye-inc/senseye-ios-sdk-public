@@ -16,7 +16,6 @@ import SwiftyJSON
 class CameraService: NSObject, ObservableObject {
     
     private var captureVideoDataOutput = AVCaptureVideoDataOutput()
-    
     private var frontCameraDevice: CameraRepresentable
     private(set) var captureSession = AVCaptureSession()
     private var startedTaskRecording = false
@@ -31,9 +30,9 @@ class CameraService: NSObject, ObservableObject {
     @Published var frame: CGImage?
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
-    @AppStorage("username") var username: String = ""
-    
     @Published var startedCameraRecording: Bool = false
+    
+    @AppStorage("username") var username: String = ""
     
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
@@ -52,6 +51,7 @@ class CameraService: NSObject, ObservableObject {
     
     func start() {
         self.checkPermissions()
+        self.startedCameraRecording = false
     }
     
     private func checkPermissions() {
@@ -145,7 +145,7 @@ class CameraService: NSObject, ObservableObject {
             device.unlockForConfiguration()
         } catch {
             // Handle error.
-            Log.error("Error from \(#function). Unable to set device format")
+            Log.error("Unable to set device format", shouldLogContext: true)
         }
     }
 
@@ -269,18 +269,28 @@ extension CameraService {
             && videoWriter.status == .writing
     }
     private func setupTaskRecordingToStart(onComplete: () -> Void) {
-        guard !startedTaskRecording else { return }
+        guard !startedTaskRecording else {
+            Log.error("startedTaskRecording is false", shouldLogContext: true)
+            return
+        }
         startedTaskRecording = true
         sessionAtSourceTime = nil
         onComplete()
     }
     
     func stopCurrentTaskRecordingAndSaveFile(onComplete: @escaping () -> Void) {
-        guard startedTaskRecording else { return }
+        guard startedTaskRecording else {
+            Log.error("startedTaskRecording is false", shouldLogContext: true)
+            return
+        }
         startedTaskRecording = false
-        videoWriter.finishWriting { [weak self] in 
+        startedCameraRecording = false
+        videoWriter.finishWriting { [weak self] in
             self?.sessionAtSourceTime = nil
-            guard let url = self?.videoWriter.outputURL else { return }
+            guard let url = self?.videoWriter.outputURL else {
+                Log.error("self?.videoWriter.outputURL is nil", shouldLogContext: true)
+                return
+            }
             Log.info("Video output finish --> \(url.absoluteString)")
             self?.latestFileUrl = url
             self?.fileUploadService.setLatestFrameTimestampArray(frameTimestamps: self?.frameTimestampsForTask)

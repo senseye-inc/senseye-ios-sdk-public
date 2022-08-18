@@ -13,6 +13,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var backgroundColor: Color = .black
     @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
+    @Published var hasStartedTask = false
 
     var currentInterval: Int = 0
     private var timestampsOfBackgroundSwap: [Int64] = []
@@ -25,6 +26,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
+        hasStartedTask = true
         Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [self] timer in
             currentInterval += 1
             if currentInterval <= 10 {
@@ -36,7 +38,6 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
                 timer.invalidate()
                 Log.info("PLRView Timer Cancelled")
                 didFinishCompletion()
-                reset()
             }
         }
     }
@@ -47,8 +48,10 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
         eventBackgroundColor.append(xMarkColor.toHex() ?? "")
     }
 
-    private func reset() {
+    func reset() {
         currentInterval = 0
+        hasStartedTask = false
+        timestampsOfBackgroundSwap.removeAll()
     }
     
     func addTaskInfoToJson() {

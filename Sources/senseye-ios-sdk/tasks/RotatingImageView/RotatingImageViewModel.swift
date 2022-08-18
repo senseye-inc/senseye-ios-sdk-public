@@ -64,10 +64,9 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
                 updateCurrentImage()
             } else {
                 timer.invalidate()
-                self.shouldShowConfirmationView.toggle()
-                self.isFinished.toggle()
+                shouldShowConfirmationView.toggle()
+                isFinished = true
                 Log.info("RotatingImageViewModel Timer Cancelled")
-                reset()
             }
         }
         addTimestampOfImageDisplay()
@@ -80,11 +79,18 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func removeLastImageSet() {
-        self.numberOfImagesShown -= (affectiveImagesCount)
+        numberOfImagesShown -= (affectiveImagesCount)
     }
     
-    private func reset() {
+    func checkForImages() {
+        guard !images.isEmpty else { return }
+        showImages()
+    }
+    
+    func reset() {
+        isFinished = false
         currentImageIndex = 0
+        timestampsOfImageSwap.removeAll()
     }
     
     func addTaskInfoToJson() {
@@ -100,10 +106,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         imageService.$senseyeImages
             .receive(on: DispatchQueue.main)
             .map({ senseyeImages -> [Image] in
-                let images = senseyeImages.map {
-                    Image(uiImage: $0.image)
-                }
-                return images
+                senseyeImages.map { Image(uiImage: $0.image) }
             })
             .sink(receiveCompletion: { completion in
                 Log.info("Completed from \(#function): \(completion)")

@@ -10,7 +10,7 @@ import SwiftUI
 @available(iOS 13.0, *)
 @MainActor
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
-    var pathIndex: Int = 1
+    var pathIndex: Int = 0
     var taskCompleted: String = "Calibration"
     var hasStartedTask = false
     
@@ -31,15 +31,14 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
         hasStartedTask = true
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
+            pathIndex += 1
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0
                 yCoordinate = calibrationPath[pathIndex].1
                 addTimestampOfStimuliDisplay()
-                pathIndex += 1
             } else {
                 timer.invalidate()
                 Log.info("Calibration Timer Cancelled")
-                reset()
                 didFinishCompletion()
             }
         }
@@ -53,8 +52,11 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     }
 
     func reset() {
-        pathIndex = 0
-        hasStartedTask = false
+        self.pathIndex = 0
+        self.xCoordinate = self.calibrationPath[self.pathIndex].0
+        self.yCoordinate = self.calibrationPath[self.pathIndex].1
+        self.hasStartedTask = false
+        timestampsOfStimuli.removeAll()
     }
     
     func addTaskInfoToJson() {

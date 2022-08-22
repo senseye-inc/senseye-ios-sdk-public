@@ -24,8 +24,9 @@ class ResultsViewModel: ObservableObject {
 
     func getUploadProgress() {
         fileUploadService.uploadProgressPublisher
-            .sink { uploadProgress in
-                self.uploadProgress = uploadProgress / self.fileUploadService.numberOfUploads
+            .sink { newUploadProgress in
+                let updatedUploadProgress = newUploadProgress/self.fileUploadService.numberOfUploads
+                self.uploadProgress = updatedUploadProgress
             }
             .store(in: &cancellables)
     }

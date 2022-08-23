@@ -25,11 +25,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var isLoading: Bool = true
     @Published var images: [Image?] = []
     @Published var isFinished: Bool = false
-    @Published var currentImageIndex: Int = 0 {
-        willSet {
-            eventImageID.append(imageService.affectiveImageNames[currentImageIndex])
-        }
-    }
+    @Published var currentImageIndex: Int = 0
     
     private var cancellables = Set<AnyCancellable>()
     private var fileManager: FileManager = FileManager.default
@@ -74,7 +70,9 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     private func addTimestampOfImageDisplay() {
         let timestamp = Date().currentTimeMillis()
+        let imageName = imageService.affectiveImageNames[currentImageIndex]
         timestampsOfImageSwap.append(timestamp)
+        eventImageID.append(imageName)
         Log.info("Adding image swap event timestamp \(currentImageIndex) --- \(timestamp)")
     }
     

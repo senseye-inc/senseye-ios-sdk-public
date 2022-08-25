@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Tab {
+enum TabType {
     case imageView
     case plrView
     case resultsView
@@ -17,7 +17,24 @@ enum Tab {
     case calibrationView
 }
 
-extension Tab {
+struct TabItem: Hashable {
+    let taskId: String
+    let tabType: TabType
+    let blockNumber: Int?
+    
+    init(taskId: String, tabType: TabType, blockNumber: Int? = nil) {
+        self.taskId = taskId
+        self.tabType = tabType
+        self.blockNumber = blockNumber
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(taskId)
+        hasher.combine(tabType)
+    }
+}
+
+extension TabType {
     func retrieveTaskInfoForTab() -> (String, String) {
         switch self {
         case .imageView:
@@ -36,19 +53,32 @@ extension Tab {
 @MainActor
 class TabController: ObservableObject {
 
-    @Published var activeTab: Tab = .loginView
-    private var nextTab: Tab = .calibrationView
-    private var currentTabIndex = 0
 
-    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .cameraView, .calibrationView, .resultsView]
+    private var taskTabOrdering: [TabItem] = [TabItem(taskId: "login_view", tabType: .loginView),
+                                              TabItem(taskId: "survey_view", tabType: .surveyView),
+                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 0),
+                                              TabItem(taskId: "calibration_view_1", tabType: .calibrationView, blockNumber: 1),
+                                              TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 1),
+                                              TabItem(taskId: "plr_view", tabType: .plrView, blockNumber: 1),
+                                              TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 1),
+                                              TabItem(taskId: "affective_image_set_1", tabType: .imageView, blockNumber: 2),
+                                              TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 2),
+                                              TabItem(taskId: "affective_image_set_2", tabType: .imageView, blockNumber: 2),
+                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 3),
+                                              TabItem(taskId: "calibration_view_2", tabType: .calibrationView, blockNumber: 3),
+                                              TabItem(taskId: "results_view", tabType: .resultsView)]
+    
+    @Published var activeTabType: TabType = .loginView
+    private var nextTab: TabItem?
+    private var currentTabIndex = 0
 
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1
     }
 
     func refreshSameTab() {
-        open(.cameraView)
         currentTabIndex-=1
+        open(taskTabOrdering[currentTabIndex])
     }
 
     func proceedToNextTab() {
@@ -58,8 +88,11 @@ class TabController: ObservableObject {
     }
 
     func openNextTab() {
+        guard let updatedTabType = self.nextTab?.tabType else {
+            return
+        }
         DispatchQueue.main.async {
-            self.activeTab = self.nextTab
+            self.activeTabType = updatedTabType
         }
     }
 
@@ -72,12 +105,12 @@ class TabController: ObservableObject {
 
     func taskInfoForNextTab() -> (String, String) {
         let nextTabIndex = currentTabIndex+1
-        return taskTabOrdering[nextTabIndex].retrieveTaskInfoForTab()
+        return taskTabOrdering[nextTabIndex].tabType.retrieveTaskInfoForTab()
     }
 
-    private func open(_ tab: Tab) {
+    private func open(_ tab: TabItem) {
         DispatchQueue.main.async {
-            self.activeTab = tab
+            self.activeTabType = tab.tabType
         }
     }
 }

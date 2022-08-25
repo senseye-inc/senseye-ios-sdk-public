@@ -23,10 +23,21 @@ class ImageService {
     private let folderName = "affective_images"
     private var cancellables = Set<AnyCancellable>()
     
-    let affectiveImageNames: [String] = ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]
+    private var affectiveImageSets: [Int: AffectiveImageSet] = [
+        1: AffectiveImageSet(category: .positive, imageIds: ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]),
+        2: AffectiveImageSet(category: .neutral, imageIds: ["puppies_1", "cat_5", "bird_1", "panda_5", "chipmunk_1", "dog_4", "seal_1", "horse_1"])
+    ]
+    
+    private var allImageNames : [String] {
+        let imageNames = affectiveImageSets.flatMap { (key: Int, value: AffectiveImageSet) in
+            return value.imageIds
+        }
+        return imageNames
+    }
     
     private func getImages() {
-        if let savedImages = fileManager.getImages(imageNames: affectiveImageNames, folderName: folderName) {
+        let allImages = allImageNames
+        if let savedImages = fileManager.getImages(imageNames: allImages, folderName: folderName) {
             Log.info("Fetching Saved Image!")
             self.senseyeImages = savedImages
         } else {
@@ -35,8 +46,18 @@ class ImageService {
         }
     }
     
+    func imageSetForBlockNumber(blockNumber: Int) -> [SenseyeImage] {
+        guard let imageSetIds = affectiveImageSets[blockNumber]?.imageIds else {
+            return []
+        }
+        let senseyeImageFilesForIds = senseyeImages.filter { senseyeImage in
+            imageSetIds.contains(senseyeImage.imageName)
+        }
+        return senseyeImageFilesForIds
+    }
+    
     private func downloadImagesToFileManager() {
-        for imageName in affectiveImageNames {
+        for imageName in allImageNames {
             let s3imageKey = "ptsd_image_sets/\(imageName).png"
             Log.info("Starting Download for Image: \(imageName)!")
             
@@ -50,10 +71,21 @@ class ImageService {
                     fileManager.saveImage(image: image, imageName: imageName, folderName: folderName)
                     let newSenseyeImage = SenseyeImage(image: image, imageName: imageName)
                     senseyeImages.append(newSenseyeImage)
-                    senseyeImages = senseyeImages.reorder(by: affectiveImageNames)
+                    senseyeImages = senseyeImages.reorder(by: allImageNames)
                 }
                 .store(in: &cancellables)
         }
     }
-    
+}
+
+enum AffectiveImageCategory {
+    case positive
+    case neutral
+    case negative
+    case negativeArousal
+    case facialExpression
+}
+struct AffectiveImageSet {
+    let category: AffectiveImageCategory
+    let imageIds: [String]
 }

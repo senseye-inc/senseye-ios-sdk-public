@@ -12,14 +12,16 @@ import SwiftUI
 @available(iOS 14.0, *)
 class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService, blockNumber: Int) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
+        self.taskBlockNumber = blockNumber
         addSubscribers()
     }
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
+    let taskBlockNumber: Int
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
@@ -105,10 +107,12 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     func addSubscribers() {
         imageService.$senseyeImages
             .receive(on: DispatchQueue.main)
-            .map({ senseyeImages -> [Image] in
-                senseyeImages.map { Image(uiImage: $0.image) }
-            })
-            .sink(receiveCompletion: { completion in
+            .map { images -> [Image] in
+                imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber).imageIds.map {
+                    Image(uiImage: $0.image)
+                }
+                Image(uiImage: $0.image)
+            }.sink(receiveCompletion: { completion in
                 Log.info("Completed from \(#function): \(completion)")
                 self.showImages()
             }, receiveValue: { images in
@@ -120,6 +124,23 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
                 self.showImages()
             })
             .store(in: &cancellables)
+//
+//        imageService.$senseyeImages
+//            .receive(on: DispatchQueue.main)
+//            .map({ senseyeImages -> [Image] in
+//                senseyeImages.map { Image(uiImage: $0.image) }
+//            })
+//            .sink(receiveCompletion: { completion in
+//                Log.info("Completed from \(#function): \(completion)")
+//                self.showImages()
+//            }, receiveValue: { images in
+//                self.images = images
+//                guard self.images.count == self.affectiveImagesCount else {
+//                    return
+//                }
+//                Log.info("Showing images")
+//                self.showImages()
+//            })
     }
     
 }

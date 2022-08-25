@@ -26,7 +26,9 @@ class ResultsViewModel: ObservableObject {
         fileUploadService.uploadProgressPublisher
             .sink { newUploadProgress in
                 let updatedUploadProgress = newUploadProgress/self.fileUploadService.numberOfUploads
-                self.uploadProgress = updatedUploadProgress
+                DispatchQueue.main.async {
+                    self.uploadProgress = updatedUploadProgress
+                }
             }
             .store(in: &cancellables)
     }

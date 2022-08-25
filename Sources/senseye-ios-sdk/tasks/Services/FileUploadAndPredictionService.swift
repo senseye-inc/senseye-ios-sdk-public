@@ -158,7 +158,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let currentBrightnessInt = Int(UIScreen.main.brightness)
         let osVersion = UIDevice.current.systemVersion
         let reachability = NetworkReachabilityManager.default?.status
-        let idlenessTimerEnabled = UIApplication.shared.isIdleTimerDisabled
+        let idlenessTimerDisabled = UIApplication.shared.isIdleTimerDisabled
         var networkType: String?
         switch reachability {
         case .unknown, .notReachable, .none:
@@ -168,7 +168,7 @@ class FileUploadAndPredictionService: ObservableObject {
         }
         
         let phoneDetails = PhoneDetails(os: "iOS", osVersion: osVersion, brand: "Apple", deviceType: deviceType.rawValue)
-        let phoneSettings = PhoneSettings(idlenessTimerEnabled: idlenessTimerEnabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
+        let phoneSettings = PhoneSettings(idlenessTimerEnabled: idlenessTimerDisabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
         
         self.sessionInfo = SessionInfo(versionCode: versionCode, age: age, eyeColor: eyeColor, versionName: versionName, gender: gender, folderName: s3FolderName, username: username, timezone: currentTiemzone.identifier, phoneSettings: phoneSettings, phoneDetails: phoneDetails, tasks: [])
     }

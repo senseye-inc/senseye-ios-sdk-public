@@ -39,8 +39,12 @@ class CameraService: NSObject, ObservableObject {
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
     
-    init(frontCameraDevice: CameraRepresentable = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)!, authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
-        self.frontCameraDevice = frontCameraDevice
+    init(authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
+        if let realCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
+            self.frontCameraDevice = realCameraDevice
+        } else {
+            self.frontCameraDevice = MockAVCaptureDevice()
+        }
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
         if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
@@ -79,6 +83,14 @@ class CameraService: NSObject, ObservableObject {
         DispatchQueue.main.async {
             self.shouldSetupCaptureSession = true
         }
+        
+        //Handle mock-camera call
+        if frontCameraDevice.cameraType == .simulator {
+            DispatchQueue.main.async {
+                self.startedCameraRecording = true
+            }
+        }
+        
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
             Log.error("Error casting cameraRepresentable to AvCaptureDevice")
             captureSession.commitConfiguration()

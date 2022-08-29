@@ -12,16 +12,15 @@ import SwiftUI
 @available(iOS 14.0, *)
 class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService, blockNumber: Int) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
-        self.taskBlockNumber = blockNumber
         addSubscribers()
     }
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
-    let taskBlockNumber: Int
+    var taskBlockNumber: Int = 0
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
@@ -29,7 +28,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var isFinished: Bool = false
     @Published var currentImageIndex: Int = 0 {
         willSet {
-            eventImageID.append(imageService.affectiveImageNames[currentImageIndex])
+            let currentImage = (imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber))[currentImageIndex]
+            eventImageID.append(currentImage.imageName)
         }
     }
     
@@ -52,10 +52,11 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     var affectiveImagesCount: Int {
-        imageService.affectiveImageNames.count
+        imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber).count
     }
     
     func showImages() {
+        Log.info("in show images ---")
         isLoading = false
         updateCurrentImage()
         Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
@@ -85,8 +86,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func checkForImages() {
-        guard !images.isEmpty else { return }
-        showImages()
+        Log.info("in check for images ---")
+        self.updateImageSet()
     }
     
     func reset() {
@@ -105,42 +106,23 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addSubscribers() {
+        Log.info("in add subscribers ---")
+        imageService.refreshImages()
         imageService.$senseyeImages
             .receive(on: DispatchQueue.main)
-            .map { images -> [Image] in
-                imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber).imageIds.map {
-                    Image(uiImage: $0.image)
-                }
-                Image(uiImage: $0.image)
-            }.sink(receiveCompletion: { completion in
-                Log.info("Completed from \(#function): \(completion)")
-                self.showImages()
-            }, receiveValue: { images in
-                self.images = images
-                guard self.images.count == self.affectiveImagesCount else {
-                    return
-                }
-                Log.info("Showing images")
-                self.showImages()
+            .sink(receiveCompletion: { _ in
+                Log.info("in receive completion ---")
+                self.updateImageSet()
+            }, receiveValue: { _ in
+                Log.info("in receive value ---")
+                self.updateImageSet()
             })
-            .store(in: &cancellables)
-//
-//        imageService.$senseyeImages
-//            .receive(on: DispatchQueue.main)
-//            .map({ senseyeImages -> [Image] in
-//                senseyeImages.map { Image(uiImage: $0.image) }
-//            })
-//            .sink(receiveCompletion: { completion in
-//                Log.info("Completed from \(#function): \(completion)")
-//                self.showImages()
-//            }, receiveValue: { images in
-//                self.images = images
-//                guard self.images.count == self.affectiveImagesCount else {
-//                    return
-//                }
-//                Log.info("Showing images")
-//                self.showImages()
-//            })
     }
     
+    private func updateImageSet() {
+        Log.info("in update image set ---")
+        let imageSetForBlock = imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber).map { Image(uiImage: $0.image) }
+        self.images = imageSetForBlock
+        self.showImages()
+    }
 }

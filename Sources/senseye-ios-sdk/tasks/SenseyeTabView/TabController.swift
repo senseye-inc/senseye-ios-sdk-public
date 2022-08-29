@@ -58,17 +58,18 @@ class TabController: ObservableObject {
                                               TabItem(taskId: "survey_view", tabType: .surveyView),
                                               TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 0),
                                               TabItem(taskId: "calibration_view_1", tabType: .calibrationView, blockNumber: 1),
-                                              TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 1),
-                                              TabItem(taskId: "plr_view", tabType: .plrView, blockNumber: 1),
-                                              TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 1),
+                                              TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 2),
+                                              TabItem(taskId: "plr_view", tabType: .plrView, blockNumber: 2),
+                                              TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 2),
                                               TabItem(taskId: "affective_image_set_1", tabType: .imageView, blockNumber: 2),
-                                              TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 2),
-                                              TabItem(taskId: "affective_image_set_2", tabType: .imageView, blockNumber: 2),
-                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 3),
-                                              TabItem(taskId: "calibration_view_2", tabType: .calibrationView, blockNumber: 3),
+                                              TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
+                                              TabItem(taskId: "affective_image_set_2", tabType: .imageView, blockNumber: 3),
+                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
+                                              TabItem(taskId: "calibration_view_2", tabType: .calibrationView, blockNumber: 4),
                                               TabItem(taskId: "results_view", tabType: .resultsView)]
     
     @Published var activeTabType: TabType = .loginView
+    var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
 
@@ -88,11 +89,12 @@ class TabController: ObservableObject {
     }
 
     func openNextTab() {
-        guard let updatedTabType = self.nextTab?.tabType else {
+        guard let updatedTab = self.nextTab else {
             return
         }
         DispatchQueue.main.async {
-            self.activeTabType = updatedTabType
+            self.activeTabType = updatedTab.tabType
+            self.activeTabBlockNumber = updatedTab.blockNumber
         }
     }
 
@@ -111,6 +113,7 @@ class TabController: ObservableObject {
     private func open(_ tab: TabItem) {
         DispatchQueue.main.async {
             self.activeTabType = tab.tabType
+            self.activeTabBlockNumber = tab.blockNumber
         }
     }
 }

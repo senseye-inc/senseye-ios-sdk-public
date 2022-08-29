@@ -18,14 +18,15 @@ class ImageService {
     }
     
     @Published var senseyeImages: [SenseyeImage] = []
+    @Published var finishedDownloadingImages: Bool = false
     
     private let fileManager: FileManager
     private let folderName = "affective_images"
     private var cancellables = Set<AnyCancellable>()
     
     private var affectiveImageSets: [Int: AffectiveImageSet] = [
-        1: AffectiveImageSet(category: .positive, imageIds: ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]),
-        2: AffectiveImageSet(category: .neutral, imageIds: ["puppies_1", "cat_5", "bird_1", "panda_5", "chipmunk_1", "dog_4", "seal_1", "horse_1"])
+        2: AffectiveImageSet(category: .positive, imageIds: ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]),
+        3: AffectiveImageSet(category: .neutral, imageIds: ["puppies_1", "cat_5", "bird_1", "panda_5", "chipmunk_1", "dog_4", "seal_1", "horse_1"])
     ]
     
     private var allImageNames : [String] {
@@ -33,6 +34,10 @@ class ImageService {
             return value.imageIds
         }
         return imageNames
+    }
+    
+    func refreshImages() {
+        self.getImages()
     }
     
     private func getImages() {

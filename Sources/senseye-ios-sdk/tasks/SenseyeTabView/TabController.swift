@@ -20,16 +20,21 @@ enum TabType {
 struct TabItem: Hashable {
     let taskId: String
     let tabType: TabType
-    let blockNumber: Int?
     let taskTitle: String
     let taskDescription: String
+    let blockNumber: Int?
+    let category: SessionCategory?
+    let subcategory: SessionSubcategory?
     
-    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil) {
+    
+    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: SessionCategory? = nil, subcategory: SessionSubcategory? = nil) {
         self.taskId = taskId
         self.tabType = tabType
         self.taskTitle = taskTitle
         self.taskDescription = taskDescription
         self.blockNumber = blockNumber
+        self.category = category
+        self.subcategory = subcategory
     }
     
     func hash(into hasher: inout Hasher) {
@@ -62,13 +67,17 @@ class TabController: ObservableObject {
                                                       tabType: .imageView,
                                                       taskTitle: "PTSD Image Set - Block 2",
                                                       taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
-                                                      blockNumber: 2),
+                                                      blockNumber: 2,
+                                                      category: .positive,
+                                                      subcategory: .animals),
                                               TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
                                               TabItem(taskId: "affective_image_set_2",
                                                       tabType: .imageView,
                                                       taskTitle: "PTSD Image Set - Block 3",
                                                       taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
-                                                      blockNumber: 3),
+                                                      blockNumber: 3,
+                                                      category: .positive,
+                                                      subcategory: .animals),
                                               TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
                                               TabItem(taskId: "calibration_view_2",
                                                       tabType: .calibrationView,
@@ -123,6 +132,11 @@ class TabController: ObservableObject {
     func titleForCurrentTab() -> String {
         let currentTab = taskTabOrdering[currentTabIndex]
         return currentTab.taskTitle
+    }
+    
+    func cateogryAndSubcategoryForCurrentTab() -> (SessionCategory?, SessionSubcategory?) {
+        let currentTab = taskTabOrdering[currentTabIndex]
+        return (currentTab.category, currentTab.subcategory)
     }
 
     private func open(_ tab: TabItem) {

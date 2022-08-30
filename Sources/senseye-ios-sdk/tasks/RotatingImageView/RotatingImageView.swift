@@ -24,7 +24,8 @@ struct RotatingImageView: View {
                 SingleImageView(isLoading: $viewModel.isLoading, image: viewModel.currentImage)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .onAppear {
-                        viewModel.taskBlockNumber = tabController.activeTabBlockNumber ?? 0
+                        let tabCategoryAndSubCategory = tabController.cateogryAndSubcategoryForCurrentTab()
+                        viewModel.tabInfo = RotatingImageViewTaskInfo(taskBlockNumber: tabController.activeTabBlockNumber, taskCategory: tabCategoryAndSubCategory.0, taskSubcategory: tabCategoryAndSubCategory.1)
                         viewModel.checkForImages()
                         DispatchQueue.main.async {
                             cameraService.startRecordingForTask(taskId: "aiv")

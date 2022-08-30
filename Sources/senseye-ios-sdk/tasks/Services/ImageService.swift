@@ -19,6 +19,7 @@ class ImageService {
     
     @Published var senseyeImages: [SenseyeImage] = []
     @Published var imagesForBlock: [Image] = []
+    var senseyeImagesForBlock: [SenseyeImage] = []
     @Published var finishedDownloadingImages: Bool = false
     
     private let fileManager: FileManager
@@ -59,6 +60,7 @@ class ImageService {
         let senseyeImageFilesForIds = senseyeImages.filter { senseyeImage in
             imageSetIds.contains(senseyeImage.imageName)
         }
+        self.senseyeImagesForBlock = senseyeImageFilesForIds
         let imageSetForBlock = senseyeImageFilesForIds.map { Image(uiImage: $0.image) }
         self.imagesForBlock = imageSetForBlock
     }

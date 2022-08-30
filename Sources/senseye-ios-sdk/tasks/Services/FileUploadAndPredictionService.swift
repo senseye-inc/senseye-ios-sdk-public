@@ -214,6 +214,15 @@ class FileUploadAndPredictionService: ObservableObject {
         if let eventFrameTimestamps = jsonFor(taskInfo.frameTimestamps) {
             newTaskJsonObject["frameTimestamps"] = eventFrameTimestamps
         }
+        
+        if let blockNumber = jsonFor(taskInfo.blockNumber) {
+            newTaskJsonObject["blockNumber"] = blockNumber
+        }
+        
+        if let category = jsonFor(taskInfo.category), let subcategory = jsonFor(taskInfo.subcategory) {
+            newTaskJsonObject["category"] = category
+            newTaskJsonObject["subcategory"] = subcategory
+        }
 
         var taskObjectList: [JSON] = []
         if let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array {

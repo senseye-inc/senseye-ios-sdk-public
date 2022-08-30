@@ -13,6 +13,7 @@ class SurveyViewModel: ObservableObject {
     @AppStorage("selectedAge") var selectedAge: Int?
     @AppStorage("selectedEyeColor") var selectedEyeColor: String?
     @AppStorage("selectedGender") var selectedGender: String?
+    @Published var enableDebugMode: Bool = false
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     
@@ -27,7 +28,11 @@ class SurveyViewModel: ObservableObject {
     var surveyIsEmpty: Bool {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""
     }
-        
+    
+    func updateDebugModeFlag() {
+        fileUploadService.enableDebugMode = self.enableDebugMode
+    }
+    
     func createSessionJsonFile() {
         var surveyInput : [String: String] = [:]
         surveyInput["age"] = String(selectedAge ?? -1)

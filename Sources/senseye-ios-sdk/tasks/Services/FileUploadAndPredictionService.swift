@@ -24,6 +24,8 @@ protocol FileUploadAndPredictionServiceProtocol {
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
     func getLatestFrameTimestampArray() -> [Int64]
+    var enableDebugMode: Bool { get set }
+    var debugModeTaskTiming: Double { get }
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -61,6 +63,9 @@ class FileUploadAndPredictionService: ObservableObject {
     private var fileManager: FileManager
     private var fileDestUrl: URL?
     weak var delegate: FileUploadAndPredictionServiceDelegate?
+    
+    var enableDebugMode: Bool = false
+    let debugModeTaskTiming = 0.5
     
     init() {
         self.fileManager = FileManager.default

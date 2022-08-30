@@ -21,6 +21,15 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
     var taskBlockNumber: Int = 0
+    private var taskTiming: Double {
+        get {
+            if (fileUploadService.enableDebugMode) {
+                return fileUploadService.debugModeTaskTiming
+            } else {
+                return 5.0
+            }
+        }
+    }
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
@@ -59,7 +68,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         Log.info("in show images ---")
         isLoading = false
         updateCurrentImage()
-        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
             numberOfImagesShown += 1
             if currentImageIndex < affectiveImagesCount - 1 {
                 currentImageIndex += 1
@@ -87,7 +96,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     func checkForImages() {
         Log.info("in check for images ---")
-        self.updateImageSet()
+        self.updateImageSetIfAvailable()
     }
     
     func reset() {
@@ -107,21 +116,23 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     func addSubscribers() {
         Log.info("in add subscribers ---")
-        imageService.refreshImages()
         imageService.$senseyeImages
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in
                 Log.info("in receive completion ---")
-                self.updateImageSet()
+                self.updateImageSetIfAvailable()
             }, receiveValue: { _ in
                 Log.info("in receive value ---")
-                self.updateImageSet()
+                self.updateImageSetIfAvailable()
             })
     }
     
-    private func updateImageSet() {
+    private func updateImageSetIfAvailable() {
         Log.info("in update image set ---")
         let imageSetForBlock = imageService.imageSetForBlockNumber(blockNumber: taskBlockNumber).map { Image(uiImage: $0.image) }
+        guard !imageSetForBlock.isEmpty else {
+            return
+        }
         self.images = imageSetForBlock
         self.showImages()
     }

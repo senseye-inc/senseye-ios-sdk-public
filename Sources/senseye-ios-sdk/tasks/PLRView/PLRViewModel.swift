@@ -14,6 +14,15 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
     @Published var hasStartedTask = false
+    private var taskTiming: Double {
+        get {
+            if (fileUploadService.enableDebugMode) {
+                return fileUploadService.debugModeTaskTiming
+            } else {
+                return 5.0
+            }
+        }
+    }
 
     var currentInterval: Int = 0
     private var timestampsOfBackgroundSwap: [Int64] = []
@@ -27,9 +36,9 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
     func showPLR(didFinishCompletion: @escaping () -> Void) {
         hasStartedTask = true
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
             currentInterval += 1
-            if currentInterval <= 10 {
+            if currentInterval <= 6 {
                 DispatchQueue.main.async {
                     self.toggleColors()
                 }

@@ -42,7 +42,7 @@ struct PLRView: View {
             viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
-            UserConfirmationView(taskCompleted: "PLR", yesAction: {
+            UserConfirmationView(yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 viewModel.addTaskInfoToJson()

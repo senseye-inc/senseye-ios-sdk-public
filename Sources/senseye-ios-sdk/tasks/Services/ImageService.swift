@@ -18,6 +18,7 @@ class ImageService {
     }
     
     @Published var senseyeImages: [SenseyeImage] = []
+    @Published var imagesForBlock: [Image] = []
     @Published var finishedDownloadingImages: Bool = false
     
     private let fileManager: FileManager
@@ -51,14 +52,15 @@ class ImageService {
         }
     }
     
-    func imageSetForBlockNumber(blockNumber: Int) -> [SenseyeImage] {
+    func updateImagesForBlock(blockNumber: Int) {
         guard let imageSetIds = affectiveImageSets[blockNumber]?.imageIds else {
-            return []
+            return
         }
         let senseyeImageFilesForIds = senseyeImages.filter { senseyeImage in
             imageSetIds.contains(senseyeImage.imageName)
         }
-        return senseyeImageFilesForIds
+        let imageSetForBlock = senseyeImageFilesForIds.map { Image(uiImage: $0.image) }
+        self.imagesForBlock = imageSetForBlock
     }
     
     private func downloadImagesToFileManager() {

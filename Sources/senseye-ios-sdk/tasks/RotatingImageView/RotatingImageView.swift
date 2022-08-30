@@ -41,7 +41,7 @@ struct RotatingImageView: View {
             }
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
-            UserConfirmationView(taskCompleted: viewModel.taskCompleted, yesAction: {
+            UserConfirmationView(yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 viewModel.addTaskInfoToJson()

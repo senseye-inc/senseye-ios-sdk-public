@@ -45,7 +45,7 @@ struct CalibrationView: View {
             viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {
-            UserConfirmationView(taskCompleted: "Calibration", yesAction: {
+            UserConfirmationView(yesAction: {
                 cameraService.uploadLatestFile()
                 viewModel.shouldShowConfirmationView.toggle()
                 viewModel.addTaskInfoToJson()

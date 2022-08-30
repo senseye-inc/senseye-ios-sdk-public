@@ -11,7 +11,6 @@ import SwiftUI
 @MainActor
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
-    var taskCompleted: String = "Calibration"
     var hasStartedTask = false
     private var taskTiming: Double {
         get {

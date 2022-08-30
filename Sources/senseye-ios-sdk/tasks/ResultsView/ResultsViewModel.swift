@@ -24,12 +24,12 @@ class ResultsViewModel: ObservableObject {
 
     func getUploadProgress() {
         fileUploadService.uploadProgressPublisher
-            .sink { newUploadProgress in
-                let updatedUploadProgress = newUploadProgress/self.fileUploadService.numberOfUploads
-                DispatchQueue.main.async {
-                    self.uploadProgress = updatedUploadProgress
-                }
-            }
+            .sink(receiveValue: { [weak self] newUploadProgress in
+                guard let self = self else { return }
+                let updatedUploadProgress = newUploadProgress / self.fileUploadService.numberOfUploads
+                self.uploadProgress = updatedUploadProgress.rounded(toPlaces: 2)
+                Log.info("UploadProgress: \(self.uploadProgress)", shouldLogContext: true)
+            })
             .store(in: &cancellables)
     }
     

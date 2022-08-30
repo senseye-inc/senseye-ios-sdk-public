@@ -17,7 +17,7 @@ struct SessionInfo: Codable {
 
 // MARK: - PhoneSetting
 struct PhoneSettings: Codable {
-    let idlenessTimerEnabled: Bool
+    let idlenessTimerDisabled: Bool
     let brightness, freeSpace: Int?
     let networkType: String?
     let downloadSpeed, uploadSpeed: Int?

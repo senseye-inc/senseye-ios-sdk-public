@@ -41,8 +41,8 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published var uploadProgress: Double = 0.0
     @AppStorage("username") var username: String = ""
     
-    var numberOfUploads: Double = 0.0
     var isUploadOngoing: Bool = false
+    var numberOfUploads: Double = 0.0
     weak var delegate: FileUploadAndPredictionServiceDelegate?
 
     private var cancellables = Set<AnyCancellable>()
@@ -98,9 +98,11 @@ class FileUploadAndPredictionService: ObservableObject {
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .scan(0.0, { previousValue, newValueFromPublisher in
-                let difference = (newValueFromPublisher.fractionCompleted - previousValue)
-                self.uploadProgress += difference
-                return newValueFromPublisher.fractionCompleted
+                let newValueRounded = newValueFromPublisher.fractionCompleted.rounded(toPlaces: 2)
+                let previousValueRounded = previousValue.rounded(toPlaces: 2)
+                let difference = (newValueRounded - previousValueRounded).rounded(toPlaces: 2)
+                self.uploadProgress = self.uploadProgress.rounded(toPlaces: 2) + difference
+                return newValueRounded
             })
             .sink(receiveValue: { Log.info("Progress: " + $0.description) })
             .store(in: &self.cancellables)
@@ -168,7 +170,7 @@ class FileUploadAndPredictionService: ObservableObject {
         }
         
         let phoneDetails = PhoneDetails(os: "iOS", osVersion: osVersion, brand: "Apple", deviceType: deviceType.rawValue)
-        let phoneSettings = PhoneSettings(idlenessTimerEnabled: idlenessTimerDisabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
+        let phoneSettings = PhoneSettings(idlenessTimerDisabled: idlenessTimerDisabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
         
         self.sessionInfo = SessionInfo(versionCode: versionCode, age: age, eyeColor: eyeColor, versionName: versionName, gender: gender, folderName: s3FolderName, username: username, timezone: currentTiemzone.identifier, phoneSettings: phoneSettings, phoneDetails: phoneDetails, tasks: [])
     }

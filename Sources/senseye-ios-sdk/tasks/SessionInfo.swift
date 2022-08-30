@@ -9,9 +9,10 @@ import Foundation
 import UIKit
 // MARK: - SessionInfo
 struct SessionInfo: Codable {
-    let versionCode, age, eyeColor, versionName: String
-    let gender: String
-    let tasks: [SenseyeTask]
+    let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone: String?
+    let phoneSettings: PhoneSettings?
+    let phoneDetails: PhoneDetails?
+    var tasks: [SenseyeTask]
 }
 
 enum SessionCategory: String, Codable {
@@ -22,7 +23,20 @@ enum SessionSubcategory: String, Codable {
     case animals
 }
 
-// MARK: - Task
+// MARK: - PhoneSetting
+struct PhoneSettings: Codable {
+    let idlenessTimerDisabled: Bool
+    let brightness, freeSpace: Int?
+    let networkType: String?
+    let downloadSpeed, uploadSpeed: Int?
+}
+
+// MARK: - PhoneDetails
+struct PhoneDetails: Codable {
+    let os, osVersion, brand, deviceType: String?
+}
+
+// MARK: - SenseyeTask
 struct SenseyeTask: Codable {
     let taskID: String
     let timestamps: [Int64]?

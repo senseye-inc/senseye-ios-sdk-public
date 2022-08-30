@@ -41,28 +41,27 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 class FileUploadAndPredictionService: ObservableObject {
 
     @Published var uploadProgress: Double = 0.0
-    var numberOfUploads: Double = 0.0
-    private var cancellables = Set<AnyCancellable>()
+    @AppStorage("username") var username: String = ""
     
-    private let hostApi =  "https://apeye.senseye.co"
+    var isUploadOngoing: Bool = false
+    var numberOfUploads: Double = 0.0
+    weak var delegate: FileUploadAndPredictionServiceDelegate?
+
+    private var cancellables = Set<AnyCancellable>()
+    private var fileManager: FileManager
+    private var fileDestUrl: URL?
     private var hostApiKey: String? = nil
     private var sessionTimeStamp: Int64
-    @AppStorage("username") var username: String = ""
+    private var shouldUpload: Bool = true
+    private var currentSessionUploadFileKeys: [String] = []
+    private var currentTaskFrameTimestamps: [Int64]? = []
+    private var hasUploadedJsonFile: Bool = false
+    private var sessionInfo: SessionInfo? = nil
     private var s3FolderName: String {
         return "\(username)_\(sessionTimeStamp)"
     }
+    private let hostApi =  "https://apeye.senseye.co"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
-    private var shouldUpload: Bool = true
-    
-    private var currentSessionUploadFileKeys: [String] = []
-    private var currentSessionJsonInputFile: JSON? = nil
-    private var currentTaskFrameTimestamps: [Int64]? = []
-    private var hasUploadedJsonFile: Bool = false
-
-    var isUploadOngoing: Bool = false
-    private var fileManager: FileManager
-    private var fileDestUrl: URL?
-    weak var delegate: FileUploadAndPredictionServiceDelegate?
     
     var enableDebugMode: Bool = false
     let debugModeTaskTiming = 0.5
@@ -104,9 +103,11 @@ class FileUploadAndPredictionService: ObservableObject {
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .scan(0.0, { previousValue, newValueFromPublisher in
-                let difference = (newValueFromPublisher.fractionCompleted - previousValue)
-                self.uploadProgress += difference
-                return newValueFromPublisher.fractionCompleted
+                let newValueRounded = newValueFromPublisher.fractionCompleted.rounded(toPlaces: 2)
+                let previousValueRounded = previousValue.rounded(toPlaces: 2)
+                let difference = (newValueRounded - previousValueRounded).rounded(toPlaces: 2)
+                self.uploadProgress = self.uploadProgress.rounded(toPlaces: 2) + difference
+                return newValueRounded
             })
             .sink(receiveValue: { Log.info("Progress: " + $0.description) })
             .store(in: &self.cancellables)
@@ -151,25 +152,32 @@ class FileUploadAndPredictionService: ObservableObject {
      
      - Parameters:
      - surveyInput: Array of responses from demographic survey
-     - tasks: Array of experiment tasks that are performed during the session
      */
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
         self.setUserAttributes()
-        var sessionInputJson = JSON()
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let age = surveyInput["age"]
+        let gender = surveyInput["gender"]
+        let eyeColor = surveyInput["eyeColor"]
+        let versionName = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        let versionCode = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
         let deviceType = UIDevice().type
         let currentTiemzone = TimeZone.current
-        
-        sessionInputJson["versionName"].string = version
-        sessionInputJson["versionCode"].string = build
-        sessionInputJson["deviceType"].string = deviceType.rawValue
-        sessionInputJson["timezone"].string = currentTiemzone.identifier
-        
-        for inputItem in surveyInput {
-            sessionInputJson[inputItem.key].string = inputItem.value
+        let currentBrightnessInt = Int(UIScreen.main.brightness)
+        let osVersion = UIDevice.current.systemVersion
+        let reachability = NetworkReachabilityManager.default?.status
+        let idlenessTimerDisabled = UIApplication.shared.isIdleTimerDisabled
+        var networkType: String?
+        switch reachability {
+        case .unknown, .notReachable, .none:
+            print("unknown connection type or not reachable")
+        case .reachable(let connectionType):
+            networkType = "\(connectionType)"
         }
-        self.currentSessionJsonInputFile = sessionInputJson
+        
+        let phoneDetails = PhoneDetails(os: "iOS", osVersion: osVersion, brand: "Apple", deviceType: deviceType.rawValue)
+        let phoneSettings = PhoneSettings(idlenessTimerDisabled: idlenessTimerDisabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
+        
+        self.sessionInfo = SessionInfo(versionCode: versionCode, age: age, eyeColor: eyeColor, versionName: versionName, gender: gender, folderName: s3FolderName, username: username, timezone: currentTiemzone.identifier, phoneSettings: phoneSettings, phoneDetails: phoneDetails, tasks: [])
     }
     
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?) {
@@ -181,66 +189,7 @@ class FileUploadAndPredictionService: ObservableObject {
     }
 
     func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
-        var newTaskJsonObject = JSON()
-
-        // taskID
-        newTaskJsonObject["taskId"].string = taskInfo.taskID
-
-        // timeStamps
-        if let timestamps = jsonFor(taskInfo.timestamps) {
-            newTaskJsonObject["timestamps"] = timestamps
-        }
-
-        // eventXLOC
-        if let eventXLOC = jsonFor(taskInfo.eventXLOC) {
-            newTaskJsonObject["eventXLOC"] = eventXLOC
-        }
-
-        // eventYLOC
-        if let eventYLOC = jsonFor(taskInfo.eventYLOC) {
-            newTaskJsonObject["eventYLOC"] = eventYLOC
-        }
-
-        // eventImageID
-        if let eventImageID = jsonFor(taskInfo.eventImageID) {
-            newTaskJsonObject["eventImageID"] = eventImageID
-        }
-
-        // eventBackgroundColor
-        if let eventBackgroundColor = jsonFor(taskInfo.eventBackgroundColor) {
-            newTaskJsonObject["eventBackgroundColor"] = eventBackgroundColor
-        }
-        
-        if let eventFrameTimestamps = jsonFor(taskInfo.frameTimestamps) {
-            newTaskJsonObject["frameTimestamps"] = eventFrameTimestamps
-        }
-        
-        if let blockNumber = jsonFor(taskInfo.blockNumber) {
-            newTaskJsonObject["blockNumber"] = blockNumber
-        }
-        
-        if let category = jsonFor(taskInfo.category), let subcategory = jsonFor(taskInfo.subcategory) {
-            newTaskJsonObject["category"] = category
-            newTaskJsonObject["subcategory"] = subcategory
-        }
-
-        var taskObjectList: [JSON] = []
-        if let previousTaskObjects = self.currentSessionJsonInputFile?["tasks"].array {
-            for previousTaskObject in previousTaskObjects {
-                taskObjectList.append(previousTaskObject)
-            }
-            taskObjectList.append(newTaskJsonObject)
-            self.currentSessionJsonInputFile?["tasks"] = JSON(taskObjectList)
-        }
-        else {
-            self.currentSessionJsonInputFile?["tasks"] = [newTaskJsonObject]
-        }
-
-        Log.info(self.currentSessionJsonInputFile?.stringValue ?? "")
-    }
-
-    func jsonFor<T>(_ taskInfo: T?) -> JSON? {
-        taskInfo.map { JSON($0) }
+        self.sessionInfo?.tasks.append(taskInfo)
     }
     
     /**
@@ -258,11 +207,7 @@ class FileUploadAndPredictionService: ObservableObject {
         }
         
         do {
-            guard let sessionJsonFile = try currentSessionJsonInputFile?.rawData() else {
-                Log.error("Error in json parsing for input file")
-                return
-            }
-            
+            let encodedData = try JSONEncoder().encode(sessionInfo)
             var uploadS3URLs: [String] = []
             for localFileNameKey in currentSessionUploadFileKeys {
                 uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
@@ -273,7 +218,7 @@ class FileUploadAndPredictionService: ObservableObject {
             let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
             Amplify.Storage.uploadData(
                 key: jsonFileName,
-                data: sessionJsonFile,
+                data: encodedData,
                 progressListener: { progress in
                     Log.info("Progress: \(progress)")
                 }, resultListener: { event in

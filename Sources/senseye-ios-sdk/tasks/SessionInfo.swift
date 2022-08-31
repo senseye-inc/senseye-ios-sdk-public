@@ -13,6 +13,7 @@ struct SessionInfo: Codable {
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
     var tasks: [SenseyeTask]
+    var predictionJobID: String?
 }
 
 // MARK: - PhoneSetting

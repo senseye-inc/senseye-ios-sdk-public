@@ -20,7 +20,6 @@ protocol FileUploadAndPredictionServiceProtocol {
     var numberOfUploads: Double { get }
     func uploadData(fileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
-    func uploadSessionJsonFile()
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
     func getLatestFrameTimestampArray() -> [Int64]
@@ -58,7 +57,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var s3FolderName: String {
         return "\(username)_\(sessionTimeStamp)"
     }
-    private let hostApi =  "https://apeye.senseye.co"
+    private let hostApi =  "https://rem.api.senseye.co/"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
     init() {
@@ -117,6 +116,7 @@ class FileUploadAndPredictionService: ObservableObject {
             self.currentSessionUploadFileKeys.append(fileNameKey)
             self.isUploadOngoing = false
             self.delegate?.didFinishUpload()
+            self.submitPredictionRequest()
         }
         .store(in: &self.cancellables)
     }
@@ -190,7 +190,7 @@ class FileUploadAndPredictionService: ObservableObject {
     /**
      Upload JSON file for the current session
      */
-    func uploadSessionJsonFile() {
+    private func uploadSessionJsonFile(jsonFileName: String) {
 
         guard shouldUpload else {
             Log.info("Skipping JSON Upload")
@@ -206,11 +206,8 @@ class FileUploadAndPredictionService: ObservableObject {
             var uploadS3URLs: [String] = []
             for localFileNameKey in currentSessionUploadFileKeys {
                 uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
-                Log.debug("\(s3HostBucketUrl+localFileNameKey)")
             }
             
-            let currentTimeStamp = Date().currentTimeMillis()
-            let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
             Amplify.Storage.uploadData(
                 key: jsonFileName,
                 data: encodedData,
@@ -230,6 +227,43 @@ class FileUploadAndPredictionService: ObservableObject {
         } catch {
             Log.error("Error in json parsing for input file")
         }
+    }
+    
+    private func submitPredictionRequest() {
+        
+        let currentTimeStamp = Date().currentTimeMillis()
+        let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
+        let numberOFUploadsInt = Int(numberOfUploads)
+        let workers = min(numberOFUploadsInt, 10)
+        
+        guard
+            workers >= 4, // calibration, affectiveImages, PLR, calibration
+            let apiKey = self.hostApiKey else {
+            Log.info("skipping prediction request")
+            return
+        }
+        
+        let jsonMetadataURL = s3HostBucketUrl + jsonFileName
+        let arn = "arn:aws:s3:::\(s3HostBucketUrl)\(s3FolderName)/*"
+        var s3Paths: [String] = []
+        for localFileNameKey in currentSessionUploadFileKeys {
+            s3Paths.append(s3HostBucketUrl+localFileNameKey)
+        }
+        
+        let filePathLister = FilePathLister(s3Paths: s3Paths, includes: ["**.mp4"], excludes: nil, batchSize: 1)
+        let sqsDeadLetterQueue = SQSDeadLetterQueue(arn: arn, maxReceiveCount: 1)
+        let params = PredictionRequest(workers: workers, timeout: 1, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL])
+        let headers: HTTPHeaders = [
+            "x-api-key": apiKey,
+            "Accept": "application/json"
+        ]
+        
+        AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers).responseDecodable(of: PredictionResponse.self, completionHandler: { response in
+            Log.info("response received! \(response)")
+            let jobID = response.value?.jobID
+            self.sessionInfo?.predictionJobID = jobID
+            self.uploadSessionJsonFile(jsonFileName: jsonFileName)
+        })
     }
 }
 

@@ -23,11 +23,11 @@ struct TabItem: Hashable {
     let taskTitle: String
     let taskDescription: String
     let blockNumber: Int?
-    let category: SessionCategory?
-    let subcategory: SessionSubcategory?
+    let category: TaskBlockCategory?
+    let subcategory: TaskBlockSubcategory?
     
     
-    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: SessionCategory? = nil, subcategory: SessionSubcategory? = nil) {
+    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
         self.taskId = taskId
         self.tabType = tabType
         self.taskTitle = taskTitle
@@ -48,43 +48,44 @@ struct TabItem: Hashable {
 class TabController: ObservableObject {
 
 
-    private var taskTabOrdering: [TabItem] = [TabItem(taskId: "login_view", tabType: .loginView),
-                                              TabItem(taskId: "survey_view", tabType: .surveyView),
-                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 0),
-                                              TabItem(taskId: "calibration_view_1",
-                                                      tabType: .calibrationView,
-                                                      taskTitle: "Calibration",
-                                                      taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
-                                                      blockNumber: 1),
-                                              TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 2),
-                                              TabItem(taskId: "plr_view",
-                                                      tabType: .plrView,
-                                                      taskTitle: "PLR",
-                                                      taskDescription: "Stare at the cross for the duration of the task.",
-                                                      blockNumber: 2),
-                                              TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 2),
-                                              TabItem(taskId: "affective_image_set_1",
-                                                      tabType: .imageView,
-                                                      taskTitle: "PTSD Image Set - Block 2",
-                                                      taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
-                                                      blockNumber: 2,
-                                                      category: .positive,
-                                                      subcategory: .animals),
-                                              TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
-                                              TabItem(taskId: "affective_image_set_2",
-                                                      tabType: .imageView,
-                                                      taskTitle: "PTSD Image Set - Block 3",
-                                                      taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
-                                                      blockNumber: 3,
-                                                      category: .positive,
-                                                      subcategory: .animals),
-                                              TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
-                                              TabItem(taskId: "calibration_view_2",
-                                                      tabType: .calibrationView,
-                                                      taskTitle: "Calibration",
-                                                      taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
-                                                      blockNumber: 4),
-                                              TabItem(taskId: "results_view", tabType: .resultsView)]
+    private var taskTabOrdering: [TabItem] = [
+        TabItem(taskId: "login_view", tabType: .loginView),
+        TabItem(taskId: "survey_view", tabType: .surveyView),
+        TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 0),
+        TabItem(taskId: "calibration_view_1",
+                tabType: .calibrationView,
+                taskTitle: "Calibration",
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                blockNumber: 1),
+        TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 2),
+        TabItem(taskId: "plr_view",
+                tabType: .plrView,
+                taskTitle: "PLR",
+                taskDescription: "Stare at the cross for the duration of the task.",
+                blockNumber: 2),
+        TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 2),
+        TabItem(taskId: "affective_image_set_1",
+                tabType: .imageView,
+                taskTitle: "PTSD Image Set - Block 2",
+                taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+                blockNumber: 2,
+                category: .positive,
+                subcategory: .animals),
+        TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
+        TabItem(taskId: "affective_image_set_2",
+                tabType: .imageView,
+                taskTitle: "PTSD Image Set - Block 3",
+                taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+                blockNumber: 3,
+                category: .positive,
+                subcategory: .animals),
+        TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
+        TabItem(taskId: "calibration_view_2",
+                tabType: .calibrationView,
+                taskTitle: "Calibration",
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                blockNumber: 4),
+        TabItem(taskId: "results_view", tabType: .resultsView)]
     
     @Published var activeTabType: TabType = .loginView
     var activeTabBlockNumber: Int?
@@ -134,7 +135,7 @@ class TabController: ObservableObject {
         return currentTab.taskTitle
     }
     
-    func cateogryAndSubcategoryForCurrentTab() -> (SessionCategory?, SessionSubcategory?) {
+    func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
     }

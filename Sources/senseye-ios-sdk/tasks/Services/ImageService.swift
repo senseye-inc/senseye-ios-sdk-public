@@ -17,10 +17,8 @@ class ImageService {
         self.getImages()
     }
     
-    @Published var senseyeImages: [SenseyeImage] = []
-    @Published var imagesForBlock: [Image] = []
-    var senseyeImagesForBlock: [SenseyeImage] = []
-    @Published var finishedDownloadingImages: Bool = false
+    private var fullImageSet: [SenseyeImage] = []
+    @Published var imagesForBlock: [(String, Image)] = []
     
     private let fileManager: FileManager
     private let folderName = "affective_images"
@@ -38,15 +36,10 @@ class ImageService {
         return imageNames
     }
     
-    func refreshImages() {
-        self.getImages()
-    }
-    
     private func getImages() {
-        let allImages = allImageNames
-        if let savedImages = fileManager.getImages(imageNames: allImages, folderName: folderName) {
+        if let savedImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName) {
             Log.info("Fetching Saved Image!")
-            self.senseyeImages = savedImages
+            self.fullImageSet = savedImages
         } else {
             Log.info("Downloading images!")
             downloadImagesToFileManager()
@@ -57,11 +50,10 @@ class ImageService {
         guard let imageSetIds = affectiveImageSets[blockNumber]?.imageIds else {
             return
         }
-        let senseyeImageFilesForIds = senseyeImages.filter { senseyeImage in
+        let senseyeImageFilesForIds = fullImageSet.filter { senseyeImage in
             imageSetIds.contains(senseyeImage.imageName)
         }
-        self.senseyeImagesForBlock = senseyeImageFilesForIds
-        let imageSetForBlock = senseyeImageFilesForIds.map { Image(uiImage: $0.image) }
+        let imageSetForBlock = senseyeImageFilesForIds.map { ($0.imageName,Image(uiImage: $0.image)) }
         self.imagesForBlock = imageSetForBlock
     }
     
@@ -79,8 +71,8 @@ class ImageService {
                     Log.info("completed download for image: \(imageName)")
                     fileManager.saveImage(image: image, imageName: imageName, folderName: folderName)
                     let newSenseyeImage = SenseyeImage(image: image, imageName: imageName)
-                    senseyeImages.append(newSenseyeImage)
-                    senseyeImages = senseyeImages.reorder(by: allImageNames)
+                    fullImageSet.append(newSenseyeImage)
+                    fullImageSet = fullImageSet.reorder(by: allImageNames)
                 }
                 .store(in: &cancellables)
         }

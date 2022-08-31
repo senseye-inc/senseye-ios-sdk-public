@@ -15,11 +15,11 @@ struct SessionInfo: Codable {
     var tasks: [SenseyeTask]
 }
 
-enum SessionCategory: String, Codable {
+enum TaskBlockCategory: String, Codable {
     case positive
 }
 
-enum SessionSubcategory: String, Codable {
+enum TaskBlockSubcategory: String, Codable {
     case animals
 }
 
@@ -45,8 +45,8 @@ struct SenseyeTask: Codable {
     let eventBackgroundColor: [String]?
     let frameTimestamps: [Int64]?
     let blockNumber: Int?
-    let category: SessionCategory?
-    let subcategory: SessionSubcategory?
+    let category: TaskBlockCategory?
+    let subcategory: TaskBlockSubcategory?
 
     enum CodingKeys: String, CodingKey {
         case taskID = "taskId"
@@ -61,7 +61,7 @@ struct SenseyeTask: Codable {
         case subcategory = "subcategory"
     }
 
-    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil, blockNumber: Int? = nil, category: SessionCategory? = nil, subcategory: SessionSubcategory? = nil) {
+    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil, blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
         self.taskID = taskID
         self.timestamps = timestamps
         self.eventXLOC = eventXLOC

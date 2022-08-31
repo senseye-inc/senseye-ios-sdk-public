@@ -43,15 +43,10 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
     var numberOfImagesShown = 0
-    var totalNumberOfImagesToBeShown = 24
     var currentImage: Image?
 
     var finishedAllTasks: Bool {
-        numberOfImagesShown >= affectiveImagesCount
-    }
-    
-    var affectiveImagesCount: Int {
-        images.count
+        numberOfImagesShown >= images.count
     }
     
     private var rotatingImageTimer: Timer? = nil
@@ -65,17 +60,20 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     private func startImageTimer() {
         updateCurrentImage()
-        rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
-            numberOfImagesShown += 1
-            if currentImageIndex < affectiveImagesCount - 1 {
-                currentImageIndex += 1
-                addTimestampOfImageDisplay()
-                updateCurrentImage()
-            } else {
-                shouldShowConfirmationView.toggle()
-                isFinished = true
-                Log.info("RotatingImageViewModel Timer Cancelled")
-                stopImageTimer()
+        Log.info("RotatingImageViewModel creating timer")
+        if (rotatingImageTimer == nil) {
+            rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
+                numberOfImagesShown += 1
+                if currentImageIndex < images.count - 1 {
+                    currentImageIndex += 1
+                    addTimestampOfImageDisplay()
+                    updateCurrentImage()
+                } else {
+                    shouldShowConfirmationView.toggle()
+                    isFinished = true
+                    Log.info("RotatingImageViewModel Timer Cancelled")
+                    stopImageTimer()
+                }
             }
         }
     }
@@ -96,7 +94,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func removeLastImageSet() {
-        numberOfImagesShown -= (affectiveImagesCount)
+        numberOfImagesShown -= (images.count)
     }
     
     func checkForImages() {

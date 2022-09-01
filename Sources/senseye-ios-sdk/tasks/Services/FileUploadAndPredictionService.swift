@@ -242,7 +242,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let workers = min(numberOFUploadsInt, 10)
         
         guard
-            workers >= 4, // calibration, affectiveImages, PLR, calibration
+            workers >= 5, // calibration, affectiveImages1, affectiveImages2, PLR, calibration
             let apiKey = self.hostApiKey else {
             Log.info("skipping prediction request")
             return

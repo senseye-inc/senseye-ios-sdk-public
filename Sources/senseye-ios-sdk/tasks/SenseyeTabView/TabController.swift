@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Tab {
+enum TabType {
     case imageView
     case plrView
     case resultsView
@@ -17,18 +17,29 @@ enum Tab {
     case calibrationView
 }
 
-extension Tab {
-    func retrieveTaskInfoForTab() -> (String, String) {
-        switch self {
-        case .imageView:
-            return ("PTSD Image Set", "8 different images will come across the screen. \n Note: Some of the images may be disturbing.")
-        case .plrView:
-            return ("PLR", "Stare at the cross for the duration of the task.")
-        case .calibrationView:
-            return ("Calibration", "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")
-        default:
-            return ("","")
-        }
+struct TabItem: Hashable {
+    let taskId: String
+    let tabType: TabType
+    let taskTitle: String
+    let taskDescription: String
+    let blockNumber: Int?
+    let category: TaskBlockCategory?
+    let subcategory: TaskBlockSubcategory?
+    
+    
+    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
+        self.taskId = taskId
+        self.tabType = tabType
+        self.taskTitle = taskTitle
+        self.taskDescription = taskDescription
+        self.blockNumber = blockNumber
+        self.category = category
+        self.subcategory = subcategory
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(taskId)
+        hasher.combine(tabType)
     }
 }
 
@@ -36,19 +47,58 @@ extension Tab {
 @MainActor
 class TabController: ObservableObject {
 
-    @Published var activeTab: Tab = .loginView
-    private var nextTab: Tab = .calibrationView
-    private var currentTabIndex = 0
 
-    private var taskTabOrdering: [Tab] = [.loginView, .surveyView, .cameraView, .calibrationView, .cameraView, .imageView, .cameraView, .plrView, .cameraView, .calibrationView, .resultsView]
+    private var taskTabOrdering: [TabItem] = [
+        TabItem(taskId: "login_view", tabType: .loginView),
+        TabItem(taskId: "survey_view", tabType: .surveyView),
+        TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 0),
+        TabItem(taskId: "calibration_view_1",
+                tabType: .calibrationView,
+                taskTitle: "Calibration",
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                blockNumber: 1),
+        TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 2),
+        TabItem(taskId: "plr_view",
+                tabType: .plrView,
+                taskTitle: "PLR",
+                taskDescription: "Stare at the cross for the duration of the task.",
+                blockNumber: 2),
+        TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 2),
+        TabItem(taskId: "affective_image_set_1",
+                tabType: .imageView,
+                taskTitle: "PTSD Image Set - Block 2",
+                taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+                blockNumber: 2,
+                category: .positive,
+                subcategory: .animals),
+        TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
+        TabItem(taskId: "affective_image_set_2",
+                tabType: .imageView,
+                taskTitle: "PTSD Image Set - Block 3",
+                taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+                blockNumber: 3,
+                category: .positive,
+                subcategory: .animals),
+        TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
+        TabItem(taskId: "calibration_view_2",
+                tabType: .calibrationView,
+                taskTitle: "Calibration",
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                blockNumber: 4),
+        TabItem(taskId: "results_view", tabType: .resultsView)]
+    
+    @Published var activeTabType: TabType = .loginView
+    var activeTabBlockNumber: Int?
+    private var nextTab: TabItem?
+    private var currentTabIndex = 0
 
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1
     }
 
     func refreshSameTab() {
-        open(.cameraView)
         currentTabIndex-=1
+        open(taskTabOrdering[currentTabIndex])
     }
 
     func proceedToNextTab() {
@@ -58,8 +108,12 @@ class TabController: ObservableObject {
     }
 
     func openNextTab() {
+        guard let updatedTab = self.nextTab else {
+            return
+        }
         DispatchQueue.main.async {
-            self.activeTab = self.nextTab
+            self.activeTabType = updatedTab.tabType
+            self.activeTabBlockNumber = updatedTab.blockNumber
         }
     }
 
@@ -72,12 +126,24 @@ class TabController: ObservableObject {
 
     func taskInfoForNextTab() -> (String, String) {
         let nextTabIndex = currentTabIndex+1
-        return taskTabOrdering[nextTabIndex].retrieveTaskInfoForTab()
+        let tabItem = taskTabOrdering[nextTabIndex]
+        return (tabItem.taskTitle, tabItem.taskDescription)
+    }
+    
+    func titleForCurrentTab() -> String {
+        let currentTab = taskTabOrdering[currentTabIndex]
+        return currentTab.taskTitle
+    }
+    
+    func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
+        let currentTab = taskTabOrdering[currentTabIndex]
+        return (currentTab.category, currentTab.subcategory)
     }
 
-    private func open(_ tab: Tab) {
+    private func open(_ tab: TabItem) {
         DispatchQueue.main.async {
-            self.activeTab = tab
+            self.activeTabType = tab.tabType
+            self.activeTabBlockNumber = tab.blockNumber
         }
     }
 }

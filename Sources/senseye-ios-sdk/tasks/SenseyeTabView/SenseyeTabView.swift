@@ -16,33 +16,33 @@ struct SenseyeTabView: View {
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
-        TabView(selection: $tabController.activeTab) {
+        TabView(selection: $tabController.activeTabType) {
             LoginView(authenticationService: authenticationService)
-                .tag(Tab.loginView)
+                .tag(TabType.loginView)
                 .gesture(DragGesture())
 
             SurveyView(authenticationService: authenticationService, fileUploadAndPredictionService: fileUploadService)
-                .tag(Tab.surveyView)
+                .tag(TabType.surveyView)
                 .gesture(DragGesture())
 
             CalibrationView(fileUploadAndPredictionService: fileUploadService)
-                .tag(Tab.calibrationView)
+                .tag(TabType.calibrationView)
                 .gesture(DragGesture())
 
             RotatingImageView(fileUploadService: fileUploadService, imageService: imageService)
-                .tag(Tab.imageView)
+                .tag(TabType.imageView)
                 .gesture(DragGesture())
 
             PLRView(fileUploadService: fileUploadService)
-                .tag(Tab.plrView)
+                .tag(TabType.plrView)
                 .gesture(DragGesture())
 
             ResultsView(fileUploadService: fileUploadService)
-                .tag(Tab.resultsView)
+                .tag(TabType.resultsView)
                 .gesture(DragGesture())
 
             CameraView()
-                .tag(Tab.cameraView)
+                .tag(TabType.cameraView)
                 .gesture(DragGesture())
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in

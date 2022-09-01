@@ -11,8 +11,16 @@ import SwiftUI
 @MainActor
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
-    var taskCompleted: String = "Calibration"
     var hasStartedTask = false
+    private var taskTiming: Double {
+        get {
+            if (fileUploadService.enableDebugMode) {
+                return fileUploadService.debugModeTaskTiming
+            } else {
+                return 2.5
+            }
+        }
+    }
     
     @Published var xCoordinate: CGFloat
     @Published var yCoordinate: CGFloat
@@ -30,7 +38,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
 
     func startCalibration(didFinishCompletion: @escaping () -> Void) {
         hasStartedTask = true
-        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
+        Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
             pathIndex += 1
             if pathIndex < calibrationPath.count {
                 xCoordinate = calibrationPath[pathIndex].0

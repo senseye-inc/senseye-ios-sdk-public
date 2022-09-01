@@ -15,15 +15,24 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
-        addSubscribers()
     }
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
+    var tabInfo: RotatingImageViewTaskInfo?
+    private var taskTiming: Double {
+        get {
+            if (fileUploadService.enableDebugMode) {
+                return fileUploadService.debugModeTaskTiming
+            } else {
+                return 5.0
+            }
+        }
+    }
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
-    @Published var images: [Image?] = []
+    @Published var images: [(String, Image)] = []
     @Published var isFinished: Bool = false
     @Published var currentImageIndex: Int = 0
     
@@ -34,55 +43,67 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
     var numberOfImagesShown = 0
-    var totalNumberOfImagesToBeShown = 24
     var currentImage: Image?
 
     var finishedAllTasks: Bool {
-        numberOfImagesShown >= affectiveImagesCount
+        numberOfImagesShown >= images.count
     }
     
-    var taskCompleted: String {
-        "PTSD \(numberOfImagesShown)/\(affectiveImagesCount)"
-    }
-    
-    var affectiveImagesCount: Int {
-        imageService.affectiveImageNames.count
-    }
+    private var rotatingImageTimer: Timer? = nil
     
     func showImages() {
+        Log.info("in show images ---")
         isLoading = false
+        startImageTimer()
+        addTimestampOfImageDisplay()
+    }
+    
+    private func startImageTimer() {
         updateCurrentImage()
-        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [self] timer in
-            numberOfImagesShown += 1
-            if currentImageIndex < affectiveImagesCount - 1 {
-                currentImageIndex += 1
-                addTimestampOfImageDisplay()
-                updateCurrentImage()
-            } else {
-                timer.invalidate()
-                shouldShowConfirmationView.toggle()
-                isFinished = true
-                Log.info("RotatingImageViewModel Timer Cancelled")
+        Log.info("RotatingImageViewModel creating timer")
+        if (rotatingImageTimer == nil) {
+            rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
+                numberOfImagesShown += 1
+                if currentImageIndex < images.count - 1 {
+                    currentImageIndex += 1
+                    addTimestampOfImageDisplay()
+                    updateCurrentImage()
+                } else {
+                    shouldShowConfirmationView.toggle()
+                    isFinished = true
+                    Log.info("RotatingImageViewModel Timer Cancelled")
+                    stopImageTimer()
+                }
             }
         }
-        addTimestampOfImageDisplay()
+    }
+    
+    private func stopImageTimer() {
+        if (rotatingImageTimer != nil) {
+            rotatingImageTimer?.invalidate()
+            rotatingImageTimer = nil
+        }
     }
     
     private func addTimestampOfImageDisplay() {
         let timestamp = Date().currentTimeMillis()
-        let imageName = imageService.affectiveImageNames[currentImageIndex]
         timestampsOfImageSwap.append(timestamp)
-        eventImageID.append(imageName)
+        let currentImage = images[currentImageIndex]
+        eventImageID.append(currentImage.0)
         Log.info("Adding image swap event timestamp \(currentImageIndex) --- \(timestamp)")
     }
     
     func removeLastImageSet() {
-        numberOfImagesShown -= (affectiveImagesCount)
+        numberOfImagesShown -= (images.count)
     }
     
     func checkForImages() {
-        guard !images.isEmpty else { return }
-        showImages()
+        guard let currentBlockNumber = self.tabInfo?.taskBlockNumber else {
+            return
+        }
+        Log.info("in check for images ---")
+        imageService.updateImagesForBlock(blockNumber: currentBlockNumber)
+        addSubscribers()
     }
     
     func reset() {
@@ -92,32 +113,33 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "ptsd_image_set", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfImageSwap, eventImageID: eventImageID)
+        let taskInfo = SenseyeTask(taskID: "ptsd_image_set", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfImageSwap, eventImageID: eventImageID, blockNumber: tabInfo?.taskBlockNumber, category: tabInfo?.taskCategory, subcategory: tabInfo?.taskSubcategory)
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
     
     func updateCurrentImage() {
-        currentImage = images[currentImageIndex]
+        currentImage = images[currentImageIndex].1
     }
     
     func addSubscribers() {
-        imageService.$senseyeImages
+        Log.info("in add subscribers ---")
+        imageService.$imagesForBlock
             .receive(on: DispatchQueue.main)
-            .map({ senseyeImages -> [Image] in
-                senseyeImages.map { Image(uiImage: $0.image) }
-            })
-            .sink(receiveCompletion: { completion in
-                Log.info("Completed from \(#function): \(completion)")
-                self.showImages()
-            }, receiveValue: { images in
-                self.images = images
-                guard self.images.count == self.affectiveImagesCount else {
+            .sink(receiveValue: { [weak self] imageSetForBlock in
+                guard let self = self else {
                     return
                 }
-                Log.info("Showing images")
+                print(imageSetForBlock)
+                self.images = imageSetForBlock
                 self.showImages()
             })
             .store(in: &cancellables)
     }
     
+}
+
+struct RotatingImageViewTaskInfo {
+    let taskBlockNumber: Int?
+    let taskCategory: TaskBlockCategory?
+    let taskSubcategory: TaskBlockSubcategory?
 }

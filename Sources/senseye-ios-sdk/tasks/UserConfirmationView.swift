@@ -11,12 +11,10 @@ struct UserConfirmationView: View {
     @EnvironmentObject var tabController: TabController
     @Environment(\.dismiss) var dismiss
     @State var isShowingAlert: Bool = false
-    let taskCompleted: String?
     let yesAction: (() -> Void)
     let noAction: (() -> Void)
     
-    init(taskCompleted: String, yesAction: @escaping (() -> Void), noAction: @escaping (() -> Void)) {
-        self.taskCompleted = taskCompleted
+    init(yesAction: @escaping (() -> Void), noAction: @escaping (() -> Void)) {
         self.yesAction = yesAction
         self.noAction = noAction
     }
@@ -29,7 +27,7 @@ struct UserConfirmationView: View {
             VStack {
                 Spacer()
                 
-                Text("Was this a good recording for \(taskCompleted ?? "n/a")?")
+                Text("Was this a good recording for \(tabController.titleForCurrentTab())?")
                     .font(.title)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)

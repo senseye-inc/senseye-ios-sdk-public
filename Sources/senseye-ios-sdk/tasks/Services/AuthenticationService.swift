@@ -39,6 +39,7 @@ public class AuthenticationService: ObservableObject {
     
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
+    var enableDebugMode = false
 
     /**
      Authenticates the user session and handles subsequent all sign in flows.

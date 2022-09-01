@@ -43,8 +43,16 @@ struct SurveyView: View {
                 genderPicker
 
                 eyeColorPicker
-
+                
+                Toggle(isOn: $viewModel.enableDebugMode) {
+                    Text("Enable Debug Mode")
+                        .foregroundColor(.white)
+                }.padding()
+                    
+                
                 Spacer()
+                
+                
                 Spacer()
 
                 HStack(spacing: 100) {
@@ -62,6 +70,7 @@ struct SurveyView: View {
 
                     Button {
                         tabController.proceedToNextTab()
+                        viewModel.updateDebugModeFlag()
                         viewModel.createSessionJsonFile()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)

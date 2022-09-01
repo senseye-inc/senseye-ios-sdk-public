@@ -23,6 +23,8 @@ protocol FileUploadAndPredictionServiceProtocol {
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
     func getLatestFrameTimestampArray() -> [Int64]
+    var enableDebugMode: Bool { get set }
+    var debugModeTaskTiming: Double { get }
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -59,6 +61,9 @@ class FileUploadAndPredictionService: ObservableObject {
     }
     private let hostApi =  "https://rem.api.senseye.co/"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
+    
+    var enableDebugMode: Bool = false
+    let debugModeTaskTiming = 0.5
     
     init() {
         self.fileManager = FileManager.default

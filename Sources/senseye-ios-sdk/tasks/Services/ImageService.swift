@@ -25,8 +25,7 @@ class ImageService {
     private var cancellables = Set<AnyCancellable>()
     
     private var affectiveImageSets: [Int: AffectiveImageSet] = [
-        2: AffectiveImageSet(category: .positive, imageIds: ["fire_9", "stream", "leaves_3", "desert_3", "acorns_1", "desert_2", "fire_7", "water"]),
-        3: AffectiveImageSet(category: .neutral, imageIds: ["puppies_1", "cat_5", "bird_1", "panda_5", "chipmunk_1", "dog_4", "seal_1", "horse_1"])
+        1: AffectiveImageSet(category: .positive, imageIds: ["beach_1", "beach_2", "beach_6", "lake_2", "lake_7", "rainbow_1", "outside_5", "sunset_4"])
     ]
     
     private var allImageNames : [String] {
@@ -58,23 +57,28 @@ class ImageService {
     }
     
     private func downloadImagesToFileManager() {
-        for imageName in allImageNames {
-            let s3imageKey = "ptsd_image_sets/\(imageName).png"
-            Log.info("Starting Download for Image: \(imageName)!")
-            
-            Amplify.Storage.downloadData(key: s3imageKey).resultPublisher
-                .receive(on: DispatchQueue.main)
-                .compactMap({ UIImage(data: $0) })
-                .sink { _ in
-                    
-                } receiveValue: { [self] image in
-                    Log.info("completed download for image: \(imageName)")
-                    fileManager.saveImage(image: image, imageName: imageName, folderName: folderName)
-                    let newSenseyeImage = SenseyeImage(image: image, imageName: imageName)
-                    fullImageSet.append(newSenseyeImage)
-                    fullImageSet = fullImageSet.reorder(by: allImageNames)
-                }
-                .store(in: &cancellables)
+        for blockNumber in affectiveImageSets.keys {
+            let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
+            let blockValue = affectiveImageSets[blockNumber]
+            guard let imageIdsForBlock = blockValue?.imageIds else {
+                return
+            }
+            for imageName in imageIdsForBlock {
+                let s3ImageKey = "\(s3ImageFolder)/\(imageName).png"
+                Amplify.Storage.downloadData(key: s3ImageKey).resultPublisher
+                    .receive(on: DispatchQueue.main)
+                    .compactMap({UIImage(data: $0)})
+                    .sink { _ in
+                    } receiveValue: { [weak self] image in
+                        guard let self = self else {
+                            return
+                        }
+                        Log.info("completed download for image: \(imageName)")
+                        self.fileManager.saveImage(image: image, imageName: imageName, folderName: self.folderName)
+                        let newSenseyeImage = SenseyeImage(image: image, imageName: imageName)
+                        self.fullImageSet.append(newSenseyeImage)
+                    }.store(in: &cancellables)
+            }
         }
     }
 }

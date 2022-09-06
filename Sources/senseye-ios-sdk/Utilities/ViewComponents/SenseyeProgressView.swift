@@ -8,9 +8,12 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct SenseyeProgressView: View {
 
-    @Binding var currentProgress: Double
-    private var isFinished: Bool {
-        currentProgress >= 1.0
+    @Binding var uploadProgress: Double
+    private var isFinished: Bool
+    
+    init(isFinished: Bool, uploadProgress: Binding<Double>) {
+        self.isFinished = isFinished
+        self._uploadProgress = uploadProgress
     }
 
     var body: some View {
@@ -24,7 +27,7 @@ struct SenseyeProgressView: View {
                         .foregroundColor(.senseyeSecondary)
                         .frame(width: 100, height: 100)
                 } else {
-                    ProgressBar(value: $currentProgress).frame(height: 10)
+                    ProgressBar(uploadProgress: $uploadProgress).frame(height: 10)
                 }
             }
             .padding()
@@ -35,7 +38,7 @@ struct SenseyeProgressView: View {
 
 @available(iOS 14.0, *)
 struct ProgressBar: View {
-    @Binding var value: Double
+    @Binding var uploadProgress: Double
 
     var body: some View {
         GeometryReader { geometry in
@@ -44,7 +47,7 @@ struct ProgressBar: View {
                     .opacity(0.3)
                     .foregroundColor(Color(UIColor.systemTeal))
 
-                Rectangle().frame(width: min(CGFloat(self.value)*geometry.size.width, geometry.size.width), height: geometry.size.height)
+                Rectangle().frame(width: min(CGFloat(self.uploadProgress)*geometry.size.width, geometry.size.width), height: geometry.size.height)
                     .foregroundColor(.senseyeSecondary)
                     .animation(.linear)
             }.cornerRadius(45.0)

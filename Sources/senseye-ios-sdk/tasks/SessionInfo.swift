@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 // MARK: - SessionInfo
 struct SessionInfo: Codable {
-    let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone: String?
+    let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone, isDebugModeEnabled: String?
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
     var tasks: [SenseyeTask]

@@ -13,7 +13,7 @@ class SurveyViewModel: ObservableObject {
     @AppStorage("selectedAge") var selectedAge: Int?
     @AppStorage("selectedEyeColor") var selectedEyeColor: String?
     @AppStorage("selectedGender") var selectedGender: String?
-    @Published var enableDebugMode: Bool = false
+    @Published var debugModeEnabled: Bool = false
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     
@@ -30,7 +30,7 @@ class SurveyViewModel: ObservableObject {
     }
     
     func updateDebugModeFlag() {
-        fileUploadService.enableDebugMode = self.enableDebugMode
+        fileUploadService.isDebugModeEnabled = self.debugModeEnabled
     }
     
     func createSessionJsonFile() {

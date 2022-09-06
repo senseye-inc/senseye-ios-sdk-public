@@ -25,9 +25,10 @@ struct TabItem: Hashable {
     let blockNumber: Int?
     let category: TaskBlockCategory?
     let subcategory: TaskBlockSubcategory?
+    let isTaskItem: Bool
     
     
-    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
+    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil, isTaskItem: Bool = false) {
         self.taskId = taskId
         self.tabType = tabType
         self.taskTitle = taskTitle
@@ -35,6 +36,7 @@ struct TabItem: Hashable {
         self.blockNumber = blockNumber
         self.category = category
         self.subcategory = subcategory
+        self.isTaskItem = isTaskItem
     }
     
     func hash(into hasher: inout Hasher) {
@@ -56,13 +58,15 @@ class TabController: ObservableObject {
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
                 taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
-                blockNumber: 1),
+                blockNumber: 1,
+                isTaskItem: true),
         TabItem(taskId: "camera_view_plr", tabType: .cameraView, blockNumber: 2),
         TabItem(taskId: "plr_view",
                 tabType: .plrView,
                 taskTitle: "PLR",
                 taskDescription: "Stare at the cross for the duration of the task.",
-                blockNumber: 2),
+                blockNumber: 2,
+                isTaskItem: true),
         TabItem(taskId: "camera_view_affective_image_set_1", tabType: .cameraView, blockNumber: 2),
         TabItem(taskId: "affective_image_set_1",
                 tabType: .imageView,
@@ -70,7 +74,8 @@ class TabController: ObservableObject {
                 taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
                 blockNumber: 2,
                 category: .positive,
-                subcategory: .animals),
+                subcategory: .animals,
+                isTaskItem: true),
         TabItem(taskId: "camera_view_affective_image_set_2", tabType: .cameraView, blockNumber: 3),
         TabItem(taskId: "affective_image_set_2",
                 tabType: .imageView,
@@ -78,13 +83,15 @@ class TabController: ObservableObject {
                 taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
                 blockNumber: 3,
                 category: .positive,
-                subcategory: .animals),
+                subcategory: .animals,
+                isTaskItem: true),
         TabItem(taskId: "camera_view_calibration", tabType: .cameraView, blockNumber: 4),
         TabItem(taskId: "calibration_view_2",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
                 taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
-                blockNumber: 4),
+                blockNumber: 4,
+                isTaskItem: true),
         TabItem(taskId: "results_view", tabType: .resultsView)]
     
     @Published var activeTabType: TabType = .loginView
@@ -123,7 +130,6 @@ class TabController: ObservableObject {
         openNextTab()
     }
 
-
     func taskInfoForNextTab() -> (String, String) {
         let nextTabIndex = currentTabIndex+1
         let tabItem = taskTabOrdering[nextTabIndex]
@@ -138,6 +144,15 @@ class TabController: ObservableObject {
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
+    }
+    
+    func numberOfTasks() -> Int {
+        taskTabOrdering.filter({ $0.isTaskItem }).count
+    }
+    
+    func reset() {
+        currentTabIndex = 0
+        open(taskTabOrdering[currentTabIndex])
     }
 
     private func open(_ tab: TabItem) {

@@ -37,7 +37,7 @@ struct LoginView: View {
                     SenseyeButton(text: "login", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                         .padding()
                 })
-                .disabled(vm.username.isEmpty || vm.password.isEmpty)
+                .disabled(vm.username.isEmpty || vm.password.isEmpty || vm.isFetchingAuthorization)
                 .alert(vm.alertItem?.title ?? "", isPresented: $vm.isShowingAlert) {
                     Button(vm.alertItem?.alertButtonText ?? "") { }
                 } message: {
@@ -59,6 +59,7 @@ struct LoginView: View {
         }
         .onChange(of: vm.isUserSignedIn) { _ in
             if vm.isUserSignedIn {
+                vm.password = ""
                 tabController.proceedToNextTab()
             }
         }

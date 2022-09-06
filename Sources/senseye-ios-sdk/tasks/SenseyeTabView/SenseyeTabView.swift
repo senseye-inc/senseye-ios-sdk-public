@@ -45,6 +45,9 @@ struct SenseyeTabView: View {
                 .tag(TabType.cameraView)
                 .gesture(DragGesture())
         }
+        .onAppear {
+            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+        }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
         })

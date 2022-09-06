@@ -89,9 +89,11 @@ public class AuthenticationService: ObservableObject {
                     Amplify.Auth.signOut { result in
                         switch result {
                         case .success():
-                            Log.info("\(currentSignedInUser) signed out")
-                            self.delegate?.didSuccessfullySignOut()
-                            completeSignOut?()
+                            DispatchQueue.main.async {
+                                Log.info("\(currentSignedInUser) signed out")
+                                self.delegate?.didSuccessfullySignOut()
+                                completeSignOut?()
+                            }
                         case .failure(let error):
                             Log.warn("Amplify auth signout failed in \(#function) with error \(error)")
                         }

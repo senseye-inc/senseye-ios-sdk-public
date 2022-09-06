@@ -22,7 +22,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     var tabInfo: RotatingImageViewTaskInfo?
     private var taskTiming: Double {
         get {
-            if (fileUploadService.enableDebugMode) {
+            if (fileUploadService.isDebugModeEnabled) {
                 return fileUploadService.debugModeTaskTiming
             } else {
                 return 5.0
@@ -90,7 +90,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         timestampsOfImageSwap.append(timestamp)
         let currentImage = images[currentImageIndex]
         eventImageID.append(currentImage.0)
-        Log.info("Adding image swap event timestamp \(currentImageIndex) --- \(timestamp)")
+        Log.info("Adding Image: \(currentImage.0) swap event timestamp \(currentImageIndex) --- \(timestamp)")
     }
     
     func removeLastImageSet() {
@@ -109,7 +109,9 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         isFinished = false
         currentImageIndex = 0
+        eventImageID.removeAll()
         timestampsOfImageSwap.removeAll()
+        cancellables.removeAll()
     }
     
     func addTaskInfoToJson() {

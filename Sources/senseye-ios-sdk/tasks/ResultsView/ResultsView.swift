@@ -10,11 +10,12 @@ import SwiftUI
 @available(iOS 14.0, *)
 struct ResultsView: View {
     
-    @StateObject var resultsViewModel: ResultsViewModel
+    @StateObject var viewModel: ResultsViewModel
     @EnvironmentObject var tabController: TabController
+    @EnvironmentObject var authenticationService: AuthenticationService
 
     init(fileUploadService: FileUploadAndPredictionService) {
-        _resultsViewModel = StateObject(wrappedValue: ResultsViewModel(fileUploadService: fileUploadService))
+        _viewModel = StateObject(wrappedValue: ResultsViewModel(fileUploadService: fileUploadService))
     }
     
     var body: some View {
@@ -25,7 +26,7 @@ struct ResultsView: View {
                 HeaderView()
                     .padding()
 
-                SenseyeProgressView(currentProgress: $resultsViewModel.uploadProgress)
+                SenseyeProgressView(isFinished: viewModel.isFinished, uploadProgress: $viewModel.uploadProgress)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
@@ -33,21 +34,45 @@ struct ResultsView: View {
                         .padding()
                         .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 20)
                         .shadow(color: Color.black.opacity(0.7), radius: 10, x: 0, y: 5)
+                    
+                    if viewModel.isFinished {
+                        VStack {
+                            Image("analyze_brain")
+                                .resizable()
+                                .frame(width: 91, height: 91)
+                                .padding()
 
-                    VStack {
-                        Image("analyze_brain")
-                            .resizable()
-                            .frame(width: 91, height: 91)
-                            .padding()
+                            Text("You have completed the diagnostic, please speak with your health care provider for further information.")
+                                .foregroundColor(.senseyeTextColor)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                            
+                            Button {
+                                authenticationService.signOut {
+                                    Log.info("Sign out complete. Closing app")
+                                    tabController.reset()
+                                    viewModel.reset()
+                                }
+                            } label: {
+                                SenseyeButton(text: "Complete Session", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                            }.padding(.top, 40)
+                        }
+                    } else {
+                        VStack {
+                            Image(systemName: "gearshape.fill")
+                                .resizable()
+                                .foregroundColor(.senseyeTextColor)
+                                .frame(width: 91, height: 91)
+                                .padding()
 
-                        Text("You have completed the diagnostic, please speak with your health care provider for further information.")
-                            .foregroundColor(.senseyeTextColor)
-                            .multilineTextAlignment(.center)
-                            .padding()
+                            Text("Please wait. Results processing.")
+                                .foregroundColor(.senseyeTextColor)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                        }
                     }
-                    .padding()
                 }
-                .frame(width: 350, height: 350)
+                .frame(width: 350, height: 450)
 
                 Spacer()
             }

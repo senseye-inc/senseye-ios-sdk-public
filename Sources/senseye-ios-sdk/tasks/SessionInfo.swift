@@ -20,7 +20,7 @@ enum TaskBlockCategory: String, Codable {
 }
 
 enum TaskBlockSubcategory: String, Codable {
-    case nature, mess, accident, negative, neutral, positive, kids, people, delay, animals, texture, broken, bodilyHarm, object, inconvenience, war, buildings, frustrating, desctruction
+    case nature, mess, accident, negative, neutral, positive, kids, people, delay, animals, texture, broken, bodilyHarm, object, inconvenience, war, plants, buildings, frustrating, desctruction
 }
 
 // MARK: - PhoneSetting

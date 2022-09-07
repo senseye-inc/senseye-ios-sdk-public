@@ -30,7 +30,7 @@ class ImageService {
         3: AffectiveImageSet(category: .negative, imageIds: ["carsplash2", "coffee_spill2", "dog_destroy", "gumshoe", "icecream", "kidmess", "spiltmilk", "trash"]),
         4: AffectiveImageSet(category: .negativeArousal, imageIds: ["car_crash1", "car_crash2", "car_crash3", "car_crash4", "car_crash5", "car_crash6", "car_crash7", "car_crash8"]),
         5: AffectiveImageSet(category: .facialExpression, imageIds: ["negative1", "negative2", "negative3", "negative4", "neutral1", "neutral2","positive1", "positive2"]),
-        6: AffectiveImageSet(category: .positive, imageIds: ["baby_10", "baby_2", "baby_8", "baby_9", "birthday_2", "children_1", "cute_baby_1", "dessert_8", "gazing_6"]),
+        6: AffectiveImageSet(category: .positive, imageIds: ["baby_10", "baby_2", "baby_8", "baby_9", "birthday_2", "children_1", "cute_baby_1", "dessert_8"]),
         7: AffectiveImageSet(category: .neutral, imageIds: ["biking_1", "collaboration_1", "farmer_1", "gathering_6", "guitar_4", "man_red_2", "man_sleeping", "vintage"]),
         8: AffectiveImageSet(category: .negative, imageIds: ["crowded_sub2", "flattire", "flightdelay5", "log", "lost_dog2", "redlight", "stolen_bike2", "traffic"]),
         9: AffectiveImageSet(category: .negativeArousal, imageIds: ["animal_carcass_1", "animal_carcass_6", "trauma_animal1", "trauma_animal3", "trauma_animal4", "trauma_animal6", "trauma_animal7", "trauma_animal8"]),
@@ -60,13 +60,28 @@ class ImageService {
     }
     
     private func getImages() {
-        if let savedImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName) {
-            Log.info("Fetching Saved Image!")
-            self.fullImageSet = savedImages
+        let allPreviouslyDownloadImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName)
+        let allPreviouslyDownloadedImageKeys = allPreviouslyDownloadImages.map { $0.imageName }
+        if (allPreviouslyDownloadImages.isEmpty) {
+            downloadFullImageSet()
         } else {
-            Log.info("Downloading images!")
-            downloadImagesToFileManager()
+            self.fullImageSet = allPreviouslyDownloadImages
+            let additionalImagesToDownloadDiffCollection = allPreviouslyDownloadedImageKeys.difference(from: allImageNames)
+            var additionalImageIds: [String] = []
+            for change in additionalImagesToDownloadDiffCollection {
+                switch change {
+                case .remove(_, let element, _):
+                    additionalImageIds.append(element)
+                case .insert(_, let element, _):
+                    additionalImageIds.append(element)
+                }
+            }
+            if (!additionalImageIds.isEmpty) {
+                downloadSpecificImages(imageIds: additionalImageIds)
+                Log.info("Need to download images -> \(additionalImageIds)")
+            }
         }
+        
     }
     
     func updateImagesForBlock(blockNumber: Int) {
@@ -80,29 +95,47 @@ class ImageService {
         self.imagesForBlock = imageSetForBlock
     }
     
-    private func downloadImagesToFileManager() {
+    private func downloadFullImageSet() {
         for blockNumber in affectiveImageSets.keys {
             let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
             let blockValue = affectiveImageSets[blockNumber]
             guard let imageIdsForBlock = blockValue?.imageIds else {
                 return
             }
-            for imageName in imageIdsForBlock {
-                let s3ImageKey = "\(s3ImageFolder)/\(imageName).png"
-                Amplify.Storage.downloadData(key: s3ImageKey).resultPublisher
-                    .receive(on: DispatchQueue.main)
-                    .compactMap({UIImage(data: $0)})
-                    .sink { _ in
-                    } receiveValue: { [weak self] image in
-                        guard let self = self else {
-                            return
-                        }
-                        Log.info("completed download for image: \(imageName)")
-                        self.fileManager.saveImage(image: image, imageName: imageName, folderName: self.folderName)
-                        let newSenseyeImage = SenseyeImage(image: image, imageName: imageName)
-                        self.fullImageSet.append(newSenseyeImage)
-                    }.store(in: &cancellables)
+            let imageIdAndS3KeyTupleArray = imageIdsForBlock.map { ($0, "ptsd_image_sets/block_\(blockNumber)/\($0).png") }
+            downloadImagesToFileManager(s3ImageIds: imageIdAndS3KeyTupleArray)
+        }
+    }
+    
+    private func downloadSpecificImages(imageIds: [String]) {
+        for blockNumber in affectiveImageSets.keys {
+            let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
+            let blockValue = affectiveImageSets[blockNumber]
+            guard let imageIdsForBlock = blockValue?.imageIds else {
+                return
             }
+            let imagesToDownloadFromBlock: [(String, String)] = imageIdsForBlock.filter { imageIds.contains($0) }.map {
+                ($0, "\(s3ImageFolder)/\($0).png")
+            }
+            downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock)
+        }
+    }
+    
+    private func downloadImagesToFileManager(s3ImageIds: [(String, String)]) {
+        for imageId in s3ImageIds {
+            Amplify.Storage.downloadData(key: imageId.1).resultPublisher
+                .receive(on: DispatchQueue.global())
+                .compactMap({UIImage(data: $0)})
+                .sink { _ in
+                } receiveValue: { [weak self] image in
+                    guard let self = self else {
+                        return
+                    }
+                    Log.info("completed download for image: \(imageId)")
+                    self.fileManager.saveImage(image: image, imageName: imageId.0, folderName: self.folderName)
+                    let newSenseyeImage = SenseyeImage(image: image, imageName: imageId.0)
+                    self.fullImageSet.append(newSenseyeImage)
+                }.store(in: &cancellables)
         }
     }
 }

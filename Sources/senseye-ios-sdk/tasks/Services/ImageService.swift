@@ -34,7 +34,22 @@ class ImageService {
         7: AffectiveImageSet(category: .neutral, imageIds: ["biking_1", "collaboration_1", "farmer_1", "gathering_6", "guitar_4", "man_red_2", "man_sleeping", "vintage"]),
         8: AffectiveImageSet(category: .negative, imageIds: ["crowded_sub2", "flattire", "flightdelay5", "log", "lost_dog2", "redlight", "stolen_bike", "traffic"]),
         9: AffectiveImageSet(category: .negativeArousal, imageIds: ["animal_carcass_1", "animal_carcass_6", "trauma_animal1", "trauma_animal2", "trauma_animal4", "trauma_animal6", "trauma_animal7", "trauma_animal8"]),
-        10: AffectiveImageSet(category: .facialExpression, imageIds: ["negative5", "negative6", "negative7", "negative8", "neutral3", "neutral3", "neutral4", "positive3", "positive4"])
+        10: AffectiveImageSet(category: .facialExpression, imageIds: ["negative5", "negative6", "negative7", "negative8", "neutral3", "neutral3", "neutral4", "positive3", "positive4"]),
+        11: AffectiveImageSet(category: .positive, imageIds: ["bird_1", "cat_5", "chipmunk_1", "dog_4", "horse_1", "panda_5", "puppies_1", "seal_1"]),
+        12: AffectiveImageSet(category: .neutral, imageIds: ["seal_1", "bark_1", "bricks_1", "cold_5", "fence_1", "ice_2", "paper_4", "sidewalk_3", "wall_5"]),
+        13: AffectiveImageSet(category: .negative, imageIds: ["broken_glasses", "broken_cellphone", "broken_mug3", "broken_window2", "cracked_windsh", "hole_socks", "ripped_jeans", "spill"]),
+        14: AffectiveImageSet(category: .negativeArousal, imageIds: ["abused_child1", "abused_face", "burned_bodies", "dead_bodies1", "injury2", "injury3", "mauled_face", "shot"]),
+        15: AffectiveImageSet(category: .facialExpression, imageIds: ["negative10", "negative11", "negative12", "negative9", "positive5", "positive6", "positive7", "positive8"]),
+        16: AffectiveImageSet(category: .positive, imageIds: ["couple_7", "dancing_9", "friends_2", "parade_1", "picnic_1", "wedding_1", "wedding_2", "yoga_5"]),
+        17: AffectiveImageSet(category: .neutral, imageIds: ["bench", "blue_car_2", "boat_1", "cotton_swabs_2", "keyboard_2", "lime_tree", "moon_1", "watch_3"]),
+        18: AffectiveImageSet(category: .negative, imageIds: ["badparking", "bathroom", "battery2", "empty_tp3", "empty_wallet4", "jumpcar", "roadclosed", "sockburr"]),
+        19: AffectiveImageSet(category: .negativeArousal, imageIds: ["soldiers_3", "war_4", "war_5", "war_8", "war1", "war3", "war5", "war_7"]),
+        20: AffectiveImageSet(category: .facialExpression, imageIds: ["negative13", "negative14", "negative15", "negative16", "positive10", "positive11", "positive12", "positive9"]),
+        21: AffectiveImageSet(category: .positive, imageIds: ["bridge_1", "flower_1", "flower_3", "flowers_2", "flowers_5", "succulent_1", "sunflower_1", "wedding_ring_1"]),
+        22: AffectiveImageSet(category: .neutral, imageIds: ["building_1", "building_2", "building_5", "building_6", "building_7"]),
+        23: AffectiveImageSet(category: .negative, imageIds: ["banana", "broken_zipper", "empty_chip", "empty_jug", "fork_syrup", "glass_spill", "not_center", "shoelace"]),
+        24: AffectiveImageSet(category: .negativeArousal, imageIds: ["destruction1", "destruction2", "desctruction3", "destruction4", "destruction5", "desctruction6", "destruction7", "destruction8"]),
+        25: AffectiveImageSet(category: .facialExpression, imageIds: ["negative17", "negative18", "negative19", "negative20", "positive13", "positive14", "positive15", "positive16"])
     ]
     
     private var allImageNames : [String] {

@@ -96,24 +96,16 @@ class ImageService {
     }
     
     private func downloadFullImageSet() {
-        for blockNumber in affectiveImageSets.keys {
-            let blockValue = affectiveImageSets[blockNumber]
-            guard let imageIdsForBlock = blockValue?.imageIds else {
-                return
-            }
-            let imageIdAndS3KeyTupleArray = imageIdsForBlock.map { ($0, "ptsd_image_sets/block_\(blockNumber)/\($0).png") }
+        for (blockNumber, imageSet) in affectiveImageSets {
+            let imageIdAndS3KeyTupleArray = imageSet.imageIds.map { ($0, "ptsd_image_sets/block_\(blockNumber)/\($0).png") }
             downloadImagesToFileManager(s3ImageIds: imageIdAndS3KeyTupleArray)
         }
     }
     
     private func downloadSpecificImages(imageIds: [String]) {
-        for blockNumber in affectiveImageSets.keys {
+        for (blockNumber, _) in affectiveImageSets {
             let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
-            let blockValue = affectiveImageSets[blockNumber]
-            guard let imageIdsForBlock = blockValue?.imageIds else {
-                return
-            }
-            let imagesToDownloadFromBlock: [(String, String)] = imageIdsForBlock.filter { imageIds.contains($0) }.map {
+            let imagesToDownloadFromBlock: [(String, String)] = imageIds.filter { imageIds.contains($0) }.map {
                 ($0, "\(s3ImageFolder)/\($0).png")
             }
             downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock)

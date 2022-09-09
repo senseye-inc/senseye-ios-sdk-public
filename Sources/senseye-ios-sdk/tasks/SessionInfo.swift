@@ -17,11 +17,11 @@ struct SessionInfo: Codable {
 }
 
 enum TaskBlockCategory: String, Codable {
-    case positive
+    case positive, neutral, negative, negativeArousal, facialExpression
 }
 
 enum TaskBlockSubcategory: String, Codable {
-    case animals
+    case nature, mess, accident, negative, neutral, positive, kids, people, delay, animals, texture, broken, bodilyHarm, object, inconvenience, war, plants, buildings, frustrating, desctruction
 }
 
 // MARK: - PhoneSetting

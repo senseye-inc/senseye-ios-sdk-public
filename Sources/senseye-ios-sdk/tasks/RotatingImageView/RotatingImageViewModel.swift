@@ -55,13 +55,13 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         Log.info("in show images ---")
         isLoading = false
         startImageTimer()
-        addTimestampOfImageDisplay()
     }
     
     private func startImageTimer() {
-        updateCurrentImage()
-        Log.info("RotatingImageViewModel creating timer")
         if (rotatingImageTimer == nil) {
+            updateCurrentImage()
+            Log.info("RotatingImageViewModel creating timer")
+            addTimestampOfImageDisplay()
             rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
                 numberOfImagesShown += 1
                 if currentImageIndex < images.count - 1 {

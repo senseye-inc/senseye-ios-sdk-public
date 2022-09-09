@@ -35,19 +35,18 @@ extension FileManager {
      - Parameter imageNames: A array of strings used to retrieve images by name
      - Parameter folderName: The folder name as a string where the images are stored
      */
-    func getImages(imageNames: [String], folderName: String) -> [SenseyeImage]? {
+    func getImages(imageNames: [String], folderName: String) -> [SenseyeImage] {
         var senseyeImages: [SenseyeImage] = []
         for imageName in imageNames {
-            guard let url = getURLForImage(imageName: imageName, folderName: folderName),
-                  FileManager.default.fileExists(atPath: url.path) else {
-                return nil
-            }
-            if let savedImage = UIImage(contentsOfFile: url.path) {
+            Log.info("Getting image \(imageName) at \(folderName)")
+            if let url = getURLForImage(imageName: imageName, folderName: folderName),
+               FileManager.default.fileExists(atPath: url.path),
+               let savedImage = UIImage(contentsOfFile: url.path) {
                 let newSenseyeImage = SenseyeImage(image: savedImage, imageName: imageName)
                 senseyeImages.append(newSenseyeImage)
             }
         }
-        return senseyeImages.reorder(by: imageNames)
+        return senseyeImages
     }
     
     private func createFolderIfNeeded(folderName: String) {

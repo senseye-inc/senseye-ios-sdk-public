@@ -44,7 +44,7 @@ struct SurveyView: View {
 
                 eyeColorPicker
                 
-                Toggle(isOn: $viewModel.enableDebugMode) {
+                Toggle(isOn: $viewModel.debugModeEnabled) {
                     Text("Enable Debug Mode")
                         .foregroundColor(.white)
                 }.padding()

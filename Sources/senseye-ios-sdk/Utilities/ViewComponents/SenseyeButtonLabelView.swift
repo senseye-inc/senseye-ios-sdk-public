@@ -17,7 +17,7 @@ struct SenseyeButton: View {
         Text(text.uppercased())
             .foregroundColor(foregroundColor)
             .padding()
-            .frame(width: 147, height: 52)
+            .frame(minWidth: 147, minHeight: 52)
             .background(
                 RoundedRectangle(
                     cornerRadius: 34,

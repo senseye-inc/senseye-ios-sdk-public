@@ -14,7 +14,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var hasStartedTask = false
     private var taskTiming: Double {
         get {
-            if (fileUploadService.enableDebugMode) {
+            if (fileUploadService.isDebugModeEnabled) {
                 return fileUploadService.debugModeTaskTiming
             } else {
                 return 2.5

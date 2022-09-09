@@ -25,9 +25,10 @@ struct TabItem: Hashable {
     let blockNumber: Int?
     let category: TaskBlockCategory?
     let subcategory: TaskBlockSubcategory?
+    let isTaskItem: Bool
     
     
-    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
+    init(taskId: String, tabType: TabType, taskTitle: String = "", taskDescription: String = "", blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil, isTaskItem: Bool = false) {
         self.taskId = taskId
         self.tabType = tabType
         self.taskTitle = taskTitle
@@ -35,6 +36,7 @@ struct TabItem: Hashable {
         self.blockNumber = blockNumber
         self.category = category
         self.subcategory = subcategory
+        self.isTaskItem = isTaskItem
     }
     
     func hash(into hasher: inout Hasher) {
@@ -46,7 +48,6 @@ struct TabItem: Hashable {
 @available(iOS 14.0, *)
 @MainActor
 class TabController: ObservableObject {
-
 
     private var taskTabOrdering: [TabItem] = []
     
@@ -135,7 +136,6 @@ class TabController: ObservableObject {
         openNextTab()
     }
 
-
     func taskInfoForNextTab() -> (String, String) {
         let nextTabIndex = currentTabIndex+1
         let tabItem = taskTabOrdering[nextTabIndex]
@@ -150,6 +150,15 @@ class TabController: ObservableObject {
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
+    }
+    
+    func numberOfTasks() -> Int {
+        taskTabOrdering.filter({ $0.isTaskItem }).count
+    }
+    
+    func reset() {
+        currentTabIndex = 0
+        open(taskTabOrdering[currentTabIndex])
     }
 
     private func open(_ tab: TabItem) {

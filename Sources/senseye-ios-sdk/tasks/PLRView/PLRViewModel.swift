@@ -16,7 +16,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var hasStartedTask = false
     private var taskTiming: Double {
         get {
-            if (fileUploadService.enableDebugMode) {
+            if (fileUploadService.isDebugModeEnabled) {
                 return fileUploadService.debugModeTaskTiming
             } else {
                 return 5.0

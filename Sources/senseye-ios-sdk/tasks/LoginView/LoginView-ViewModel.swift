@@ -19,6 +19,7 @@ extension LoginView {
         @Published var isUserSignedIn = false
         @Published var isShowingAlert = false
         var alertItem: AlertItem?
+        @Published var isFetchingAuthorization: Bool = false
 
         private var authenticationService: AuthenticationServiceProtocol
         private var cancellables = Set<AnyCancellable>()
@@ -35,12 +36,14 @@ extension LoginView {
                 .sink { alertItem in
                     Log.error("AuthError!")
                     self.isShowingAlert = true
+                    self.isFetchingAuthorization = false
                     self.alertItem = alertItem
                 }
                 .store(in: &cancellables)
         }
         
         func login() {
+            isFetchingAuthorization = true
             self.authenticationService.signIn(
                 accountUsername: self.username,
                 accountPassword: self.password
@@ -79,6 +82,7 @@ extension LoginView.ViewModel: AuthenticationServiceDelegate {
         Log.info("Successful sign in")
         DispatchQueue.main.async {
             self.isUserSignedIn = true
+            self.isFetchingAuthorization = false
         }
     }
  

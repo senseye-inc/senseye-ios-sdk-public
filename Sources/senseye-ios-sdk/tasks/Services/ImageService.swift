@@ -97,7 +97,6 @@ class ImageService {
     
     private func downloadFullImageSet() {
         for blockNumber in affectiveImageSets.keys {
-            let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
             let blockValue = affectiveImageSets[blockNumber]
             guard let imageIdsForBlock = blockValue?.imageIds else {
                 return
@@ -137,6 +136,7 @@ class ImageService {
                     self.fullImageSet.append(newSenseyeImage)
                 }.store(in: &cancellables)
         }
+        self.fullImageSet.reorder(by: allImageNames)
     }
 }
 

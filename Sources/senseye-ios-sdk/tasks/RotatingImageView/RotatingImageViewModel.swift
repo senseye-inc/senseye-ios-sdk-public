@@ -55,13 +55,13 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         Log.info("in show images ---")
         isLoading = false
         startImageTimer()
-        addTimestampOfImageDisplay()
     }
     
     private func startImageTimer() {
-        updateCurrentImage()
-        Log.info("RotatingImageViewModel creating timer")
         if (rotatingImageTimer == nil) {
+            updateCurrentImage()
+            Log.info("RotatingImageViewModel creating timer")
+            addTimestampOfImageDisplay()
             rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
                 numberOfImagesShown += 1
                 if currentImageIndex < images.count - 1 {
@@ -90,7 +90,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         timestampsOfImageSwap.append(timestamp)
         let currentImage = images[currentImageIndex]
         eventImageID.append(currentImage.0)
-        Log.info("Adding image swap event timestamp \(currentImageIndex) --- \(timestamp)")
+        Log.info("Adding image swap event timestamp \(currentImage.0) - \(currentImageIndex) --- \(timestamp)")
     }
     
     func removeLastImageSet() {
@@ -109,6 +109,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         isFinished = false
         currentImageIndex = 0
+        eventImageID.removeAll()
         timestampsOfImageSwap.removeAll()
     }
     

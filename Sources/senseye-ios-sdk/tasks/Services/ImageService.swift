@@ -106,7 +106,7 @@ class ImageService {
                     self.fullImageSet.append(newSenseyeImage)
                 }.store(in: &cancellables)
         }
-        self.fullImageSet.reorder(by: allImageNames)
+        self.fullImageSet = self.fullImageSet.reorder(by: allImageNames)
     }
 }
 

@@ -60,28 +60,13 @@ class ImageService {
     }
     
     private func getImages() {
-        let allPreviouslyDownloadImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName)
-        let allPreviouslyDownloadedImageKeys = allPreviouslyDownloadImages.map { $0.imageName }
-        if (allPreviouslyDownloadImages.isEmpty) {
-            downloadFullImageSet()
-        } else {
-            self.fullImageSet = allPreviouslyDownloadImages
-            let additionalImagesToDownloadDiffCollection = allPreviouslyDownloadedImageKeys.difference(from: allImageNames)
-            var additionalImageIds: [String] = []
-            for change in additionalImagesToDownloadDiffCollection {
-                switch change {
-                case .remove(_, let element, _):
-                    additionalImageIds.append(element)
-                case .insert(_, let element, _):
-                    additionalImageIds.append(element)
-                }
-            }
-            if (!additionalImageIds.isEmpty) {
-                downloadSpecificImages(imageIds: additionalImageIds)
-                Log.info("Need to download images -> \(additionalImageIds)")
-            }
-        }
-        
+         let allPreviouslyDownloadImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName)
+         let allPreviouslyDownloadedImageKeys = Set(allPreviouslyDownloadImages.map { $0.imageName })
+         self.fullImageSet = allPreviouslyDownloadImages
+         let fullImageNameSet = Set(allImageNames)
+         let additionalImageIds = fullImageNameSet.subtracting(allPreviouslyDownloadedImageKeys)
+         downloadSpecificImages(imageIds: Array(additionalImageIds))
+         Log.info("Need to download images -> \(additionalImageIds)")
     }
     
     func updateImagesForBlock(blockNumber: Int) {
@@ -95,17 +80,10 @@ class ImageService {
         self.imagesForBlock = imageSetForBlock
     }
     
-    private func downloadFullImageSet() {
-        for (blockNumber, imageSet) in affectiveImageSets {
-            let imageIdAndS3KeyTupleArray = imageSet.imageIds.map { ($0, "ptsd_image_sets/block_\(blockNumber)/\($0).png") }
-            downloadImagesToFileManager(s3ImageIds: imageIdAndS3KeyTupleArray)
-        }
-    }
-    
     private func downloadSpecificImages(imageIds: [String]) {
-        for (blockNumber, _) in affectiveImageSets {
+        for (blockNumber, imageSet) in affectiveImageSets {
             let s3ImageFolder = "ptsd_image_sets/block_\(blockNumber)"
-            let imagesToDownloadFromBlock: [(String, String)] = imageIds.filter { imageIds.contains($0) }.map {
+            let imagesToDownloadFromBlock: [(String, String)] = imageSet.imageIds.filter { imageIds.contains($0) }.map {
                 ($0, "\(s3ImageFolder)/\($0).png")
             }
             downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock)

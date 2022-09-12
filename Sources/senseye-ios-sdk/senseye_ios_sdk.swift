@@ -15,7 +15,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 public class SenseyeSDK {
     
     weak var delegate: SenseyeTaskCompletionDelegate?
-    
+
     public init() {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
@@ -43,11 +43,13 @@ public class SenseyeSDK {
 
     @MainActor public func senseyeTabView() -> some View {
         let authenticationService = AuthenticationService()
-        let fileUploadService = FileUploadAndPredictionService()
+        let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
+        let imageService = ImageService(authenticationService: authenticationService)
         return SenseyeTabView()
             .environmentObject(authenticationService)
             .environmentObject(fileUploadService)
+            .environmentObject(imageService)
             .environmentObject(cameraService)
     }
     

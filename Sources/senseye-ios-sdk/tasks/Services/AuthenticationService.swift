@@ -36,7 +36,9 @@ public class AuthenticationService: ObservableObject {
     @Published var authError: AlertItem? = nil
     var authErrorPublished: Published<AlertItem?> { _authError }
     var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
-    
+
+    @MainActor @Published var isSignedIn: Bool = false
+
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
     var enableDebugMode = false
@@ -76,7 +78,6 @@ public class AuthenticationService: ObservableObject {
      - completeSignOut: Optional completion action
      */
     public func signOut(completeSignOut: (()->())? = nil ) {
-        // User must exist to signout
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
             completeSignOut?()
             return
@@ -90,7 +91,8 @@ public class AuthenticationService: ObservableObject {
                         switch result {
                         case .success():
                             DispatchQueue.main.async {
-                                Log.info("\(currentSignedInUser) signed out")
+                                self.isSignedIn = currentSession.isSignedIn
+                                Log.info("\(currentSignedInUser) signed out: \(self.isSignedIn)")
                                 self.delegate?.didSuccessfullySignOut()
                                 completeSignOut?()
                             }
@@ -184,8 +186,11 @@ public class AuthenticationService: ObservableObject {
                 case .done:
                     // Use has successfully signed in to the app
                     Log.debug("done")
+                    DispatchQueue.main.async {
+                        self.isSignedIn = signinResult.isSignedIn
+                    }
                     self.delegate?.didSuccessfullySignIn()
-                    Log.info("Signin complete")
+                    Log.info("Auth.signIn complete \(signinResult.isSignedIn)")
                 }
             } catch(let error) {
                 // TODO: Insert delegate or completion handler for failed sign in.

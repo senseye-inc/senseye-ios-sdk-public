@@ -33,6 +33,8 @@ protocol FileUploadAndPredictionServiceProtocol {
     func reset()
     var isDebugModeEnabled: Bool { get set }
     var debugModeTaskTiming: Double { get }
+
+    var authenticationService: AuthenticationService? { get set }
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -46,6 +48,7 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
  */
 @available(iOS 14.0, *)
 class FileUploadAndPredictionService: ObservableObject {
+    var authenticationService: AuthenticationService?
 
     @Published var uploadProgress: Double = 0.0
     @Published var isFinishedUploading: Bool = false
@@ -92,10 +95,12 @@ class FileUploadAndPredictionService: ObservableObject {
         self.taskCount = taskCount
     }
     
-    init() {
+    init(authenticationService: AuthenticationService) {
         self.fileManager = FileManager.default
+        self.authenticationService = authenticationService
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
         Log.debug("ShouldUpload: \(shouldUpload)")
+        addSubscribers()
     }
     
     
@@ -111,13 +116,28 @@ class FileUploadAndPredictionService: ObservableObject {
         let filename = fileUrl
         
         guard let _ = self.hostApiKey, shouldUpload else {
-            Log.info("Skipping data upload")
+            Log.info("Skipping data upload because hostApiKey maybe empty, or shouldUpload: \(shouldUpload)")
             return
         }
         
         self.uploadFile(fileNameKey: fileNameKey, filename: filename)
     }
-    
+
+    private func addSubscribers() {
+        guard let authenticationService = self.authenticationService else { return }
+
+        authenticationService.$isSignedIn
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] isSignedIn in
+                guard let self = self else {return}
+                if isSignedIn {
+                    self.setUserAttributes()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
     private func uploadFile(fileNameKey: String, filename: URL) {
         isUploadOngoing = true
         numberOfUploadsInProgress += 1
@@ -161,7 +181,7 @@ class FileUploadAndPredictionService: ObservableObject {
             case .success(let attributes):
                 if let apiKey = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
                     self.hostApiKey = apiKey.value
-                    Log.debug("Found and set senseye_api_token")
+                    Log.info("Found and set senseye_api_token")
                 } else {
                     Log.warn("unable to set api key")
                 }
@@ -169,9 +189,8 @@ class FileUploadAndPredictionService: ObservableObject {
                     Log.debug("Found and set skip_uploads. Skipping Upload.")
                     self.shouldUpload = false
                 }
-                Log.debug("Host api key: \(String(describing: self.hostApiKey))")
             case .failure(let authError):
-                Log.warn("Fetching user attribute senseye_api_token failed: \(authError)")
+                Log.warn("Fetching user attributes failed: \(authError)")
             }
         }
     }
@@ -184,7 +203,6 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
         self.sessionTimeStamp = Date().currentTimeMillis()
-        self.setUserAttributes()
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
         let eyeColor = surveyInput["eyeColor"]
@@ -269,7 +287,7 @@ class FileUploadAndPredictionService: ObservableObject {
             isFinishedUploading,
             numberOfUploadsInProgress == 0,
             let apiKey = self.hostApiKey else {
-            Log.info("skipping prediction request")
+            Log.info("skipping prediction request. isFinishedUploading: \(isFinishedUploading), numberOfUploadsInProgress: \(numberOfUploadsInProgress) or api key is nil")
             return
         }
         
@@ -282,15 +300,15 @@ class FileUploadAndPredictionService: ObservableObject {
         // PredictionRequest
         let numberOFUploadsInt = Int(numberOfUploadsComplete)
         let workers = min(numberOFUploadsInt, 10)
-        let arn = "arn:aws:s3:::\(s3HostBucketUrl)\(s3FolderName)/*"
+        let sqsDeadLetterQueueARN = "arn:aws:sqs:us-east-1:555897601062:iossdk_ptsd_batch_dead_letter.fifo"
         var s3Paths: [String] = []
         for localFileNameKey in currentSessionUploadFileKeys {
             s3Paths.append(s3HostBucketUrl+localFileNameKey)
         }
         
         let filePathLister = FilePathLister(s3Paths: s3Paths, includes: ["**.mp4"], excludes: nil, batchSize: 1)
-        let sqsDeadLetterQueue = SQSDeadLetterQueue(arn: arn, maxReceiveCount: 1)
-        let params = PredictionRequest(workers: workers, timeout: 1, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL])
+        let sqsDeadLetterQueue = SQSDeadLetterQueue(arn: sqsDeadLetterQueueARN, maxReceiveCount: 2)
+        let params = PredictionRequest(workers: workers, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL])
         let headers: HTTPHeaders = [
             "x-api-key": apiKey,
             "Accept": "application/json"

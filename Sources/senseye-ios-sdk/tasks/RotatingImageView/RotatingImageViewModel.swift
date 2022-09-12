@@ -131,7 +131,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
                 guard let self = self else {
                     return
                 }
-                print(imageSetForBlock)
+                Log.info("\(imageSetForBlock)")
                 self.images = imageSetForBlock
                 self.showImages()
             })

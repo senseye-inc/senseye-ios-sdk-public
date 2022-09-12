@@ -9,13 +9,13 @@ import Foundation
 
 // MARK: - PredictionRequest
 struct PredictionRequest: Codable {
-    let workers, timeout: Int?
+    let workers: Int?
     let sqsDeadLetterQueue: SQSDeadLetterQueue?
     let filePathLister: FilePathLister?
     let config: [String: String]?
 
     enum CodingKeys: String, CodingKey {
-        case workers, timeout
+        case workers
         case sqsDeadLetterQueue = "sqs_dead_letter_queue"
         case filePathLister = "file_path_lister"
         case config
@@ -52,7 +52,7 @@ struct PredictionResponse: Codable {
     let workers: Int
     let sqsDeadLetterQueue: SQSDeadLetterQueue
     let config: [String: String]
-    let timeout: Int
+    let timeout: Int?
     let apiID, sqsURL, startTime: String
 
     enum CodingKeys: String, CodingKey {

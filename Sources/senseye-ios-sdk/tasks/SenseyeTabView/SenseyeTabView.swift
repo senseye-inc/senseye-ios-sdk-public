@@ -9,10 +9,10 @@ import SwiftUI
 @available(iOS 15.0, *)
 struct SenseyeTabView: View {
 
-    @EnvironmentObject var cameraService: CameraService
-    @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
     @EnvironmentObject var authenticationService: AuthenticationService
-    var imageService: ImageService = ImageService()
+    @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
+    @EnvironmentObject var imageService: ImageService
+    @EnvironmentObject var cameraService: CameraService
     @StateObject var tabController: TabController = TabController()
 
     var body: some View {
@@ -21,7 +21,7 @@ struct SenseyeTabView: View {
                 .tag(TabType.loginView)
                 .gesture(DragGesture())
 
-            SurveyView(authenticationService: authenticationService, fileUploadAndPredictionService: fileUploadService)
+            SurveyView(fileUploadAndPredictionService: fileUploadService)
                 .tag(TabType.surveyView)
                 .gesture(DragGesture())
 
@@ -57,6 +57,5 @@ struct SenseyeTabView: View {
         .navigationBarBackButtonHidden(true)
         .statusBar(hidden: true)
         .environmentObject(tabController)
-        .environmentObject(cameraService)
     }
 }

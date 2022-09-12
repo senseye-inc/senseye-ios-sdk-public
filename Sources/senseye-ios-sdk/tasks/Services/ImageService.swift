@@ -10,11 +10,13 @@ import Combine
 import Amplify
 
 @available(iOS 14.0, *)
-class ImageService {
-    
-    init() {
+class ImageService: ObservableObject {
+    private var authenticationService: AuthenticationService?
+
+    init(authenticationService: AuthenticationService) {
         self.fileManager = FileManager.default
-        self.getImages()
+        self.authenticationService = authenticationService
+        addSubscribers()
     }
     
     private var fullImageSet: [SenseyeImage] = []
@@ -57,6 +59,21 @@ class ImageService {
             return value.imageIds
         }
         return imageNames
+    }
+
+    func addSubscribers() {
+        guard let authenticationService = self.authenticationService else { return }
+
+        authenticationService.$isSignedIn
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] isSignedIn in
+                guard let self = self else {return}
+                if isSignedIn {
+                    self.getImages()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     private func getImages() {

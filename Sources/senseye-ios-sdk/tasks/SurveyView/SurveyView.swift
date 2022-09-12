@@ -11,10 +11,8 @@ import SwiftUI
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel : SurveyViewModel
-    let authenticationService: AuthenticationService
 
-    init(authenticationService: AuthenticationService, fileUploadAndPredictionService: FileUploadAndPredictionService) {
-        self.authenticationService = authenticationService
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
         _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService))
     }
     
@@ -57,9 +55,7 @@ struct SurveyView: View {
 
                 HStack(spacing: 100) {
                     Button {
-                        authenticationService.signOut {
-                            tabController.proceedToPreviousTab()
-                        }
+                        tabController.proceedToPreviousTab()
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")
                             .resizable()

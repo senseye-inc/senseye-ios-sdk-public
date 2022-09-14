@@ -25,7 +25,7 @@ struct CalibrationView: View {
             GeometryReader { _ in
                 Circle()
                     .fill(.white)
-                    .frame(width: 50, height: 50)
+                    .frame(width: 35)
                     .position(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
             .onReceive(cameraService.$startedCameraRecording) { hasStartedRecording in

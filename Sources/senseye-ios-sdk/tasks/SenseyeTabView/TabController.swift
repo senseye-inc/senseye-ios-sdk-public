@@ -170,12 +170,6 @@ class TabController: ObservableObject {
     
     private func tasksForImageSetBlock(blockNumber: Int, category: TaskBlockCategory, subcategory: TaskBlockSubcategory) -> [TabItem] {
         var items: [TabItem] = []
-        items.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
-        items.append(
-                TabItem(taskId: "plr_view",
-                    tabType: .plrView,
-                    taskTitle: "PLR",
-                    taskDescription: "Stare at the cross for the duration of the task."))
         items.append(TabItem(taskId: "camera_view_affective_image_set_\(blockNumber)", tabType: .cameraView, blockNumber: blockNumber))
         items.append(TabItem(taskId: "affective_image_set_\(blockNumber)",
                         tabType: .imageView,
@@ -184,6 +178,12 @@ class TabController: ObservableObject {
                         blockNumber: blockNumber,
                         category: category,
                         subcategory: subcategory))
+        items.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
+        items.append(
+                TabItem(taskId: "plr_view",
+                    tabType: .plrView,
+                    taskTitle: "PLR",
+                    taskDescription: "Stare at the cross for the duration of the task."))
         return items
     }
 }

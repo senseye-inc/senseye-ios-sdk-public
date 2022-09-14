@@ -38,7 +38,6 @@ extension FileManager {
     func getImages(imageNames: [String], folderName: String) -> [SenseyeImage] {
         var senseyeImages: [SenseyeImage] = []
         for imageName in imageNames {
-            Log.info("Getting image \(imageName) at \(folderName)")
             if let url = getURLForImage(imageName: imageName, folderName: folderName),
                FileManager.default.fileExists(atPath: url.path),
                let savedImage = UIImage(contentsOfFile: url.path) {

@@ -109,6 +109,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         isFinished = false
         currentImageIndex = 0
+        currentImage = nil
         eventImageID.removeAll()
         timestampsOfImageSwap.removeAll()
         cancellables.removeAll()

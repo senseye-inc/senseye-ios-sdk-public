@@ -38,7 +38,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
         hasStartedTask = true
         Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
             currentInterval += 1
-            if currentInterval <= 6 {
+            if currentInterval <= 1 {
                 DispatchQueue.main.async {
                     self.toggleColors()
                 }
@@ -60,6 +60,8 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         currentInterval = 0
         hasStartedTask = false
+        backgroundColor = .black
+        xMarkColor = .white
         timestampsOfBackgroundSwap.removeAll()
     }
     

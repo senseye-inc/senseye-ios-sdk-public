@@ -16,7 +16,6 @@ import SwiftUI
 protocol FileUploadAndPredictionServiceProtocol {
     // MARK: - Published Properties
     var uploadProgress: Double { get }
-    var uploadProgressPublished: Published<Double> { get}
     var uploadProgressPublisher: Published<Double>.Publisher { get }
     
     var taskCount: Int { get }
@@ -48,7 +47,6 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published var uploadProgress: Double = 0.0
     @AppStorage("username") var username: String = ""
     
-    var isUploadOngoing: Bool = false
     private var numberOfUploadsComplete: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
@@ -116,26 +114,29 @@ class FileUploadAndPredictionService: ObservableObject {
     }
 
     private func uploadFile(fileNameKey: String, filename: URL) {
-        isUploadOngoing = true
         Log.debug("About to upload - video url: \(filename)")
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
-        let currentFileUploadSize = sizePerMB(url: filename)
+        
+        storageOperation.progressPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { newProgressValue in
+                self.uploadProgress = Double(self.numberOfUploadsComplete) + newProgressValue.fractionCompleted
+                Log.info("latestProgress -- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
+            }
+            .store(in: &self.cancellables)
 
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
             .sink {
             if case let .failure(storageError) = $0 {
                 Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
-                self.isUploadOngoing = false
             }
         } receiveValue: { data in
             print("Completed: \(data)")
             self.currentSessionUploadFileKeys.append(fileNameKey)
-            self.isUploadOngoing = false
             self.numberOfUploadsComplete += 1
             self.uploadProgress = Double(self.numberOfUploadsComplete)
-            Log.info("count -- \(self.numberOfUploadsComplete) - \(self.taskCount)")
             if (self.numberOfUploadsComplete == self.taskCount) {
                 self.submitPredictionRequest()
             }
@@ -244,6 +245,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private func submitPredictionRequest() {
         
         guard let apiKey = hostApiKey else {
+            Log.error("Skipping the PTSD request but it's here")
             return
         }
         
@@ -304,6 +306,5 @@ class FileUploadAndPredictionService: ObservableObject {
 
 @available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
-    var uploadProgressPublished: Published<Double> { _uploadProgress }
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
 }

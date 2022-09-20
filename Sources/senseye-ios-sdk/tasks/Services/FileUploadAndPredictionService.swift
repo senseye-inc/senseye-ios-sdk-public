@@ -18,12 +18,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     var uploadProgress: Double { get }
     var uploadProgressPublished: Published<Double> { get}
     var uploadProgressPublisher: Published<Double>.Publisher { get }
-    var isFinishedUploading: Bool { get }
-    var uploadsAreCompletePublished: Published<Bool> { get }
-    var uploadsAreCompletePublisher: Published<Bool>.Publisher { get }
     
-    var numberOfUploadsInProgress: Double { get }
-    var numberOfUploadsComplete: Int { get }
     var taskCount: Int { get }
     func uploadData(fileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
@@ -51,19 +46,10 @@ class FileUploadAndPredictionService: ObservableObject {
     var authenticationService: AuthenticationService?
 
     @Published var uploadProgress: Double = 0.0
-    @Published var isFinishedUploading: Bool = false
     @AppStorage("username") var username: String = ""
     
     var isUploadOngoing: Bool = false
-    var numberOfUploadsInProgress: Double = 0.0
-    var numberOfUploadsComplete: Int = 0 {
-        didSet {
-            if numberOfUploadsComplete == taskCount {
-                Log.info("UploadsComplete")
-                isFinishedUploading = true
-            }
-        }
-    }
+    private var numberOfUploadsComplete: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
 
@@ -71,21 +57,13 @@ class FileUploadAndPredictionService: ObservableObject {
     private var fileManager: FileManager
     private var fileDestUrl: URL?
     private var hostApiKey: String? = nil
-    private var sessionTimeStamp: Int64? = nil
-    private var shouldUpload: Bool = true
     private var currentSessionUploadFileKeys: [String] = []
     private var currentTaskFrameTimestamps: [Int64]? = []
-    private var hasUploadedJsonFile: Bool = false
     private var sessionInfo: SessionInfo? = nil
-    private var s3FolderName: String {
-        if let sessionTimeStamp = sessionTimeStamp {
-            return "\(username)_\(sessionTimeStamp)"
-        } else {
-            return "error--\(username)_\(Date())"
-        }
-    }
+    private var s3FolderName: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
+    private var numberOfUploadedItems = 0
     
     var isDebugModeEnabled: Bool = false
     let debugModeTaskTiming = 0.75
@@ -99,7 +77,6 @@ class FileUploadAndPredictionService: ObservableObject {
         self.fileManager = FileManager.default
         self.authenticationService = authenticationService
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
-        Log.debug("ShouldUpload: \(shouldUpload)")
         addSubscribers()
     }
     
@@ -115,8 +92,8 @@ class FileUploadAndPredictionService: ObservableObject {
         let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
         let filename = fileUrl
         
-        guard let _ = self.hostApiKey, shouldUpload else {
-            Log.info("Skipping data upload because hostApiKey maybe empty, or shouldUpload: \(shouldUpload)")
+        guard let _ = self.hostApiKey else {
+            Log.info("Skipping data upload because hostApiKey maybe empty")
             return
         }
         
@@ -140,22 +117,10 @@ class FileUploadAndPredictionService: ObservableObject {
 
     private func uploadFile(fileNameKey: String, filename: URL) {
         isUploadOngoing = true
-        numberOfUploadsInProgress += 1
         Log.debug("About to upload - video url: \(filename)")
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
-
-        storageOperation.progressPublisher
-            .receive(on: DispatchQueue.main)
-            .scan(0.0, { previousValue, newValueFromPublisher in
-                let newValueRounded = newValueFromPublisher.fractionCompleted.rounded(toPlaces: 2)
-                let previousValueRounded = previousValue.rounded(toPlaces: 2)
-                let difference = (newValueRounded - previousValueRounded).rounded(toPlaces: 2)
-                self.uploadProgress = self.uploadProgress.rounded(toPlaces: 2) + difference
-                return newValueRounded
-            })
-            .sink(receiveValue: { Log.info("Progress: " + $0.description) })
-            .store(in: &self.cancellables)
+        let currentFileUploadSize = sizePerMB(url: filename)
 
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
@@ -168,9 +133,12 @@ class FileUploadAndPredictionService: ObservableObject {
             print("Completed: \(data)")
             self.currentSessionUploadFileKeys.append(fileNameKey)
             self.isUploadOngoing = false
-            self.numberOfUploadsInProgress -= 1
             self.numberOfUploadsComplete += 1
-            self.submitPredictionRequest(for: self.taskCount)
+            self.uploadProgress = Double(self.numberOfUploadsComplete)
+            Log.info("count -- \(self.numberOfUploadsComplete) - \(self.taskCount)")
+            if (self.numberOfUploadsComplete == self.taskCount) {
+                self.submitPredictionRequest()
+            }
         }
         .store(in: &self.cancellables)
     }
@@ -187,7 +155,6 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
                 if attributes.contains(where: { $0.key == AuthUserAttributeKey.custom("skip_uploads")}) {
                     Log.debug("Found and set skip_uploads. Skipping Upload.")
-                    self.shouldUpload = false
                 }
             case .failure(let authError):
                 Log.warn("Fetching user attributes failed: \(authError)")
@@ -202,7 +169,8 @@ class FileUploadAndPredictionService: ObservableObject {
      - surveyInput: Array of responses from demographic survey
      */
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
-        self.sessionTimeStamp = Date().currentTimeMillis()
+        let sessionTimeStamp = Date().currentTimeMillis()
+        self.s3FolderName = "\(username)_\(sessionTimeStamp)"
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
         let eyeColor = surveyInput["eyeColor"]
@@ -245,15 +213,6 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     private func uploadSessionJsonFile(jsonFileName: String) {
 
-        guard shouldUpload else {
-            Log.info("Skipping JSON Upload")
-            return
-        }
-        
-        if hasUploadedJsonFile {
-            return
-        }
-        
         do {
             let encodedData = try JSONEncoder().encode(sessionInfo)
             var uploadS3URLs: [String] = []
@@ -270,7 +229,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     switch event {
                     case let .success(data):
                         Log.debug("Uploaded json file - data: \(data)")
-                        self.hasUploadedJsonFile = true
+                        self.numberOfUploadsComplete += 1
                     case let .failure(storageError):
                         Log.warn("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
                     }
@@ -282,12 +241,9 @@ class FileUploadAndPredictionService: ObservableObject {
         }
     }
     
-    private func submitPredictionRequest(for taskCount: Int) {
-        guard
-            isFinishedUploading,
-            numberOfUploadsInProgress == 0,
-            let apiKey = self.hostApiKey else {
-            Log.info("skipping prediction request. isFinishedUploading: \(isFinishedUploading), numberOfUploadsInProgress: \(numberOfUploadsInProgress) or api key is nil")
+    private func submitPredictionRequest() {
+        
+        guard let apiKey = hostApiKey else {
             return
         }
         
@@ -298,8 +254,7 @@ class FileUploadAndPredictionService: ObservableObject {
         self.uploadSessionJsonFile(jsonFileName: jsonFileName)
         
         // PredictionRequest
-        let numberOFUploadsInt = Int(numberOfUploadsComplete)
-        let workers = min(numberOFUploadsInt, 10)
+        let workers = min(self.taskCount, 10)
         let sqsDeadLetterQueueARN = "arn:aws:sqs:us-east-1:555897601062:iossdk_ptsd_batch_dead_letter.fifo"
         var s3Paths: [String] = []
         for localFileNameKey in currentSessionUploadFileKeys {
@@ -325,22 +280,30 @@ class FileUploadAndPredictionService: ObservableObject {
         print("Reset Called")
         sessionInfo = nil
         hostApiKey = nil
-        sessionTimeStamp = nil
-        hasUploadedJsonFile = false
-        isFinishedUploading = false
-        shouldUpload = true
         uploadProgress = 0
-        numberOfUploadsInProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
+    }
+    
+    private func sizePerMB(url: URL?) -> Double {
+        guard let filePath = url?.path else {
+            return 0.0
+        }
+        do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: filePath)
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                return size.doubleValue / 1000000.0
+            }
+        } catch {
+            print("Error: \(error)")
+        }
+        return 0.0
     }
 }
 
 @available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
-    var uploadsAreCompletePublished: Published<Bool> { _isFinishedUploading }
-    var uploadsAreCompletePublisher: Published<Bool>.Publisher { $isFinishedUploading }
     var uploadProgressPublished: Published<Double> { _uploadProgress }
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
 }

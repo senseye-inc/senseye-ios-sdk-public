@@ -46,6 +46,7 @@ struct SenseyeTabView: View {
                 .gesture(DragGesture())
         }
         .onAppear {
+            Log.info("Set task count -- \(tabController.numberOfTasks())")
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in

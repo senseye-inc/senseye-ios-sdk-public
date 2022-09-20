@@ -58,41 +58,44 @@ class TabController: ObservableObject {
     
     init() {
         //Initial Tabs
-        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView), TabItem(taskId: "survey_view", tabType: .surveyView)]
+        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
+                            TabItem(taskId: "survey_view", tabType: .surveyView)]
         //Starting Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
             TabItem(taskId: "calibration_view_1",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
-                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")]
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                isTaskItem: true)]
         
         //Image Set Blocks
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 1, category: .positive, subcategory: .nature))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 2, category: .neutral, subcategory: .nature))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 3, category: .negative, subcategory: .mess))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 4, category: .negativeArousal, subcategory: .accident))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 5, category: .facialExpression, subcategory: .negative))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 6, category: .positive, subcategory: .kids))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 7, category: .neutral, subcategory: .people))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 8, category: .negative, subcategory: .delay))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 9, category: .negativeArousal, subcategory: .animals))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 10, category: .facialExpression, subcategory: .negative))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 11, category: .positive, subcategory: .animals))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 12, category: .neutral, subcategory: .texture))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 13, category: .negative, subcategory: .broken))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 14, category: .negativeArousal, subcategory: .bodilyHarm))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 15, category: .facialExpression, subcategory: .negative))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 16, category: .positive, subcategory: .people))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 17, category: .neutral, subcategory: .object))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 18, category: .negative, subcategory: .inconvenience))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 19, category: .negativeArousal, subcategory: .war))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 20, category: .facialExpression, subcategory: .negative))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 21, category: .positive, subcategory: .plants))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 22, category: .neutral, subcategory: .buildings))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 23, category: .negative, subcategory: .frustrating))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 24, category: .negativeArousal, subcategory: .desctruction))
-        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
+        
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 2, category: .neutral, subcategory: .nature))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 3, category: .negative, subcategory: .mess))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 4, category: .negativeArousal, subcategory: .accident))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 5, category: .facialExpression, subcategory: .negative))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 6, category: .positive, subcategory: .kids))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 7, category: .neutral, subcategory: .people))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 8, category: .negative, subcategory: .delay))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 9, category: .negativeArousal, subcategory: .animals))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 10, category: .facialExpression, subcategory: .negative))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 11, category: .positive, subcategory: .animals))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 12, category: .neutral, subcategory: .texture))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 13, category: .negative, subcategory: .broken))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 14, category: .negativeArousal, subcategory: .bodilyHarm))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 15, category: .facialExpression, subcategory: .negative))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 16, category: .positive, subcategory: .people))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 17, category: .neutral, subcategory: .object))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 18, category: .negative, subcategory: .inconvenience))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 19, category: .negativeArousal, subcategory: .war))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 20, category: .facialExpression, subcategory: .negative))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 21, category: .positive, subcategory: .plants))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 22, category: .neutral, subcategory: .buildings))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 23, category: .negative, subcategory: .frustrating))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 24, category: .negativeArousal, subcategory: .desctruction))
+//        taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
         
         //Ending Calibration
         taskTabOrdering += [
@@ -100,7 +103,8 @@ class TabController: ObservableObject {
             TabItem(taskId: "calibration_view_2",
                     tabType: .calibrationView,
                     taskTitle: "Calibration",
-                    taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears."),
+                    taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                   isTaskItem: true),
             TabItem(taskId: "results_view", tabType: .resultsView)]
                             
     }
@@ -177,13 +181,15 @@ class TabController: ObservableObject {
                         taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
                         blockNumber: blockNumber,
                         category: category,
-                        subcategory: subcategory))
+                        subcategory: subcategory,
+                        isTaskItem: true))
         items.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
         items.append(
                 TabItem(taskId: "plr_view",
                     tabType: .plrView,
                     taskTitle: "PLR",
-                    taskDescription: "Stare at the cross for the duration of the task."))
+                    taskDescription: "Stare at the cross for the duration of the task.",
+                    isTaskItem: true))
         return items
     }
 }

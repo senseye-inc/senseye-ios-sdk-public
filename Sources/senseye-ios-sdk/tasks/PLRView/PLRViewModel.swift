@@ -14,6 +14,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
     @Published var hasStartedTask = false
+    @Published var isFinished: Bool = false
     private var taskTiming: Double {
         get {
             if (fileUploadService.isDebugModeEnabled) {
@@ -33,21 +34,32 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
         self.fileUploadService = fileUploadService
     }
     
+    private var plrTimer: Timer? = nil
 
-    func showPLR(didFinishCompletion: @escaping () -> Void) {
-        hasStartedTask = true
-        Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
-            currentInterval += 1
-            if currentInterval <= 6 {
-                DispatchQueue.main.async {
+    func showPLR() {
+        if plrTimer == nil {
+            Log.info("PLRViewModel creating timer")
+            hasStartedTask = true
+            plrTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [weak self] timer in
+                guard let self = self else { return }
+                self.currentInterval += 1
+                if self.currentInterval <= 6 {
                     self.toggleColors()
+                    self.timestampsOfBackgroundSwap.append(Date().self.currentTimeMillis())
+                } else {
+                    self.shouldShowConfirmationView.toggle()
+                    self.isFinished = true
+                    self.stopPLR()
                 }
-                timestampsOfBackgroundSwap.append(Date().currentTimeMillis())
-            } else {
-                timer.invalidate()
-                Log.info("PLRView Timer Cancelled")
-                didFinishCompletion()
             }
+        }
+    }
+    
+    private func stopPLR() {
+        if (plrTimer != nil) {
+            plrTimer?.invalidate()
+            Log.info("PLRView Timer Cancelled")
+            plrTimer = nil
         }
     }
 
@@ -60,6 +72,8 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         currentInterval = 0
         hasStartedTask = false
+        plrTimer = nil
+        isFinished = false
         timestampsOfBackgroundSwap.removeAll()
     }
     

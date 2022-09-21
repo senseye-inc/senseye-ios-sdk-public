@@ -49,6 +49,5 @@ struct CameraView: View {
                 Text("Change camera permissions in your settings.")
             }
         }
-        .animation(.easeIn(duration: 0.5))
     }
 }

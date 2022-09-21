@@ -43,6 +43,7 @@ extension LoginView {
         }
         
         func login() {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) // Dismiss keyboard
             isFetchingAuthorization = true
             self.authenticationService.signIn(
                 accountUsername: self.username,

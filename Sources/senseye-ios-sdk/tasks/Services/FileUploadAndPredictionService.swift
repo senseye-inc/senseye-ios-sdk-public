@@ -91,7 +91,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let filename = fileUrl
         
         guard let _ = self.hostApiKey else {
-            Log.info("Skipping data upload because hostApiKey maybe empty")
+            Log.info("Skipping data upload - hostApiKey is empty")
             return
         }
         
@@ -121,7 +121,9 @@ class FileUploadAndPredictionService: ObservableObject {
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { newProgressValue in
-                self.uploadProgress = Double(self.numberOfUploadsComplete) + newProgressValue.fractionCompleted
+                let latestProgressValue = Double(self.numberOfUploadsComplete) + newProgressValue.fractionCompleted
+                let previousProgressValue = self.uploadProgress
+                self.uploadProgress = max(previousProgressValue, latestProgressValue)
                 Log.info("latestProgress -- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
             }
             .store(in: &self.cancellables)
@@ -153,9 +155,6 @@ class FileUploadAndPredictionService: ObservableObject {
                     Log.info("Found and set senseye_api_token")
                 } else {
                     Log.warn("unable to set api key")
-                }
-                if attributes.contains(where: { $0.key == AuthUserAttributeKey.custom("skip_uploads")}) {
-                    Log.debug("Found and set skip_uploads. Skipping Upload.")
                 }
             case .failure(let authError):
                 Log.warn("Fetching user attributes failed: \(authError)")
@@ -248,7 +247,7 @@ class FileUploadAndPredictionService: ObservableObject {
             Log.error("Skipping the PTSD request but it's here")
             return
         }
-        
+         
         // JSON Upload
         let currentTimeStamp = Date().currentTimeMillis()
         let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
@@ -279,28 +278,12 @@ class FileUploadAndPredictionService: ObservableObject {
     }
     
     func reset() {
-        print("Reset Called")
         sessionInfo = nil
         hostApiKey = nil
         uploadProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
-    }
-    
-    private func sizePerMB(url: URL?) -> Double {
-        guard let filePath = url?.path else {
-            return 0.0
-        }
-        do {
-            let attribute = try FileManager.default.attributesOfItem(atPath: filePath)
-            if let size = attribute[FileAttributeKey.size] as? NSNumber {
-                return size.doubleValue / 1000000.0
-            }
-        } catch {
-            print("Error: \(error)")
-        }
-        return 0.0
     }
 }
 

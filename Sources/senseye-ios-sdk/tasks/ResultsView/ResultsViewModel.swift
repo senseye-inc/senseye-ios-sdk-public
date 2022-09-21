@@ -27,7 +27,7 @@ class ResultsViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] progressCount in
                 guard let self = self else { return }
-                self.uploadProgress = Double(self.fileUploadService.uploadProgress)/Double(self.fileUploadService.taskCount)
+                self.uploadProgress = Double(progressCount)/Double(self.fileUploadService.taskCount)
                 self.isFinished = (self.uploadProgress == 1.0)
             })
             .store(in: &cancellables)

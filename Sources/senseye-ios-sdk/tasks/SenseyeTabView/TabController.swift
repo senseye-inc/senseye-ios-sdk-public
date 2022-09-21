@@ -58,14 +58,16 @@ class TabController: ObservableObject {
     
     init() {
         //Initial Tabs
-        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView), TabItem(taskId: "survey_view", tabType: .surveyView)]
+        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
+                            TabItem(taskId: "survey_view", tabType: .surveyView)]
         //Starting Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
             TabItem(taskId: "calibration_view_1",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
-                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.")]
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                isTaskItem: true)]
         
         //Image Set Blocks
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 1, category: .positive, subcategory: .nature))
@@ -100,7 +102,8 @@ class TabController: ObservableObject {
             TabItem(taskId: "calibration_view_2",
                     tabType: .calibrationView,
                     taskTitle: "Calibration",
-                    taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears."),
+                    taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                   isTaskItem: true),
             TabItem(taskId: "results_view", tabType: .resultsView)]
                             
     }
@@ -177,13 +180,15 @@ class TabController: ObservableObject {
                         taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
                         blockNumber: blockNumber,
                         category: category,
-                        subcategory: subcategory))
+                        subcategory: subcategory,
+                        isTaskItem: true))
         items.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
         items.append(
                 TabItem(taskId: "plr_view",
                     tabType: .plrView,
                     taskTitle: "PLR",
-                    taskDescription: "Stare at the cross for the duration of the task."))
+                    taskDescription: "Stare at the cross for the duration of the task.",
+                    isTaskItem: true))
         return items
     }
 }

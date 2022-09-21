@@ -43,7 +43,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
             plrTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [weak self] timer in
                 guard let self = self else { return }
                 self.currentInterval += 1
-                if self.currentInterval <= 6 {
+                if self.currentInterval <= 1 {
                     self.toggleColors()
                     self.timestampsOfBackgroundSwap.append(Date().self.currentTimeMillis())
                 } else {
@@ -72,6 +72,8 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     func reset() {
         currentInterval = 0
         hasStartedTask = false
+        backgroundColor = .black
+        xMarkColor = .white
         plrTimer = nil
         isFinished = false
         timestampsOfBackgroundSwap.removeAll()

@@ -22,26 +22,14 @@ class ResultsViewModel: ObservableObject {
     @Published var uploadProgress: Double = 0.0
     @Published var isFinished: Bool = false
     
-    private var taskCount: Double {
-        Double(fileUploadService.taskCount)
-    }
-    
     func addSubscribers() {
         fileUploadService.uploadProgressPublisher
-            .sink(receiveValue: { [weak self] newUploadProgress in
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] progressCount in
                 guard let self = self else { return }
-                let updatedUploadProgress = newUploadProgress / self.taskCount
-                self.uploadProgress = updatedUploadProgress.rounded(toPlaces: 2)
-                Log.info("UploadProgress: \(self.uploadProgress)", shouldLogContext: true)
+                self.uploadProgress = Double(progressCount)/Double(self.fileUploadService.taskCount)
+                self.isFinished = (self.uploadProgress == 1.0)
             })
-            .store(in: &cancellables)
-        
-        fileUploadService.uploadsAreCompletePublisher
-            .sink { completed in
-                if completed {
-                    self.isFinished = true
-                }
-            }
             .store(in: &cancellables)
     }
     

@@ -176,7 +176,7 @@ class TabController: ObservableObject {
         items.append(TabItem(taskId: "camera_view_affective_image_set_\(blockNumber)", tabType: .cameraView, blockNumber: blockNumber))
         items.append(TabItem(taskId: "affective_image_set_\(blockNumber)",
                         tabType: .imageView,
-                        taskTitle: "PTSD Image Set - Block \(blockNumber)",
+                        taskTitle: "Image Set - Block \(blockNumber)",
                         taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
                         blockNumber: blockNumber,
                         category: category,

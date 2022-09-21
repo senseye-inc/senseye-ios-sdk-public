@@ -8,7 +8,6 @@
 import SwiftUI
 
 @available(iOS 13.0, *)
-@MainActor
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
     var hasStartedTask = false
@@ -25,6 +24,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     @Published var xCoordinate: CGFloat
     @Published var yCoordinate: CGFloat
     @Published var shouldShowConfirmationView: Bool = false
+    @Published var isFinished: Bool = false
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let calibrationPath: [(CGFloat, CGFloat)] = [(80,325), (200, 675), (320,740), (80,75), (80,575), (200, 425), (320, 575), (80,740), (320, 325), (200, 175), (320, 75)]
@@ -35,22 +35,36 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
         self.xCoordinate = calibrationPath[0].0
         self.yCoordinate = calibrationPath[0].1
     }
+    
+    private var calibrationTimer: Timer? = nil
 
-    func startCalibration(didFinishCompletion: @escaping () -> Void) {
-        hasStartedTask = true
-        Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
-            pathIndex += 1
-            if pathIndex < calibrationPath.count {
-                xCoordinate = calibrationPath[pathIndex].0
-                yCoordinate = calibrationPath[pathIndex].1
-                addTimestampOfStimuliDisplay()
-            } else {
-                timer.invalidate()
-                Log.info("Calibration Timer Cancelled")
-                didFinishCompletion()
+    func startCalibration() {
+        if calibrationTimer == nil {
+            Log.info("CalibrationViewModel creating timer")
+            addTimestampOfStimuliDisplay()
+            hasStartedTask = true
+            calibrationTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [weak self] timer in
+                guard let self = self else { return }
+                self.pathIndex += 1
+                if self.pathIndex < self.calibrationPath.count {
+                    self.xCoordinate = self.calibrationPath[self.pathIndex].0
+                    self.yCoordinate = self.calibrationPath[self.pathIndex].1
+                    self.addTimestampOfStimuliDisplay()
+                } else {
+                    self.shouldShowConfirmationView.toggle()
+                    self.isFinished = true
+                    self.stopCalibration()
+                }
             }
         }
-        addTimestampOfStimuliDisplay()
+    }
+    
+    private func stopCalibration() {
+        if (calibrationTimer != nil) {
+            calibrationTimer?.invalidate()
+            Log.info("Calibration Timer Cancelled")
+            calibrationTimer = nil
+        }
     }
     
     private func addTimestampOfStimuliDisplay() {
@@ -60,10 +74,12 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     }
 
     func reset() {
-        self.pathIndex = 0
-        self.xCoordinate = self.calibrationPath[self.pathIndex].0
-        self.yCoordinate = self.calibrationPath[self.pathIndex].1
-        self.hasStartedTask = false
+        pathIndex = 0
+        xCoordinate = calibrationPath[pathIndex].0
+        yCoordinate = calibrationPath[pathIndex].1
+        hasStartedTask = false
+        calibrationTimer = nil
+        isFinished = false
         timestampsOfStimuli.removeAll()
     }
     

@@ -26,6 +26,10 @@ class CameraService: NSObject, ObservableObject {
     
     private let authenticationService: AuthenticationServiceProtocol
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
+    
+    var isSimulatorEnabled: Bool {
+        frontCameraDevice.cameraType == .simulator
+    }
 
     @Published var frame: CGImage?
     @Published var shouldSetupCaptureSession: Bool = false
@@ -54,6 +58,10 @@ class CameraService: NSObject, ObservableObject {
     }
     
     func start() {
+        if isSimulatorEnabled {
+            simulateStart()
+            return
+        }
         self.checkPermissions()
         self.startedCameraRecording = false
     }
@@ -84,15 +92,8 @@ class CameraService: NSObject, ObservableObject {
             self.shouldSetupCaptureSession = true
         }
         
-        //Handle mock-camera call
-        if frontCameraDevice.cameraType == .simulator {
-            DispatchQueue.main.async {
-                self.startedCameraRecording = true
-            }
-        }
-        
         guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
-            Log.error("Error casting cameraRepresentable to AvCaptureDevice")
+            Log.info("Using Camera representable for AVCaptureDevice")
             captureSession.commitConfiguration()
             return
         }
@@ -106,7 +107,6 @@ class CameraService: NSObject, ObservableObject {
                 captureSession.addInput(videoDeviceInput)
             }
 
-            captureSession.sessionPreset = .high
 
             if captureSession.canAddOutput(captureVideoDataOutput) {
                 captureSession.addOutput(captureVideoDataOutput)
@@ -120,7 +120,11 @@ class CameraService: NSObject, ObservableObject {
             connection.videoOrientation = .portrait
             connection.isVideoMirrored = true
             captureSession.commitConfiguration()
-            self.captureSession.startRunning()
+            DispatchQueue.global(qos: .background).async {
+                Task {
+                    await self.captureSession.startRunning()
+                }
+            }
         } catch {
             Log.error("videoDeviceInput error")
         }
@@ -172,6 +176,10 @@ class CameraService: NSObject, ObservableObject {
     }
     
     func stopRecording() {
+        if isSimulatorEnabled {
+            simulateStopCurrentTaskRecordingAndSaveFile()
+            return
+        }
         self.stopCurrentTaskRecordingAndSaveFile() {
             self.captureSession.stopRunning()
         }
@@ -262,6 +270,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 
                 frameTimestampsForTask.append(outputBufferTimestampAsMillis)
                 if (!startedCameraRecording) {
+                    if isSimulatorEnabled { return }
                     DispatchQueue.main.async {
                         self.startedCameraRecording = true
                     }
@@ -281,6 +290,10 @@ extension CameraService {
             && videoWriter.status == .writing
     }
     private func setupTaskRecordingToStart(onComplete: () -> Void) {
+        if isSimulatorEnabled {
+            simulatSetupTaskRecordingToStart()
+            return
+        }
         guard !startedTaskRecording else {
             Log.error("startedTaskRecording is false", shouldLogContext: true)
             return
@@ -313,4 +326,46 @@ extension CameraService {
     func getLatestUrl() -> URL {
         return self.latestFileUrl ?? URL(fileURLWithPath: "")
     }
+}
+
+// MARK: - Simulator
+@available(iOS 14.0, *)
+extension CameraService {
+    
+    fileprivate func simulateStart() {
+        shouldSetupCaptureSession = true
+        startedCameraRecording = false
+        return
+    }
+    
+    fileprivate func simulateStartCameraRecording() {
+        Log.info("in \(#function)-----")
+        //Handle mock-camera call
+        DispatchQueue.main.async {
+            self.startedCameraRecording = true
+        }
+    }
+    
+    fileprivate func simulatSetupTaskRecordingToStart() {
+        simulateStartCameraRecording()
+        Log.info("in \(#function)-----")
+        guard !startedTaskRecording else {
+            Log.error("startedTaskRecording is false", shouldLogContext: true)
+            return
+        }
+        startedTaskRecording = true
+        sessionAtSourceTime = nil
+    }
+
+    fileprivate func simulateStopCurrentTaskRecordingAndSaveFile() {
+        Log.info("in \(#function)-----")
+        guard startedTaskRecording else {
+            Log.error("startedTaskRecording is false", shouldLogContext: true)
+            return
+        }
+        startedTaskRecording = false
+        startedCameraRecording = false
+    }
+    
+    
 }

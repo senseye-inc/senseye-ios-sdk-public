@@ -26,9 +26,9 @@ struct RotatingImageView: View {
                     .onAppear {
                         let tabCategoryAndSubCategory = tabController.cateogryAndSubcategoryForCurrentTab()
                         viewModel.tabInfo = RotatingImageViewTaskInfo(taskBlockNumber: tabController.activeTabBlockNumber, taskCategory: tabCategoryAndSubCategory.0, taskSubcategory: tabCategoryAndSubCategory.1)
-                        viewModel.checkForImages()
+                        cameraService.startRecordingForTask(taskId: "aiv")
                         DispatchQueue.main.async {
-                            cameraService.startRecordingForTask(taskId: "aiv")
+                            viewModel.checkForImages()
                         }
                     }
                     .onChange(of: viewModel.isFinished) { isFinished in
@@ -37,6 +37,7 @@ struct RotatingImageView: View {
                         }
                     }
                     .onDisappear {
+                        Log.info("onDisappear triggered")
                         viewModel.reset()
                     }
             }

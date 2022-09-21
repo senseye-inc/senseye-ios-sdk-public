@@ -28,20 +28,20 @@ struct CalibrationView: View {
                     .frame(width: 35)
                     .position(x: viewModel.xCoordinate, y: viewModel.yCoordinate)
             }
-            .onReceive(cameraService.$startedCameraRecording) { hasStartedRecording in
-                if (!viewModel.hasStartedTask && hasStartedRecording) {
-                    viewModel.startCalibration {
-                        cameraService.stopRecording()
-                        viewModel.shouldShowConfirmationView.toggle()
-                    }
-                }
-            }
         }
         .onAppear {
             cameraService.startRecordingForTask(taskId: "calibration")
+            DispatchQueue.main.async {
+                viewModel.startCalibration()
+            }
+        }
+        .onChange(of: viewModel.isFinished) { isFinished in
+            if isFinished {
+                cameraService.stopRecording()
+            }
         }
         .onDisappear {
-            print("onDisappear triggered")
+            Log.info("onDisappear triggered")
             viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {

@@ -25,18 +25,18 @@ struct PLRView: View {
                 .foregroundColor(viewModel.xMarkColor)
                 .scaledToFit()
                 .frame(width: 30, height: 25.5)
-                .onReceive(self.cameraService.$startedCameraRecording) { hasStartedRecording in
-                    if (!viewModel.hasStartedTask && hasStartedRecording) {
-                        viewModel.showPLR {
-                            cameraService.stopRecording()
-                            viewModel.shouldShowConfirmationView.toggle()
-                        }
-                    }
-                }
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
             cameraService.startRecordingForTask(taskId: "PLR")
+            DispatchQueue.main.async {
+                viewModel.showPLR()
+            }
+        }
+        .onChange(of: viewModel.isFinished) { isFinished in
+            if isFinished {
+                cameraService.stopRecording()
+            }
         }
         .onDisappear {
             viewModel.reset()

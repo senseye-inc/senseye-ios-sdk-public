@@ -37,7 +37,7 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @Published var startedCameraRecording: Bool = false
     @Published var isCompliantInCurrentFrame: Bool = false
-    @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle")
+    @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle", statusBackgroundColor: .red)
     
     @AppStorage("username") var username: String = ""
     
@@ -73,9 +73,9 @@ class CameraService: NSObject, ObservableObject {
                 Log.info("setting the updated compliance in cameraservice")
                 self.isCompliantInCurrentFrame = (updatedCompliance == .detected)
                 if (self.isCompliantInCurrentFrame) {
-                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Good work, you're position correctly!", statusIcon: "checkmark.circle")
+                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Good work, you're positioned correctly!", statusIcon: "checkmark.circle", statusBackgroundColor: .green)
                 } else {
-                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle")
+                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Center your face into the frame!", statusIcon: "xmark.circle", statusBackgroundColor: .red)
                 }
                 
             }

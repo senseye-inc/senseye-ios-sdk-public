@@ -8,10 +8,12 @@
 import Foundation
 import Vision
 import CoreML
+import SwiftUI
 
 struct FacialComplianceStatus {
     var statusMessage: String
     var statusIcon: String
+    var statusBackgroundColor: Color
 }
 
 class CameraComplianceViewModel: ObservableObject {

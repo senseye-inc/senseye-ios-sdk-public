@@ -10,6 +10,7 @@ import AVFoundation
 import UIKit
 import SwiftUI
 import SwiftyJSON
+import Combine
 
 @available(iOS 14.0, *)
 @MainActor
@@ -35,6 +36,8 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @Published var startedCameraRecording: Bool = false
+    @Published var isCompliantInCurrentFrame: Bool = false
+    @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle")
     
     @AppStorage("username") var username: String = ""
     
@@ -42,6 +45,10 @@ class CameraService: NSObject, ObservableObject {
     private var surveyInput : [String: String] = [:]
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
+    
+    private var cameraComplianceViewModel = CameraComplianceViewModel()
+    
+    var cancellables = Set<AnyCancellable>()
     
     init(authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         if let realCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
@@ -55,6 +62,24 @@ class CameraService: NSObject, ObservableObject {
             let cameraType = cameraInfo.deviceType.rawValue
             fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": cameraType])
         }
+        super.init()
+        addSubscribers()
+    }
+    
+    private func addSubscribers() {
+        cameraComplianceViewModel.$faceDetectionResult
+            .receive(on: DispatchQueue.main)
+            .sink { updatedCompliance in
+                Log.info("setting the updated compliance in cameraservice")
+                self.isCompliantInCurrentFrame = (updatedCompliance == .detected)
+                if (self.isCompliantInCurrentFrame) {
+                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Good work, you're position correctly!", statusIcon: "checkmark.circle")
+                } else {
+                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle")
+                }
+                
+            }
+            .store(in: &cancellables)
     }
     
     func start() {
@@ -245,6 +270,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             DispatchQueue.main.async {
                 self.frame = context.createCGImage(ciImage, from: ciImage.extent)
             }
+            cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
             return
         }
         

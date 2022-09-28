@@ -21,6 +21,7 @@ struct CameraView: View {
             ZStack {
                 FrameView(image: $cameraService.frame)
                 VStack {
+                    FacialComplianceLabelView(currentComplianceIcon: $cameraService.currentComplianceInfo.statusIcon, currentComplianceLabel: $cameraService.currentComplianceInfo.statusMessage)
                     Button { } label: {
                         CameraButtonOverlayView()
                             .onTapGesture(count: 2) {

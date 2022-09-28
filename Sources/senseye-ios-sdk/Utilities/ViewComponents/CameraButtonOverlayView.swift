@@ -11,7 +11,6 @@ struct CameraButtonOverlayView: View {
 
     var body: some View {
         VStack {
-            Spacer()
             HStack {
                 ZStack {
                     Circle()

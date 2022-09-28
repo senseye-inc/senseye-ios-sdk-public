@@ -6,7 +6,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0.0, *)
 struct HeaderView: View {
     var body: some View {
         VStack(alignment: .trailing) {

@@ -7,7 +7,6 @@
 import Foundation
 import SwiftUI
 
-@available(iOS 14.0, *)
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
 
     @Published var backgroundColor: Color = .black

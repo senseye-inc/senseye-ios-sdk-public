@@ -9,7 +9,6 @@ import SwiftUI
 import AVFoundation
 import Amplify
 
-@available(iOS 15.0, *)
 struct CameraView: View {
     
     @EnvironmentObject var cameraService: CameraService

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
-@available(iOS 13.0, *)
+
 struct KeyboardAdaptive: ViewModifier {
     @State private var keyboardHeight: CGFloat = 0
 
@@ -19,14 +19,12 @@ struct KeyboardAdaptive: ViewModifier {
     }
 }
 
-@available(iOS 13.0, *)
 extension View {
     func keyboardAdaptive() -> some View {
         ModifiedContent(content: self, modifier: KeyboardAdaptive())
     }
 }
 
-@available(iOS 13.0, *)
 extension Publishers {
     // 1.
     static var keyboardHeight: AnyPublisher<CGFloat, Never> {

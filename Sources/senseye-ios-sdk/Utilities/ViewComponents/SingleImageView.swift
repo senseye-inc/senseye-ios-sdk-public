@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct SingleImageView: View {
 
     @Binding var isLoading: Bool

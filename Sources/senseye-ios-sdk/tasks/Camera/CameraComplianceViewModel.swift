@@ -11,31 +11,25 @@ import CoreML
 import SwiftUI
 
 struct FacialComplianceStatus {
+    
     var statusMessage: String
     var statusIcon: String
     var statusBackgroundColor: Color
+    
+    static func faceNotDetected()  -> FacialComplianceStatus {
+        return FacialComplianceStatus(statusMessage: "Center your face into the frame!", statusIcon: "xmark.circle", statusBackgroundColor: .red)
+    }
+    
+    static func faceDetected() -> FacialComplianceStatus {
+        return FacialComplianceStatus(statusMessage: "Good work, you're positioned correctly!", statusIcon: "checkmark.circle", statusBackgroundColor: .green)
+    }
 }
 
 class CameraComplianceViewModel: ObservableObject {
     
-    enum FaceDetectionResult {
-        case detected
-        case notDetected
-    }
-    
-    @Published private(set) var faceDetectionResult: FaceDetectionResult
-    @Published private(set) var isAcceptableRoll: Bool
-    @Published private(set) var isAcceptablePitch: Bool
-    @Published private(set) var isAcceptableYaw: Bool
+    @Published private(set) var faceDetectionResult: FacialComplianceStatus = FacialComplianceStatus.faceNotDetected()
     
     private var sequenceHandler = VNSequenceRequestHandler()
-    
-    init() {
-        faceDetectionResult = .notDetected
-        isAcceptableRoll = false
-        isAcceptablePitch = false
-        isAcceptableYaw = false
-    }
     
     func runImageDetection(sampleBuffer: CMSampleBuffer) {
         Log.info("Running detection ---- ")
@@ -55,7 +49,7 @@ class CameraComplianceViewModel: ObservableObject {
         
         guard let results = request.results as? [VNFaceObservation], let firstFaceResult = results.first else {
             Log.info("No faces found - error")
-            faceDetectionResult = .notDetected
+            faceDetectionResult = FacialComplianceStatus.faceNotDetected()
             return
         }
         let leftEye = firstFaceResult.landmarks?.leftEye
@@ -65,11 +59,10 @@ class CameraComplianceViewModel: ObservableObject {
         
         let foundPupilsAndEyes = (leftEye != nil && leftPupil != nil && rightEye != nil && rightPupil != nil)
         if (foundPupilsAndEyes) {
-            faceDetectionResult = .detected
+            faceDetectionResult = FacialComplianceStatus.faceDetected()
             Log.info("Found a face")
         } else {
-            faceDetectionResult = .notDetected
-            Log.info("No faces found - no error")
+            faceDetectionResult = FacialComplianceStatus.faceNotDetected()
         }
     }
     

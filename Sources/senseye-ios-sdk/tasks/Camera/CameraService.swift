@@ -12,7 +12,6 @@ import SwiftUI
 import SwiftyJSON
 import Combine
 
-@available(iOS 14.0, *)
 @MainActor
 class CameraService: NSObject, ObservableObject {
     
@@ -71,13 +70,7 @@ class CameraService: NSObject, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { updatedCompliance in
                 Log.info("setting the updated compliance in cameraservice")
-                self.isCompliantInCurrentFrame = (updatedCompliance == .detected)
-                if (self.isCompliantInCurrentFrame) {
-                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Good work, you're positioned correctly!", statusIcon: "checkmark.circle", statusBackgroundColor: .green)
-                } else {
-                    self.currentComplianceInfo = FacialComplianceStatus(statusMessage: "Center your face into the frame!", statusIcon: "xmark.circle", statusBackgroundColor: .red)
-                }
-                
+                self.currentComplianceInfo = updatedCompliance
             }
             .store(in: &cancellables)
     }
@@ -254,7 +247,6 @@ class CameraService: NSObject, ObservableObject {
     }
 }
 
-@available(iOS 14.0, *)
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     internal func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -308,7 +300,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
 }
 
-@available(iOS 14.0, *)
 extension CameraService {
     private func canWrite() -> Bool {
         return startedTaskRecording
@@ -355,7 +346,6 @@ extension CameraService {
 }
 
 // MARK: - Simulator
-@available(iOS 14.0, *)
 extension CameraService {
     
     fileprivate func simulateStart() {

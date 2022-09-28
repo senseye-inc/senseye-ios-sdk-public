@@ -8,7 +8,6 @@
 import SwiftUI
 import Combine
 
-@available(iOS 14.0, *)
 class ResultsViewModel: ObservableObject {
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {

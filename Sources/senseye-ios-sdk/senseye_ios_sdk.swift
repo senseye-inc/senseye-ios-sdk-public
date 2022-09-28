@@ -11,7 +11,7 @@ import SwiftUI
 protocol SenseyeTaskCompletionDelegate: AnyObject {
     func didCompleteTasksAndReturnResult(result: String)
 }
-@available(iOS 15.0, *)
+
 public class SenseyeSDK {
     
     weak var delegate: SenseyeTaskCompletionDelegate?

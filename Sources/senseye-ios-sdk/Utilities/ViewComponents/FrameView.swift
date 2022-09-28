@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 13.0, *)
 struct FrameView: View {
     var image: Binding<CGImage?>
     private let label = Text("Camera feed")

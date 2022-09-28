@@ -9,7 +9,6 @@ import SwiftUI
 import Combine
 import Amplify
 
-@available(iOS 14.0, *)
 class ImageService: ObservableObject {
     private var authenticationService: AuthenticationService?
 

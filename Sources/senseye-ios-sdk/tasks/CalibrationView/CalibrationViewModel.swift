@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 13.0, *)
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
     var hasStartedTask = false

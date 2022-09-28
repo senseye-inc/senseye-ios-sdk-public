@@ -6,7 +6,6 @@
 
 import SwiftUI
 
-@available(iOS 13.0, *)
 struct SenseyeButton: View {
     
     let text: String

@@ -11,7 +11,6 @@ import UIKit
 import SwiftUI
 import Combine
 
-@available(iOS 15.0.0, *)
 extension LoginView {
     class ViewModel: ObservableObject {
         @AppStorage("username") var username: String = ""
@@ -73,7 +72,7 @@ extension LoginView {
 
 
 }
-@available(iOS 15.0.0, *)
+
 extension LoginView.ViewModel: AuthenticationServiceDelegate {
     func didConfirmNewUser() {
         Log.info("Attempted sign in for new user")

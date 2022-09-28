@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 @testable import senseye_ios_sdk
-@available(iOS 13.0, *)
+
 class MockFileUploadAndPredictionService {
     
     var result: Result<String, Error> = .failure(MockFileUploadAndPredictionServiceError.notInitialized)
@@ -37,7 +37,6 @@ enum MockFileUploadAndPredictionServiceError: Error {
     case notInitialized
 }
 
-@available(iOS 13.0, *)
 extension MockFileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
     func uploadData(fileUrl: URL) {
 

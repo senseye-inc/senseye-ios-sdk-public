@@ -11,6 +11,7 @@ import SwiftUI
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel : SurveyViewModel
+    @State var isPresentingSettingsView: Bool = false
 
     init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
         _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService))
@@ -18,10 +19,22 @@ struct SurveyView: View {
     
     var body: some View {
         ZStack {
-            Color.senseyePrimary
-                .edgesIgnoringSafeArea(.all)
+            Color.senseyePrimary.edgesIgnoringSafeArea(.all)
             VStack {
-                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        isPresentingSettingsView = true
+                    }, label: {
+                        Image(systemName: "line.3.horizontal.circle.fill")
+                            .resizable()
+                            .frame(width: 35, height: 35)
+                            .foregroundColor(.senseyeTextColor)
+                            .padding(5)
+                    })
+
+                }
+                .padding()
 
                 VStack {
                     Text("Let's get started.")
@@ -35,24 +48,15 @@ struct SurveyView: View {
                 }
 
                 Spacer()
-
                 agePicker
-
                 genderPicker
-
                 eyeColorPicker
-                
                 Toggle(isOn: $viewModel.debugModeEnabled) {
                     Text("Enable Debug Mode")
                         .foregroundColor(.white)
                 }.padding()
-                    
-                
                 Spacer()
-                
-                
                 Spacer()
-
                 HStack(spacing: 100) {
                     Button {
                         tabController.proceedToPreviousTab()
@@ -73,7 +77,12 @@ struct SurveyView: View {
                     }
                 }
             }
+        }.sheet(isPresented: self.$isPresentingSettingsView) {
+            isPresentingSettingsView = false
+        } content: {
+            SettingsView()
         }
+
     }
 }
 

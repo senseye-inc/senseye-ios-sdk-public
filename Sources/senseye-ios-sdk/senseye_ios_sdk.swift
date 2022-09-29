@@ -43,6 +43,7 @@ public class SenseyeSDK {
 
     @MainActor public func senseyeTabView() -> some View {
         let authenticationService = AuthenticationService()
+        let bluetoothService = BluetoothService()
         let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         let imageService = ImageService(authenticationService: authenticationService)
@@ -51,6 +52,7 @@ public class SenseyeSDK {
             .environmentObject(fileUploadService)
             .environmentObject(imageService)
             .environmentObject(cameraService)
+            .environmentObject(bluetoothService)
     }
     
 }

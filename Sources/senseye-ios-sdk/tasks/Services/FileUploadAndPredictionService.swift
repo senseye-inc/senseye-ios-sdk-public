@@ -67,7 +67,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var numberOfUploadedItems = 0
     
     var isDebugModeEnabled: Bool = false
-    let debugModeTaskTiming = 0.1
+    let debugModeTaskTiming = 0.75
     var taskCount: Int = 0
     var isFinalUpload: Bool {
         numberOfUploadsComplete == (taskCount - 1)

@@ -29,11 +29,12 @@ protocol AuthenticationServiceDelegate: AnyObject {
 /**
  The AuthenticationService for the SDK  lets developers authenticate sessions through Senseye's backend  service.
  */
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 public class AuthenticationService: ObservableObject {
     
     weak var delegate: AuthenticationServiceDelegate?
     @Published var authError: AlertItem? = nil
+    @AppStorage("isShowingDebugToggle") var isShowingDebugToggle: Bool?
     var authErrorPublished: Published<AlertItem?> { _authError }
     var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
 
@@ -41,7 +42,6 @@ public class AuthenticationService: ObservableObject {
 
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
-    var enableDebugMode = false
 
     /**
      Authenticates the user session and handles subsequent all sign in flows.
@@ -78,6 +78,7 @@ public class AuthenticationService: ObservableObject {
      - completeSignOut: Optional completion action
      */
     public func signOut(completeSignOut: (()->())? = nil ) {
+        reset()
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
             completeSignOut?()
             return
@@ -141,6 +142,10 @@ public class AuthenticationService: ObservableObject {
         guard let username = self.accountUsername, let password = self.accountPassword else {
             Log.error("No account username or account password set")
             return
+        }
+        
+        if username.contains("@senseye.co") {
+            isShowingDebugToggle = true
         }
 
         Amplify.Auth.signIn(username: username, password: password) { [self] result in
@@ -223,7 +228,11 @@ public class AuthenticationService: ObservableObject {
         }
         completion(currentSignedInUser)
     }
+    
+    func reset() {
+        isShowingDebugToggle = false
+    }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 extension AuthenticationService: AuthenticationServiceProtocol { }

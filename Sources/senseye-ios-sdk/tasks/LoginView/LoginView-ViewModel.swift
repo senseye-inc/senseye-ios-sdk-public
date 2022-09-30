@@ -20,7 +20,10 @@ extension LoginView {
         @Published var isShowingAlert = false
         var alertItem: AlertItem?
         @Published var isFetchingAuthorization: Bool = false
-
+        @Published var isShowingSafari: Bool = false
+        
+        let supportURL: URL = URL(string: "https://support.senseye.co/")!
+        
         private var authenticationService: AuthenticationServiceProtocol
         private var cancellables = Set<AnyCancellable>()
 

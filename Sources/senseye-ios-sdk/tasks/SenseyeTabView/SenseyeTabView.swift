@@ -43,8 +43,7 @@ struct SenseyeTabView: View {
 
             CameraView()
                 .tag(TabType.cameraView)
-                .gesture(DragGesture())
-
+                .disableScrolling(disabled: true)
         }
         .onAppear {
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())

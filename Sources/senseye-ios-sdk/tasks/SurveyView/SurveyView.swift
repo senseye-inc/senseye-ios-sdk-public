@@ -20,28 +20,28 @@ struct SurveyView: View {
     var body: some View {
         ZStack {
             Color.senseyePrimary.edgesIgnoringSafeArea(.all)
-            VStack {
+            VStack(spacing: 20) {
                 HStack {
                     Spacer()
+                    HeaderView()
+                        .padding(.leading, 10)
+                    Spacer()
                     Button(action: {
-                        isPresentingSettingsView = true
+                        isPresentingSettingsView.toggle()
                     }, label: {
                         Image(systemName: "line.3.horizontal.circle.fill")
                             .resizable()
-                            .frame(width: 35, height: 35)
+                            .frame(width: 30, height: 30)
                             .foregroundColor(.senseyeTextColor)
-                            .padding(5)
+                            .padding(.horizontal, 10)
                     })
-
                 }
-                .padding()
-
                 VStack {
                     Text("Let's get started.")
                         .font(.title)
                         .foregroundColor(.senseyeSecondary)
                         .bold()
-                    Text("First, please take a moment to log your recent activity.")
+                    Text("Please enter your information below.")
                         .foregroundColor(.senseyeTextColor)
                         .bold()
                         .multilineTextAlignment(.center)
@@ -51,15 +51,17 @@ struct SurveyView: View {
                 agePicker
                 genderPicker
                 eyeColorPicker
-                Toggle(isOn: $viewModel.debugModeEnabled) {
-                    Text("Enable Debug Mode")
-                        .foregroundColor(.white)
-                }.padding()
-                Spacer()
+                if viewModel.isShowingDebugToggle ?? false {
+                    Toggle(isOn: $viewModel.debugModeEnabled) {
+                        Text("Enable Debug Mode")
+                            .foregroundColor(.white)
+                    }.padding()
+                }
                 Spacer()
                 HStack(spacing: 100) {
                     Button {
                         tabController.proceedToPreviousTab()
+                        viewModel.reset()
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")
                             .resizable()

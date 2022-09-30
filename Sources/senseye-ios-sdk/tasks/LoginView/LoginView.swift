@@ -5,7 +5,6 @@
 //
 
 import SwiftUI
-
 @available(iOS 15.0.0, *)
 struct LoginView: View {
     
@@ -28,8 +27,12 @@ struct LoginView: View {
                 }
                 .padding()
                 
-                Text("Having trouble logging in?")
-                    .foregroundColor(.senseyeTextColor)
+                Button {
+                    vm.isShowingSafari.toggle()
+                } label: {
+                    Text("Having trouble logging in?")
+                        .foregroundColor(.senseyeTextColor)
+                }
                 
                 Button(action: {
                     vm.login()
@@ -54,6 +57,9 @@ struct LoginView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $vm.isShowingSafari, content: {
+            SFSafariViewWrapper(url: vm.supportURL)
+        })
         .onAppear {
             vm.onAppear()
         }
@@ -101,7 +107,6 @@ extension LoginView {
     var headerView: some View {
         VStack {
             HeaderView()
-                .padding()
             Image("holding_phone_icon")
             Text("Login to get started")
                 .foregroundColor(.senseyeTextColor)

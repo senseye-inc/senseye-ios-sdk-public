@@ -21,7 +21,7 @@ struct SettingsView: View {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
             
-            VStack(spacing: 30) {
+            VStack(spacing: 20) {
                 HStack {
                     Button {
                         dismiss()

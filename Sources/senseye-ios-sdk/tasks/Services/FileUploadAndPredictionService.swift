@@ -12,7 +12,7 @@ import SwiftyJSON
 import Combine
 import SwiftUI
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
     // MARK: - Published Properties
     var uploadProgress: Double { get }
@@ -293,6 +293,7 @@ class FileUploadAndPredictionService: ObservableObject {
     func reset() {
         sessionInfo = nil
         hostApiKey = nil
+        isDebugModeEnabled = false
         uploadProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()

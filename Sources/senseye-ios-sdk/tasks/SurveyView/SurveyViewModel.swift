@@ -10,6 +10,7 @@ import SwiftUI
 @available(iOS 14.0, *)
 class SurveyViewModel: ObservableObject {
     
+    @AppStorage("isShowingDebugToggle") var isShowingDebugToggle: Bool?
     @AppStorage("selectedAge") var selectedAge: Int?
     @AppStorage("selectedEyeColor") var selectedEyeColor: String?
     @AppStorage("selectedGender") var selectedGender: String?
@@ -31,6 +32,11 @@ class SurveyViewModel: ObservableObject {
     
     func updateDebugModeFlag() {
         fileUploadService.isDebugModeEnabled = self.debugModeEnabled
+    }
+    
+    func reset() {
+        self.debugModeEnabled = false
+        fileUploadService.isDebugModeEnabled = false
     }
     
     func createSessionJsonFile() {

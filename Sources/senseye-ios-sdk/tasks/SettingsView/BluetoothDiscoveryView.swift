@@ -25,31 +25,37 @@ struct BluetoothDiscoveryView: View {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
             
-            if bluetoothService.isDeviceConnected {
-                ZStack {
-                    HStack {
-                        Text("Connected")
-                        Image(systemName: "checkmark.circle.fill")
-                    }
-                    .font(.title)
-                    .foregroundColor(.senseyeSecondary)
-                }
-            } else if viewModel.discoveredPeripheral == nil {
-                ProgressView("Searching for devices…")
-                    .progressViewStyle(.circular)
-                    .foregroundColor(.senseyeSecondary)
-                    .tint(.senseyeSecondary)
-                    .padding(.top)
-                
-            } else {
-                DeviceCardView()
-                    .onTapGesture {
-                        Log.info("Attempting to connect to \(String(describing: viewModel.discoveredPeripheral))")
-                        viewModel.connect()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            dismiss()
+            VStack(spacing: 20) {
+                HeaderView()
+                    .padding() // padding used here since this view is presented modally. All other HeaderView's are without padding
+                Spacer()
+                if bluetoothService.isDeviceConnected {
+                    ZStack {
+                        HStack {
+                            Text("Connected")
+                            Image(systemName: "checkmark.circle.fill")
                         }
+                        .font(.title)
+                        .foregroundColor(.senseyeSecondary)
                     }
+                } else if viewModel.discoveredPeripheral == nil {
+                    ProgressView("Searching for devices…")
+                        .progressViewStyle(.circular)
+                        .foregroundColor(.senseyeSecondary)
+                        .tint(.senseyeSecondary)
+                        .padding(.top)
+                    
+                } else {
+                    DeviceCardView()
+                        .onTapGesture {
+                            Log.info("Attempting to connect to \(String(describing: viewModel.discoveredPeripheral))")
+                            viewModel.connect()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                dismiss()
+                            }
+                        }
+                }
+                Spacer()
             }
         }
     }

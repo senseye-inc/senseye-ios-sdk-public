@@ -22,9 +22,8 @@ struct ResultsView: View {
         ZStack {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
-            VStack(alignment: .center, spacing: 50) {
+            VStack(alignment: .center, spacing: 20) {
                 HeaderView()
-                    .padding()
 
                 SenseyeProgressView(isFinished: viewModel.isFinished, uploadProgress: $viewModel.uploadProgress)
 

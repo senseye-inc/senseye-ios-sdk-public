@@ -63,7 +63,8 @@ class TabController: ObservableObject {
         //Starting Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
-            TabItem(taskId: "calibration_view_1",
+            TabItem(
+                taskId: "calibration_view_1",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
                 taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
@@ -99,11 +100,13 @@ class TabController: ObservableObject {
         //Ending Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
-            TabItem(taskId: "calibration_view_2",
-                    tabType: .calibrationView,
-                    taskTitle: "Calibration",
-                    taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
-                   isTaskItem: true),
+            TabItem(
+                taskId: "calibration_view_2",
+                tabType: .calibrationView,
+                taskTitle: "Calibration",
+                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                isTaskItem: true
+            ),
             TabItem(taskId: "results_view", tabType: .resultsView)]
                             
     }
@@ -174,21 +177,24 @@ class TabController: ObservableObject {
     private func tasksForImageSetBlock(blockNumber: Int, category: TaskBlockCategory, subcategory: TaskBlockSubcategory) -> [TabItem] {
         var items: [TabItem] = []
         items.append(TabItem(taskId: "camera_view_affective_image_set_\(blockNumber)", tabType: .cameraView, blockNumber: blockNumber))
-        items.append(TabItem(taskId: "affective_image_set_\(blockNumber)",
-                        tabType: .imageView,
-                        taskTitle: "Image Set - Block \(blockNumber)",
-                        taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
-                        blockNumber: blockNumber,
-                        category: category,
-                        subcategory: subcategory,
-                        isTaskItem: true))
+        items.append(TabItem(
+            taskId: "affective_image_set_\(blockNumber)",
+            tabType: .imageView,
+            taskTitle: "Image Set - Block \(blockNumber)",
+            taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+            blockNumber: blockNumber,
+            category: category,
+            subcategory: subcategory,
+            isTaskItem: true
+        ))
         items.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
         items.append(
-                TabItem(taskId: "plr_view",
-                    tabType: .plrView,
-                    taskTitle: "PLR",
-                    taskDescription: "Stare at the cross for the duration of the task.",
-                    isTaskItem: true))
+            TabItem(
+                taskId: "plr_view",
+                tabType: .plrView,
+                taskTitle: "PLR",
+                taskDescription: "Stare at the cross for the duration of the task.",
+                isTaskItem: true))
         return items
     }
 }

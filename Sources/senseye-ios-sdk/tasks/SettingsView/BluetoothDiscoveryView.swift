@@ -15,8 +15,8 @@ struct BluetoothDiscoveryView: View {
     @Environment(\.dismiss) var dismiss
     let bluetoothService: BluetoothService
 
-    init(bluetoothService: BluetoothService) {
-        _viewModel = StateObject(wrappedValue: BluetoothDiscoveryViewModel(bluetoothService: bluetoothService))
+    init(bluetoothService: BluetoothService, fileUploadService: FileUploadAndPredictionService) {
+        _viewModel = StateObject(wrappedValue: BluetoothDiscoveryViewModel(bluetoothService: bluetoothService, fileUploadService: fileUploadService))
         self.bluetoothService = bluetoothService
     }
 
@@ -44,7 +44,7 @@ struct BluetoothDiscoveryView: View {
             } else {
                 DeviceCardView()
                     .onTapGesture {
-                        print("You tapped to connect to \(viewModel.discoveredPeripheral)")
+                        Log.info("Attempting to connect to \(String(describing: viewModel.discoveredPeripheral))")
                         viewModel.connect()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             dismiss()

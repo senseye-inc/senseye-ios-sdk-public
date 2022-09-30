@@ -218,7 +218,7 @@ public class AuthenticationService: ObservableObject {
 
     func getUsername(completion: @escaping ((String) -> Void)) {
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
-            print("Error getting signed in user")
+            Log.error("Error getting signed in user")
             return
         }
         completion(currentSignedInUser)

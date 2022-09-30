@@ -29,6 +29,9 @@ protocol FileUploadAndPredictionServiceProtocol {
     var debugModeTaskTiming: Double { get }
 
     var authenticationService: AuthenticationService? { get set }
+
+    var isFinalUpload: Bool { get }
+    var stopBluetooth: (()->())? { get set }
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -64,9 +67,15 @@ class FileUploadAndPredictionService: ObservableObject {
     private var numberOfUploadedItems = 0
     
     var isDebugModeEnabled: Bool = false
-    let debugModeTaskTiming = 0.75
+    let debugModeTaskTiming = 0.1
     var taskCount: Int = 0
-    
+    var isFinalUpload: Bool {
+        numberOfUploadsComplete == (taskCount - 1)
+    }
+
+    // TODO: something more agnostic like cancelPeripheralSubscriptions
+    var stopBluetooth: (()->())?
+
     func setTaskCount(to taskCount: Int) {
         self.taskCount = taskCount
     }
@@ -94,7 +103,11 @@ class FileUploadAndPredictionService: ObservableObject {
             Log.info("Skipping data upload - hostApiKey is empty")
             return
         }
-        
+
+        if isFinalUpload {
+            self.stopBluetooth?()
+        }
+
         self.uploadFile(fileNameKey: fileNameKey, filename: filename)
     }
 
@@ -135,7 +148,7 @@ class FileUploadAndPredictionService: ObservableObject {
                 Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
             }
         } receiveValue: { data in
-            print("Completed: \(data)")
+            Log.info("Completed: \(data)")
             self.currentSessionUploadFileKeys.append(fileNameKey)
             self.numberOfUploadsComplete += 1
             self.uploadProgress = Double(self.numberOfUploadsComplete)
@@ -185,7 +198,7 @@ class FileUploadAndPredictionService: ObservableObject {
         var networkType: String?
         switch reachability {
         case .unknown, .notReachable, .none:
-            print("unknown connection type or not reachable")
+            Log.info("unknown connection type or not reachable")
         case .reachable(let connectionType):
             networkType = "\(connectionType)"
         }

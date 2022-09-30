@@ -48,6 +48,7 @@ struct SenseyeTask: Codable {
     let blockNumber: Int?
     let category: TaskBlockCategory?
     let subcategory: TaskBlockSubcategory?
+    let rawData: [Data]?
 
     enum CodingKeys: String, CodingKey {
         case taskID = "taskId"
@@ -60,9 +61,10 @@ struct SenseyeTask: Codable {
         case blockNumber = "blockNumber"
         case category = "category"
         case subcategory = "subcategory"
+        case rawData = "raw_data"
     }
 
-    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil, blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
+    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil, blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil, rawData: [Data]? = nil) {
         self.taskID = taskID
         self.timestamps = timestamps
         self.eventXLOC = eventXLOC
@@ -73,5 +75,6 @@ struct SenseyeTask: Codable {
         self.blockNumber = blockNumber
         self.category = category
         self.subcategory = subcategory
+        self.rawData = rawData
     }
 }

@@ -13,6 +13,7 @@ struct SettingsView: View {
     @StateObject var viewModel = SettingsViewModel()
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var bluetoothService: BluetoothService
+    @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -39,7 +40,7 @@ struct SettingsView: View {
             .padding()
         }
         .sheet(isPresented: $viewModel.isShowingBluetooth) {
-            BluetoothDiscoveryView(bluetoothService: bluetoothService)
+            BluetoothDiscoveryView(bluetoothService: bluetoothService, fileUploadService: fileUploadService)
         }
     }
 }

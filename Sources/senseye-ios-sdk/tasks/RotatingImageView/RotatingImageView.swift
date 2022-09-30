@@ -37,7 +37,6 @@ struct RotatingImageView: View {
                         }
                     }
                     .onDisappear {
-                        Log.info("onDisappear triggered")
                         viewModel.reset()
                     }
             }

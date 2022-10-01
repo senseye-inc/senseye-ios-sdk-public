@@ -24,6 +24,10 @@ struct SenseyeTabView: View {
             SurveyView(fileUploadAndPredictionService: fileUploadService)
                 .tag(TabType.surveyView)
                 .gesture(DragGesture())
+            
+            HRCalibrationView(fileUploadService: fileUploadService)
+                .tag(TabType.hrCalibrationView)
+                .gesture(DragGesture())
 
             CalibrationView(fileUploadAndPredictionService: fileUploadService)
                 .tag(TabType.calibrationView)

@@ -15,6 +15,7 @@ enum TabType {
     case loginView
     case surveyView
     case calibrationView
+    case hrCalibrationView
 }
 
 struct TabItem: Hashable {
@@ -60,6 +61,14 @@ class TabController: ObservableObject {
         //Initial Tabs
         taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
                             TabItem(taskId: "survey_view", tabType: .surveyView)]
+        //HR Calibration
+        taskTabOrdering += [
+            TabItem(taskId: "heart_rate_calibration",
+                    tabType: .hrCalibrationView,
+                    taskTitle: "Heart Rate Calibration",
+                    taskDescription: "Relax and sit still for 3 minutes while we calibrate your heart rate!",
+                    isTaskItem: true)]
+        
         //Starting Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
@@ -151,6 +160,11 @@ class TabController: ObservableObject {
     func titleForCurrentTab() -> String {
         let currentTab = taskTabOrdering[currentTabIndex]
         return currentTab.taskTitle
+    }
+    
+    func descriptionForCurrentTab() -> String {
+        let currentTab = taskTabOrdering[currentTabIndex]
+        return currentTab.taskDescription
     }
     
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {

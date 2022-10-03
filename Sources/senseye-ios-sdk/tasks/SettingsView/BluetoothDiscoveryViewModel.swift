@@ -16,26 +16,25 @@ class BluetoothDiscoveryViewModel: ObservableObject {
     var fileUploadService: FileUploadAndPredictionService?
 
     // TODO: move to different module?
-    var receivedBytesTimestamps: [Int64] = []
     var receivedBytes: [Data] = []
-    var startTimestamp: Int64 = 0
-    var stopTimestamp: Int64 = 0
+    var startConnectionTimestamp: Int64 = 0
+    var endConnectionTimestamp: Int64 = 0
+    var parser: HeartParamsParsingProtocol = BerryMedPulseOx()
 
     var cancellables = Set<AnyCancellable>()
     
     init(bluetoothService: BluetoothService, fileUploadService: FileUploadAndPredictionService) {
         bluetoothService.onConnected = { [weak self] in
-            self?.startTimestamp = Date().currentTimeMillis()
+            self?.startConnectionTimestamp = Date().currentTimeMillis()
         }
 
         bluetoothService.onDataUpdated = { data in
             self.receivedBytes.append(data)
-            self.receivedBytesTimestamps.append(Date().self.currentTimeMillis())
         }
         self.bluetoothService = bluetoothService
 
         fileUploadService.stopBluetooth = {
-            self.stopTimestamp = Date().currentTimeMillis()
+            self.endConnectionTimestamp = Date().currentTimeMillis()
             self.bluetoothService?.disconnectFromPeripheral()
             self.addTaskInfoToJson()
         }
@@ -64,7 +63,15 @@ class BluetoothDiscoveryViewModel: ObservableObject {
     }
 
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "heartrate", frameTimestamps: [startTimestamp, stopTimestamp], timestamps: receivedBytesTimestamps, rawData: receivedBytes)
+        let heartParams: [HeartParams] = parser.parse(dataStream: Data(receivedBytes.joined()))
+        let taskInfo = SenseyeTask(
+            taskID: "heartrate",
+            frameTimestamps: [],
+            timestamps: [startConnectionTimestamp, endConnectionTimestamp],
+            plethysmograph: heartParams.map { $0.plethysmograph },
+            pulseRate: heartParams.map { $0.pulseRate },
+            spo2: heartParams.map { $0.spo2 }
+        )
         fileUploadService?.addTaskRelatedInfo(for: taskInfo)
     }
 }

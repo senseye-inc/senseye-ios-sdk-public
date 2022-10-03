@@ -126,6 +126,7 @@ extension BluetoothService: CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         isDeviceConnected = false
         discoveredPeripherals.removeAll()
+        connectedPeripheral = nil
         if let error = error {
             Log.error("didDisconnectPeripheral error: \(error.localizedDescription)")
             // TODO: to attempt to reconnect, you have to repeart process of service and characteristic discovery
@@ -196,7 +197,6 @@ extension BluetoothService: CBPeripheralDelegate {
         } else {
 
             if let updatedValue = characteristic.value, characteristic.uuid.description == BLEIdentifiers.berryMedCharacteristic {
-                Log.info("Received BLE data: \(updatedValue)")
                 onDataUpdated?(updatedValue)
             }
         }

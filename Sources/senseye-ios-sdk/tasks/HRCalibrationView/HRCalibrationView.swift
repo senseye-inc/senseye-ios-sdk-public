@@ -12,7 +12,6 @@ struct HRCalibrationView: View {
     
     @StateObject var viewModel: HRCalibrationViewModel
     @EnvironmentObject var tabController: TabController
-    @EnvironmentObject var cameraService: CameraService
     
     init(fileUploadService: FileUploadAndPredictionService) {
         _viewModel = StateObject(wrappedValue: HRCalibrationViewModel(fileUploadService: fileUploadService))

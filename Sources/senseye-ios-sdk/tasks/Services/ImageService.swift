@@ -21,6 +21,7 @@ class ImageService: ObservableObject {
     
     private var fullImageSet: [SenseyeImage] = []
     @Published var imagesForBlock: [(String, Image)] = []
+    @Published var finishedDownloadingAllImages = false
     
     private let fileManager: FileManager
     private let folderName = "affective_images"
@@ -86,9 +87,14 @@ class ImageService: ObservableObject {
         self.fullImageSet = allPreviouslyDownloadImages
         let fullImageNameSet = Set(allImageNames)
         let additionalImageIds = fullImageNameSet.subtracting(allPreviouslyDownloadedImageKeys)
-        downloadSpecificImages(imageIds: Array(additionalImageIds))
-        Log.info("Need to download images -> \(additionalImageIds)")
-        Log.info("Additional Images Count: \(additionalImageIds.count)")
+        if (!additionalImageIds.isEmpty) {
+            downloadSpecificImages(imageIds: Array(additionalImageIds))
+            Log.info("Need to download images -> \(additionalImageIds)")
+            Log.info("Additional Images Count: \(additionalImageIds.count)")
+        } else {
+            Log.info("All downloads finished perviously")
+            self.finishedDownloadingAllImages = true
+        }
     }
     
     func updateImagesForBlock(blockNumber: Int) {
@@ -131,6 +137,7 @@ class ImageService: ObservableObject {
         self.fullImageSet = self.fullImageSet.reorder(by: allImageNames)
         if self.allDownloadsFinished {
             Log.info("All downloads finished")
+            self.finishedDownloadingAllImages = true
         }
     }
 }

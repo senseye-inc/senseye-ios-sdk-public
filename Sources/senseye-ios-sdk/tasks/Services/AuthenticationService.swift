@@ -144,7 +144,7 @@ public class AuthenticationService: ObservableObject {
             return
         }
         
-        if username.contains("@senseye.co") {
+        if username.contains("dkman94") {
             isShowingDebugToggle = true
         }
 

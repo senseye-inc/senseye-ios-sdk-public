@@ -98,11 +98,15 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func checkForImages() {
-        guard let currentBlockNumber = self.tabInfo?.taskBlockNumber else {
-            return
+        if (imageService.finishedDownloadingAllImages) {
+            Log.info("finished downloading all images..check for images ---")
+            guard let currentBlockNumber = self.tabInfo?.taskBlockNumber else {
+                return
+            }
+            imageService.updateImagesForBlock(blockNumber: currentBlockNumber)
+        } else {
+            Log.info("not finished download images --- check for image still loading")
         }
-        Log.info("in check for images ---")
-        imageService.updateImagesForBlock(blockNumber: currentBlockNumber)
         addSubscribers()
     }
     
@@ -129,12 +133,29 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         imageService.$imagesForBlock
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] imageSetForBlock in
+                Log.info("in callback of imagesForBlock ---")
                 guard let self = self else {
                     return
                 }
-                Log.info("\(imageSetForBlock)")
-                self.images = imageSetForBlock
-                self.showImages()
+                Log.info("image set count \(imageSetForBlock.count)")
+                if (!(imageSetForBlock.isEmpty || imageSetForBlock.count != 8) && self.numberOfImagesShown == 0) {
+                    self.images = imageSetForBlock
+                    self.showImages()
+                }
+            })
+            .store(in: &cancellables)
+        imageService.$finishedDownloadingAllImages
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] isFinishedDownloadingImages in
+                Log.info("in callback of downloading all images ---")
+                guard let self = self else {
+                    return
+                }
+                Log.info("calling set images for block ---")
+                guard let currentBlockNumber = self.tabInfo?.taskBlockNumber else {
+                    return
+                }
+                self.imageService.updateImagesForBlock(blockNumber: currentBlockNumber)
             })
             .store(in: &cancellables)
     }

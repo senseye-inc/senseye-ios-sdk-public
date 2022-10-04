@@ -22,13 +22,15 @@ class ImageService: ObservableObject {
     private var fullImageSet: [SenseyeImage] = []
     @Published var imagesForBlock: [(String, Image)] = []
     @Published var finishedDownloadingAllImages = false
+    @Published var currentDownloadCount: String  = ""
     
     private let fileManager: FileManager
     private let folderName = "affective_images"
     private var cancellables = Set<AnyCancellable>()
+    private var startedInitialDownload = false
     
     var allDownloadsFinished: Bool {
-        fullImageSet.count == allImageNames.count
+        fullImageSet.count >= allImageNames.count
     }
     
     private var affectiveImageSets: [Int: AffectiveImageSet] = [
@@ -74,7 +76,8 @@ class ImageService: ObservableObject {
             .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] isSignedIn in
                 guard let self = self else {return}
-                if isSignedIn {
+                if isSignedIn && !self.startedInitialDownload {
+                    self.startedInitialDownload = true
                     self.getImages()
                 }
             }
@@ -120,24 +123,45 @@ class ImageService: ObservableObject {
     
     private func downloadImagesToFileManager(s3ImageIds: [(String, String)]) {
         for imageId in s3ImageIds {
-            Amplify.Storage.downloadData(key: imageId.1).resultPublisher
-                .receive(on: DispatchQueue.global())
-                .compactMap({UIImage(data: $0)})
-                .sink { _ in
-                } receiveValue: { [weak self] image in
-                    guard let self = self else {
-                        return
-                    }
-                    Log.info("completed download for image: \(imageId)")
-                    self.fileManager.saveImage(image: image, imageName: imageId.0, folderName: self.folderName)
-                    let newSenseyeImage = SenseyeImage(image: image, imageName: imageId.0)
-                    self.fullImageSet.append(newSenseyeImage)
-                }.store(in: &cancellables)
+            let currentImageSetList = self.fullImageSet.map {$0.imageName}
+            //Additional check to make sure we're only download images we don't have
+            if(!currentImageSetList.contains(imageId.1)) {
+                Amplify.Storage.downloadData(key: imageId.1).resultPublisher
+                    .receive(on: DispatchQueue.global())
+                    .compactMap({UIImage(data: $0)})
+                    .sink { _ in
+                    } receiveValue: { [weak self] image in
+                        guard let self = self else {
+                            return
+                        }
+                        Log.info("completed download for image: \(imageId)")
+                        self.fileManager.saveImage(image: image, imageName: imageId.0, folderName: self.folderName)
+                        let newSenseyeImage = SenseyeImage(image: image, imageName: imageId.0)
+                        self.fullImageSet.append(newSenseyeImage)
+                        Log.info("current count \(self.fullImageSet.count) of \(self.allImageNames.count)")
+                        if self.fullImageSet.count == self.allImageNames.count {
+                            self.handleCompletedDownload()
+                        } else {
+                            self.handleUpdatedImageDownload(latestCount: self.fullImageSet.count)
+                        }
+                    }.store(in: &cancellables)
+            }
         }
+    }
+    
+    private func handleCompletedDownload() {
         self.fullImageSet = self.fullImageSet.reorder(by: allImageNames)
         if self.allDownloadsFinished {
             Log.info("All downloads finished")
-            self.finishedDownloadingAllImages = true
+            DispatchQueue.main.async {
+                self.finishedDownloadingAllImages = true
+            }
+        }
+    }
+    
+    private func handleUpdatedImageDownload(latestCount: Int) {
+        DispatchQueue.main.async {
+            self.currentDownloadCount = "\(latestCount) of \(self.allImageNames.count)"
         }
     }
 }

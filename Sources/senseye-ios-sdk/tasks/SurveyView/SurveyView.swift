@@ -13,8 +13,8 @@ struct SurveyView: View {
     @StateObject var viewModel : SurveyViewModel
     @State var isPresentingSettingsView: Bool = false
 
-    init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
-        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService))
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService) {
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService))
     }
     
     var body: some View {
@@ -57,6 +57,13 @@ struct SurveyView: View {
                             .foregroundColor(.white)
                     }.padding()
                 }
+                if !viewModel.shouldEnableStartButton {
+                    Text(viewModel.currentDownloadStatusMessage)
+                        .font(.system(size: 10))
+                        .foregroundColor(.senseyeTextColor)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                }
                 Spacer()
                 HStack(spacing: 100) {
                     Button {
@@ -76,7 +83,7 @@ struct SurveyView: View {
                         viewModel.createSessionJsonFile()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
-                    }
+                    }.disabled(viewModel.shouldEnableStartButton == false)
                 }
             }
         }.sheet(isPresented: self.$isPresentingSettingsView) {

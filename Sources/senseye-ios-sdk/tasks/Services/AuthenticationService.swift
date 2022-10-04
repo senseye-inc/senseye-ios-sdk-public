@@ -126,8 +126,10 @@ public class AuthenticationService: ObservableObject {
         let doesUserMatchCurrentSignIn = currentSignedInUser == self.accountUsername
         
         if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
-            self.signOut {
-                completion()
+            DispatchQueue.main.async {
+                self.signOut {
+                    completion()
+                }
             }
         } else {
             completion()

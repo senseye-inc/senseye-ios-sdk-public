@@ -12,41 +12,32 @@ import Combine
 class BluetoothDiscoveryViewModel: ObservableObject {
     
     @Published var discoveredPeripheral: DiscoveredPeripheral?
-    var bluetoothService: BluetoothService?
-    var fileUploadService: FileUploadAndPredictionService?
-
+    var bluetoothService: BluetoothService
+    var fileUploadService: FileUploadAndPredictionService
+    
     // TODO: move to different module?
     var receivedBytes: [Data] = []
     var startConnectionTimestamp: Int64 = 0
     var endConnectionTimestamp: Int64 = 0
     var parser: HeartParamsParsingProtocol = BerryMedPulseOx()
-
     var cancellables = Set<AnyCancellable>()
     
     init(bluetoothService: BluetoothService, fileUploadService: FileUploadAndPredictionService) {
+        self.bluetoothService = bluetoothService
+        self.fileUploadService = fileUploadService
+
         bluetoothService.onConnected = { [weak self] in
             self?.startConnectionTimestamp = Date().currentTimeMillis()
         }
-
+        
         bluetoothService.onDataUpdated = { data in
             self.receivedBytes.append(data)
         }
-        self.bluetoothService = bluetoothService
 
-        fileUploadService.stopBluetooth = {
-            self.endConnectionTimestamp = Date().currentTimeMillis()
-            self.bluetoothService?.disconnectFromPeripheral()
-            self.addTaskInfoToJson()
-        }
-        self.fileUploadService = fileUploadService
         addBLESubscriber()
     }
     
     func addBLESubscriber() {
-        guard let bluetoothService = bluetoothService else {
-            return
-        }
-        
         bluetoothService.$discoveredPeripherals
             .receive(on: DispatchQueue.main)
             .sink { [weak self] peripherals in
@@ -54,11 +45,23 @@ class BluetoothDiscoveryViewModel: ObservableObject {
                 self.discoveredPeripheral = peripherals.first
             }
             .store(in: &cancellables)
+        
+        fileUploadService.$shouldStopBluetooth
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] shouldStopBluetooth in
+                guard let self = self else { return }
+                if shouldStopBluetooth {
+                    self.endConnectionTimestamp = Date().currentTimeMillis()
+                    self.bluetoothService.disconnectFromPeripheral()
+                    self.addTaskInfoToJson()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func connect() {
         if let discoveredPeripheral = self.discoveredPeripheral {
-            bluetoothService?.connect(to: discoveredPeripheral.peripheral)
+            bluetoothService.connect(to: discoveredPeripheral.peripheral)
         }
     }
 
@@ -72,6 +75,7 @@ class BluetoothDiscoveryViewModel: ObservableObject {
             pulseRate: heartParams.map { $0.pulseRate },
             spo2: heartParams.map { $0.spo2 }
         )
-        fileUploadService?.addTaskRelatedInfo(for: taskInfo)
+        Log.info("Adding Heart Rate Task Info: \(taskInfo)")
+        fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

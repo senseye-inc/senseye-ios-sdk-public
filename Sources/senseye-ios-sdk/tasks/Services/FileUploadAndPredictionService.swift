@@ -31,7 +31,6 @@ protocol FileUploadAndPredictionServiceProtocol {
     var authenticationService: AuthenticationService? { get set }
 
     var isFinalUpload: Bool { get }
-    var stopBluetooth: (()->())? { get set }
 }
 
 protocol FileUploadAndPredictionServiceDelegate: AnyObject {
@@ -51,6 +50,7 @@ class FileUploadAndPredictionService: ObservableObject {
     @AppStorage("username") var username: String = ""
     
     private var numberOfUploadsComplete: Int = 0
+    private var numberOfTasksCompleted: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
 
@@ -64,20 +64,19 @@ class FileUploadAndPredictionService: ObservableObject {
     private var s3FolderName: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
-    private var numberOfUploadedItems = 0
     
     var isDebugModeEnabled: Bool = false
-    let debugModeTaskTiming = 0.75
+    let debugModeTaskTiming = 0.5
     var taskCount: Int = 0
     var isFinalUpload: Bool {
-        numberOfUploadsComplete == (taskCount - 1)
+        numberOfTasksCompleted == (taskCount)
     }
 
     // TODO: something more agnostic like cancelPeripheralSubscriptions
-    var stopBluetooth: (()->())?
+    @Published var shouldStopBluetooth: Bool = false
 
     func setTaskCount(to taskCount: Int) {
-        self.taskCount = taskCount
+        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anythign
     }
     
     init(authenticationService: AuthenticationService) {
@@ -104,10 +103,7 @@ class FileUploadAndPredictionService: ObservableObject {
             return
         }
 
-        if isFinalUpload {
-            self.stopBluetooth?()
-        }
-
+        numberOfTasksCompleted += 1
         self.uploadFile(fileNameKey: fileNameKey, filename: filename)
     }
 
@@ -128,6 +124,11 @@ class FileUploadAndPredictionService: ObservableObject {
 
     private func uploadFile(fileNameKey: String, filename: URL) {
         Log.debug("About to upload - video url: \(filename)")
+        
+        if isFinalUpload {
+            Log.info("Final Upload✅✅✅✅✅")
+            shouldStopBluetooth = true
+        }
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
         

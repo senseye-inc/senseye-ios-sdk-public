@@ -25,7 +25,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
             if (fileUploadService.isDebugModeEnabled) {
                 return fileUploadService.debugModeTaskTiming
             } else {
-                return 5.0
+                return 2.5
             }
         }
     }

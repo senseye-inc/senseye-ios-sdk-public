@@ -66,7 +66,7 @@ class TabController: ObservableObject {
             TabItem(taskId: "heart_rate_calibration",
                     tabType: .hrCalibrationView,
                     taskTitle: "Heart Rate Calibration",
-                    taskDescription: "Relax and sit still for 3 minutes while we calibrate your heart rate!",
+                    taskDescription: "Relax and sit still for 3 minutes while we measure your baseline heart rate!",
                     isTaskItem: true)]
         
         //Starting Calibration

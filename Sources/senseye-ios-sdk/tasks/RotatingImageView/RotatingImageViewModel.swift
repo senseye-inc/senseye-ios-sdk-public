@@ -129,12 +129,15 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         imageService.$imagesForBlock
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] imageSetForBlock in
+                Log.info("in callback of imagesForBlock ---")
                 guard let self = self else {
                     return
                 }
-                Log.info("\(imageSetForBlock)")
-                self.images = imageSetForBlock
-                self.showImages()
+                Log.info("image set count \(imageSetForBlock.count)")
+                if (!(imageSetForBlock.isEmpty || imageSetForBlock.count != 8) && self.currentImageIndex == 0) {
+                    self.images = imageSetForBlock
+                    self.showImages()
+                }
             })
             .store(in: &cancellables)
     }

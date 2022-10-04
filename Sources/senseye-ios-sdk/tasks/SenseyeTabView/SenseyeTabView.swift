@@ -21,7 +21,7 @@ struct SenseyeTabView: View {
                 .tag(TabType.loginView)
                 .gesture(DragGesture())
 
-            SurveyView(fileUploadAndPredictionService: fileUploadService)
+            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService)
                 .tag(TabType.surveyView)
                 .gesture(DragGesture())
             

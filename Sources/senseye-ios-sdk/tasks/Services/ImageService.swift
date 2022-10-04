@@ -95,7 +95,7 @@ class ImageService: ObservableObject {
             Log.info("Need to download images -> \(additionalImageIds)")
             Log.info("Additional Images Count: \(additionalImageIds.count)")
         } else {
-            Log.info("All downloads finished perviously")
+            Log.info("All downloads finished previously")
             self.finishedDownloadingAllImages = true
         }
     }

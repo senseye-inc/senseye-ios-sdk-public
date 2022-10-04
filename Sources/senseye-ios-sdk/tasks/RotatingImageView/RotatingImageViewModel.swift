@@ -134,7 +134,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
                     return
                 }
                 Log.info("image set count \(imageSetForBlock.count)")
-                if (!(imageSetForBlock.isEmpty || imageSetForBlock.count != 8) && self.numberOfImagesShown == 0) {
+                if (!(imageSetForBlock.isEmpty || imageSetForBlock.count != 8) && self.currentImageIndex == 0) {
                     self.images = imageSetForBlock
                     self.showImages()
                 }

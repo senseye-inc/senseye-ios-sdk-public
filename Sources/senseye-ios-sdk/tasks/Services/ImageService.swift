@@ -96,7 +96,9 @@ class ImageService: ObservableObject {
             Log.info("Additional Images Count: \(additionalImageIds.count)")
         } else {
             Log.info("All downloads finished previously")
-            self.finishedDownloadingAllImages = true
+            DispatchQueue.main.async {
+                self.finishedDownloadingAllImages = true
+            }
         }
     }
     

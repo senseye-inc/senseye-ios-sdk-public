@@ -17,6 +17,8 @@ protocol FileUploadAndPredictionServiceProtocol {
     // MARK: - Published Properties
     var uploadProgress: Double { get }
     var uploadProgressPublisher: Published<Double>.Publisher { get }
+    var isFinished: Bool { get }
+    var isFinishedPublisher: Published<Bool>.Publisher { get }
     
     var taskCount: Int { get }
     func uploadData(fileUrl: URL)
@@ -46,11 +48,12 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 class FileUploadAndPredictionService: ObservableObject {
     var authenticationService: AuthenticationService?
 
-    @Published var uploadProgress: Double = 0.0
+    @Published private(set) var uploadProgress: Double = 0.0
+    @Published private(set) var numberOfTasksCompleted: Int = 0
+    @Published private(set) var isFinished: Bool = false
     @AppStorage("username") var username: String = ""
     
     private var numberOfUploadsComplete: Int = 0
-    private var numberOfTasksCompleted: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
 
@@ -76,7 +79,7 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published var shouldStopBluetooth: Bool = false
 
     func setTaskCount(to taskCount: Int) {
-        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anythign
+        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
     }
     
     init(authenticationService: AuthenticationService) {
@@ -120,15 +123,23 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        $numberOfTasksCompleted
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] numberOfTasksCompleted in
+                guard let self = self else {
+                    Log.error("Unable to stop bluetooth")
+                    return
+                }
+                if self.isFinalUpload {
+                    self.shouldStopBluetooth = true
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func uploadFile(fileNameKey: String, filename: URL) {
         Log.debug("About to upload - video url: \(filename)")
-        
-        if isFinalUpload {
-            Log.info("Final Upload✅✅✅✅✅")
-            shouldStopBluetooth = true
-        }
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
         
@@ -244,6 +255,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     case let .success(data):
                         Log.debug("Uploaded json file - data: \(data)")
                         self.numberOfUploadsComplete += 1
+                        self.isFinished = true
                     case let .failure(storageError):
                         Log.warn("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
                     }
@@ -295,6 +307,7 @@ class FileUploadAndPredictionService: ObservableObject {
         sessionInfo = nil
         hostApiKey = nil
         isDebugModeEnabled = false
+        isFinished = false
         uploadProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()
@@ -305,4 +318,5 @@ class FileUploadAndPredictionService: ObservableObject {
 @available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
+    var isFinishedPublisher: Published<Bool>.Publisher { $isFinished }
 }

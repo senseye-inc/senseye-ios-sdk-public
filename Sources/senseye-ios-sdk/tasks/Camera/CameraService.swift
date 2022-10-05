@@ -12,7 +12,6 @@ import SwiftUI
 import SwiftyJSON
 
 @available(iOS 14.0, *)
-@MainActor
 class CameraService: NSObject, ObservableObject {
     
     private var captureVideoDataOutput = AVCaptureVideoDataOutput()
@@ -42,6 +41,7 @@ class CameraService: NSObject, ObservableObject {
     private var surveyInput : [String: String] = [:]
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
+    private let videoBufferQueue = DispatchQueue(label: "com.senseye.videoBufferQueue")
     
     init(authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         if let realCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
@@ -120,10 +120,8 @@ class CameraService: NSObject, ObservableObject {
             connection.videoOrientation = .portrait
             connection.isVideoMirrored = true
             captureSession.commitConfiguration()
-            DispatchQueue.global(qos: .background).async {
-                Task {
-                    await self.captureSession.startRunning()
-                }
+            videoBufferQueue.async { [weak self] in
+                self?.captureSession.startRunning()
             }
         } catch {
             Log.error("videoDeviceInput error")
@@ -259,20 +257,22 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
-                videoWriterInput.append(sampleBuffer)
-                guard let sourceTime = sessionAtSourceTime, let startTaskTime = startOfTaskMillis else {
-                    return
-                }
-                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-                let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
-                let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
-                let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
-                
-                frameTimestampsForTask.append(outputBufferTimestampAsMillis)
-                if (!startedCameraRecording) {
-                    if isSimulatorEnabled { return }
-                    DispatchQueue.main.async {
-                        self.startedCameraRecording = true
+                videoBufferQueue.async { [weak self] in
+                    self?.videoWriterInput.append(sampleBuffer)
+                    guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
+                        return
+                    }
+                    let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                    let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
+                    let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
+                    let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
+                    
+                    self?.frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                    if let hasStartedRecording = self?.startedCameraRecording, let isSimulatorBuild = self?.isSimulatorEnabled {
+                        if !hasStartedRecording || isSimulatorBuild { return }
+                        DispatchQueue.main.async {
+                            self?.startedCameraRecording = true
+                        }
                     }
                 }
             }

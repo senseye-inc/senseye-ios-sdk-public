@@ -312,6 +312,7 @@ class FileUploadAndPredictionService: ObservableObject {
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
+        UserDefaults.standard.resetUser()
     }
 }
 

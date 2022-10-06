@@ -94,10 +94,18 @@ extension LoginView {
         VStack(alignment: .leading, spacing: 5) {
             Text("username".uppercased())
                 .foregroundColor(.senseyeTextColor)
-            TextField("", text: $vm.username)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .foregroundColor(.senseyeTextColor)
+            HStack {
+                TextField("", text: $vm.username)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if vm.username != "" {
+                    Button {
+                        vm.username = ""
+                    } label: {
+                        Image(systemName: "x.square.fill")
+                    }
+                }
+            }.foregroundColor(.senseyeTextColor)
             Divider()
                 .background(Color.senseyeTextColor)
         }

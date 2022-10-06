@@ -42,8 +42,12 @@ class SurveyViewModel: ObservableObject {
     }
     
     func reset() {
-        self.debugModeEnabled = false
+        debugModeEnabled = false
         fileUploadService.isDebugModeEnabled = false
+        isShowingDebugToggle = false
+        selectedAge = nil
+        selectedGender = nil
+        selectedEyeColor = nil
     }
     
     func createSessionJsonFile() {

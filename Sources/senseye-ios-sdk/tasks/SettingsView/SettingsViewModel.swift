@@ -8,7 +8,5 @@
 import SwiftUI
 @available(iOS 14.0, *)
 class SettingsViewModel: ObservableObject {
-    @AppStorage("screenTimeOut") var screenTimeOut = false
-    @AppStorage("brightness") var brightness = false
     @Published var isShowingBluetooth = false
 }

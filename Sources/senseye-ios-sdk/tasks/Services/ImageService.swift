@@ -57,7 +57,7 @@ class ImageService: ObservableObject {
         21: AffectiveImageSet(category: .positive, imageIds: ["bridge_1", "flower_1", "flower_3", "flowers_2", "flowers_5", "succulent_1", "sunflower_1", "wedding_ring_1"]),
         22: AffectiveImageSet(category: .neutral, imageIds: ["building_1", "building_2", "building_5", "building_6", "building_7", "door", "house_1", "house"]),
         23: AffectiveImageSet(category: .negative, imageIds: ["soldiers_3", "soldiers_4", "soldiers_6", "soldiers_8", "soldiers_9", "war_4", "cemetery_3", "cemetery_5"]),
-        24: AffectiveImageSet(category: .negativeArousal, imageIds: ["destruction2", "destruction6", "destruction7", "destruction5", "destruction8", "destruction7", "destruction3", "destruction10"]),
+        24: AffectiveImageSet(category: .negativeArousal, imageIds: ["destruction2", "destruction6", "destruction7", "destruction5", "destruction8", "destruction1", "destruction3", "destruction10"]),
         25: AffectiveImageSet(category: .facialExpression, imageIds: ["negative17", "negative18", "negative19", "negative20", "positive13", "positive14", "positive15", "positive16"])
     ]
     

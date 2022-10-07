@@ -66,16 +66,16 @@ class BluetoothDiscoveryViewModel: ObservableObject {
     }
 
     func addTaskInfoToJson() {
-        let heartParams: [HeartParams] = parser.parse(dataStream: Data(receivedBytes.joined()))
+        let heartParams: [HeartParams] = parser.parse(dataStream: Data(receivedBytes.joined()), startEndTimestamps: [startConnectionTimestamp, endConnectionTimestamp])
         let taskInfo = SenseyeTask(
             taskID: "heartrate",
-            frameTimestamps: [],
-            timestamps: [startConnectionTimestamp, endConnectionTimestamp],
+            frameTimestamps: [startConnectionTimestamp, endConnectionTimestamp],
+            timestamps: heartParams.map { $0.timestamp },
             plethysmograph: heartParams.map { $0.plethysmograph },
             pulseRate: heartParams.map { $0.pulseRate },
             spo2: heartParams.map { $0.spo2 }
         )
-        Log.info("Adding Heart Rate Task Info: \(taskInfo)")
+        Log.info("Adding Heart Rate data points of \(String(describing: taskInfo.timestamps?.count)) elements")
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

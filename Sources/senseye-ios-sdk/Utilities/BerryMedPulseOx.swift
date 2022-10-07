@@ -8,16 +8,17 @@
 import Foundation
 
 protocol HeartParamsParsingProtocol {
-    func parse(dataStream: Data) -> [HeartParams]
+    func parse(dataStream: Data, startEndTimestamps: [Int64]) -> [HeartParams]
 }
 
 struct HeartParams: Codable {
     let plethysmograph: UInt8 // value for plethysmograph https://www.amperordirect.com/pc/help-pulse-oximeter/z-what-is-pi.html
     let pulseRate: UInt8   // beats per minute
     let spo2: UInt8       // blood oxygen level
+    let timestamp: Int64
 
     enum CodingKeys: String, CodingKey {
-        case plethysmograph, spo2
+        case plethysmograph, spo2, timestamp
         case pulseRate = "pulse_rate"
     }
 }
@@ -37,6 +38,8 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
         static let invalidPulseRate: UInt8 = 0xFF
         static let invalidSpo2: UInt8 = 0x7F
         static let invalidPlethysmograph: UInt8 = 0x00
+
+        static let dataPeriod: Int = 10
     }
 
     private enum ParamType {
@@ -45,11 +48,18 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
         case spo2
     }
 
-    func parse(dataStream: Data) -> [HeartParams] {
+    func parse(dataStream: Data, startEndTimestamps: [Int64]) -> [HeartParams] {
         var dataPoints: [HeartParams] = []
         let headerIndices = getHeaderIndicesOfCompletePackets(dataStream: dataStream)
-        for headerIndex in headerIndices {
-            if let dataPoint = parse(dataPacket: Data(dataStream[headerIndex...(headerIndex+4)])) {
+        let headerTimestamps = getBackfillHeaderTimestamps(dataStream: dataStream, startEndTimestamps: startEndTimestamps)
+
+        guard !headerIndices.isEmpty, !headerTimestamps.isEmpty else {
+            Log.info("No data headers found while parsing heart rate data stream")
+            return []
+        }
+
+        for (i, headerIndex) in headerIndices.enumerated() {
+            if let dataPoint = parse(dataPacket: Data(dataStream[headerIndex...(headerIndex+4)]), timestamp: headerTimestamps[i]) {
                 dataPoints.append(dataPoint)
             } else {
                 Log.info("unable to parse a datapoint")
@@ -62,7 +72,7 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
     // The BCI protocol consists of 5 Bytes https://github.com/zh2x/BCI_Protocol/blob/master/BCI%20Protocol%20V1.2.pdf
     // the most sig bit of the zeroth byte is the package head and should be 1, the most significant bit of the next four bytes should be 0.
     // assumes bytes have already been checked for alignment (bit 7
-    private func parse(dataPacket: Data) -> HeartParams? {
+    private func parse(dataPacket: Data, timestamp: Int64) -> HeartParams? {
         if dataPacket.count == Constants.berrymedDataPackSize, dataPacket[0].isBitSet(atIndex: Constants.bitIndexOfHeader) {
             var plethysmograph: UInt8 = dataPacket[Constants.byteIndexOfPlethysmographBits]
             var pulseRate: UInt8 = dataPacket[Constants.byteIndexOfPulseRateBits0_6] | (dataPacket[Constants.byteIndexOfPulseRateBits7].isolateBit(atIndex: 6)).shift(.right, by: 1)
@@ -70,7 +80,7 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
             plethysmograph = sanitize(value: plethysmograph, for: .plethysmograph)
             pulseRate = sanitize(value: pulseRate, for: .pulseRate)
             spo2 = sanitize(value: spo2, for: .spo2)
-            return HeartParams(plethysmograph: plethysmograph, pulseRate: pulseRate, spo2: spo2)
+            return HeartParams(plethysmograph: plethysmograph, pulseRate: pulseRate, spo2: spo2, timestamp: timestamp)
         } else {
             Log.info("Package data length is not \(Constants.berrymedDataPackSize) Bytes")
             return nil
@@ -103,6 +113,8 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
             }
         }
 
+        Log.info("Dropping BLE datastream packets at indices \(indicesOfIncompletePackets)")
+
         return Set(headerByteIndices).subtracting(indicesOfIncompletePackets).sorted()
     }
 
@@ -112,6 +124,31 @@ struct BerryMedPulseOx: HeartParamsParsingProtocol {
         case .spo2: return value == Constants.invalidSpo2 ? 0 : value
         case .pulseRate: return value == Constants.invalidPulseRate ? 0 : value
         }
+    }
+
+    private func getBackfillHeaderTimestamps(dataStream: Data, startEndTimestamps: [Int64]) -> [Int64] {
+        var headerByteIndices: [Int] = []
+
+        for (i, byte) in dataStream.enumerated() {
+            if byte.isBitSet(atIndex: Constants.bitIndexOfHeader) {
+                headerByteIndices.append(i)
+            }
+        }
+
+        if headerByteIndices.isEmpty {
+            return []
+        }
+
+        let timestampOffset: Int64 = startEndTimestamps.isEmpty ? 0 : startEndTimestamps[0]
+        let interpolatedTimestamps: [Int64] = Array(
+            stride(
+                from: timestampOffset,
+                through: Int64(headerByteIndices.count-1)*Int64(Constants.dataPeriod) + timestampOffset,
+                by: Constants.dataPeriod
+            )
+        )
+
+        return interpolatedTimestamps
     }
 }
 

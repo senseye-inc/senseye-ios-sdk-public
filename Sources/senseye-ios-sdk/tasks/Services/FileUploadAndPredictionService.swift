@@ -65,6 +65,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentTaskFrameTimestamps: [Int64]? = []
     private var sessionInfo: SessionInfo? = nil
     private var s3FolderName: String = ""
+    private var jsonMetadataURL: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
@@ -165,7 +166,7 @@ class FileUploadAndPredictionService: ObservableObject {
             self.numberOfUploadsComplete += 1
             self.uploadProgress = Double(self.numberOfUploadsComplete)
             if (self.numberOfUploadsComplete == self.taskCount) {
-                self.submitPredictionRequest()
+                self.uploadSessionJsonFile()
             }
         }
         .store(in: &self.cancellables)
@@ -236,7 +237,11 @@ class FileUploadAndPredictionService: ObservableObject {
     /**
      Upload JSON file for the current session
      */
-    private func uploadSessionJsonFile(jsonFileName: String) {
+    private func uploadSessionJsonFile() {
+        
+        let currentTimeStamp = Date().currentTimeMillis()
+        let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
+        self.jsonMetadataURL = s3HostBucketUrl + jsonFileName
 
         do {
             let encodedData = try JSONEncoder().encode(sessionInfo)
@@ -245,22 +250,27 @@ class FileUploadAndPredictionService: ObservableObject {
                 uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
             }
             
-            Amplify.Storage.uploadData(
-                key: jsonFileName,
-                data: encodedData,
-                progressListener: { progress in
+            let storageOperation = Amplify.Storage.uploadData(key: jsonFileName, data: encodedData)
+            
+            storageOperation.progressPublisher
+                .sink { progress in
                     Log.info("Progress: \(progress)")
-                }, resultListener: { event in
-                    switch event {
-                    case let .success(data):
-                        Log.debug("Uploaded json file - data: \(data)")
-                        self.numberOfUploadsComplete += 1
-                        self.isFinished = true
-                    case let .failure(storageError):
-                        Log.warn("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
-                    }
                 }
-            )
+                .store(in: &self.cancellables)
+            
+            storageOperation.resultPublisher
+                .receive(on: DispatchQueue.main)
+                .retry(2)
+                .sink {
+                    if case let .failure(storageError) = $0 {
+                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                    }
+                } receiveValue: { data in
+                    Log.debug("Uploaded json file - data: \(data)")
+                    self.numberOfUploadsComplete += 1
+                    self.submitPredictionRequest()
+                }
+                .store(in: &cancellables)
             
         } catch {
             Log.error("Error in json parsing for input file")
@@ -270,15 +280,9 @@ class FileUploadAndPredictionService: ObservableObject {
     private func submitPredictionRequest() {
         
         guard let apiKey = hostApiKey else {
-            Log.error("Skipping the PTSD request but it's here")
+            Log.error("Skipping the PTSD request but it's here", userInfo: sessionInfo?.asDictionary)
             return
         }
-         
-        // JSON Upload
-        let currentTimeStamp = Date().currentTimeMillis()
-        let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
-        let jsonMetadataURL = s3HostBucketUrl + jsonFileName
-        self.uploadSessionJsonFile(jsonFileName: jsonFileName)
         
         // PredictionRequest
         let workers = min(self.taskCount, 10)
@@ -299,6 +303,7 @@ class FileUploadAndPredictionService: ObservableObject {
         AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers).responseDecodable(of: PredictionResponse.self, completionHandler: { response in
             Log.info("response received! \(response)")
             let jobID = response.value?.jobID
+            self.isFinished = true
             self.sessionInfo?.predictionJobID = jobID
         })
     }
@@ -308,12 +313,14 @@ class FileUploadAndPredictionService: ObservableObject {
         hostApiKey = nil
         isDebugModeEnabled = false
         isFinished = false
+        jsonMetadataURL = ""
         uploadProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
         UserDefaults.standard.resetUser()
     }
+    
 }
 
 @available(iOS 14.0, *)

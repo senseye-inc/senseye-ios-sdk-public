@@ -81,10 +81,15 @@ enum Log {
     /**
      Log level error: Use for fatal operation errors.
     */
-    static func error(_ str: String, shouldLogContext: Bool = false, file: String = #file, function: String = #function, line: Int = #line) {
+    static func error(_ str: String, shouldLogContext: Bool = false, file: String = #file, function: String = #function, line: Int = #line, userInfo: [String: Any]? = nil) {
         let context = Context(file: file, function: function, line: line)
         Log.handleLog(level: .error, str: str, shouldLogContext: shouldLogContext, context: context) {
             DDLogError($0)
+            if let userInfo = userInfo {
+                let domain = "\(file)/\(function)"
+                let error = NSError(domain: domain, code: 404, userInfo: userInfo)
+                Crashlytics.crashlytics().record(error: error)
+            }
         }
     }
 

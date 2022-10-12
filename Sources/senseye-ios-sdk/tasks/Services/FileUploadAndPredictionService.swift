@@ -159,7 +159,7 @@ class FileUploadAndPredictionService: ObservableObject {
             .retry(2)
             .sink {
             if case let .failure(storageError) = $0 {
-                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)", userInfo: sessionInfo?.asDictionary)
+                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)", userInfo: self.sessionInfo?.asDictionary)
             }
         } receiveValue: { data in
             Log.info("Completed: \(data)")
@@ -265,7 +265,7 @@ class FileUploadAndPredictionService: ObservableObject {
                 .sink {
                     if case let .failure(storageError) = $0 {
                         Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)",
-                                  userInfo: sessionInfo?.asDictionary))
+                                  userInfo: self.sessionInfo?.asDictionary)
                     }
                 } receiveValue: { data in
                     Log.debug("Uploaded json file - data: \(data)")

@@ -208,6 +208,7 @@ class TabController: ObservableObject {
                 tabType: .plrView,
                 taskTitle: "PLR",
                 taskDescription: "Stare at the cross for the duration of the task.",
+                blockNumber: blockNumber,
                 isTaskItem: true))
         return items
     }

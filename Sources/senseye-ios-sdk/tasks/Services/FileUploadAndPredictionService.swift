@@ -156,9 +156,10 @@ class FileUploadAndPredictionService: ObservableObject {
 
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
+            .retry(2)
             .sink {
             if case let .failure(storageError) = $0 {
-                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)")
+                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)", userInfo: sessionInfo?.asDictionary)
             }
         } receiveValue: { data in
             Log.info("Completed: \(data)")
@@ -177,7 +178,7 @@ class FileUploadAndPredictionService: ObservableObject {
             switch result {
             case .success(let attributes):
                 if let apiKey = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
-                    self.hostApiKey = apiKey.value
+                    self.hostApiKey = nil//apiKey.value
                     Log.info("Found and set senseye_api_token")
                 } else {
                     Log.warn("unable to set api key")
@@ -263,7 +264,8 @@ class FileUploadAndPredictionService: ObservableObject {
                 .retry(2)
                 .sink {
                     if case let .failure(storageError) = $0 {
-                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                        Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)",
+                                  userInfo: sessionInfo?.asDictionary))
                     }
                 } receiveValue: { data in
                     Log.debug("Uploaded json file - data: \(data)")

@@ -178,7 +178,7 @@ class FileUploadAndPredictionService: ObservableObject {
             switch result {
             case .success(let attributes):
                 if let apiKey = attributes.first(where: { $0.key == AuthUserAttributeKey.custom("senseye_api_token") }) {
-                    self.hostApiKey = nil//apiKey.value
+                    self.hostApiKey = apiKey.value
                     Log.info("Found and set senseye_api_token")
                 } else {
                     Log.warn("unable to set api key")

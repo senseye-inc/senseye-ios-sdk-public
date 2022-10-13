@@ -35,8 +35,9 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @Published var startedCameraRecording: Bool = false
     
-    @AppStorage("username") var username: String = ""
-    
+    @AppStorage(AppStorageKeys.username()) var username: String?
+    @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
+
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     private var latestFileUrl: URL?
@@ -51,12 +52,12 @@ class CameraService: NSObject, ObservableObject {
         }
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
+        super.init()
         if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
-            let cameraType = cameraInfo.deviceType.rawValue
-            fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": cameraType])
+            cameraType = cameraInfo.deviceType.rawValue
         }
     }
-    
+
     func start() {
         if isSimulatorEnabled {
             simulateStart()
@@ -165,7 +166,8 @@ class CameraService: NSObject, ObservableObject {
 
     func startRecordingForTask(taskId: String) {
         let currentTimeStamp = Date().currentTimeMillis()
-        guard let fileUrl = fileDestUrl?.appendingPathComponent("\(self.username)_\(currentTimeStamp)_\(taskId).mp4") else {
+        let username = self.username ?? "unknown"
+        guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
             return
         }
         setupTaskRecordingToStart() {

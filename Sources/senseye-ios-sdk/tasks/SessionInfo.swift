@@ -42,7 +42,7 @@ struct PhoneSettings: Codable {
 
 // MARK: - PhoneDetails
 struct PhoneDetails: Codable {
-    let os, osVersion, brand, deviceType: String?
+    let os, osVersion, brand, deviceType: String?, cameraType: String?
 }
 
 // MARK: - SenseyeTask
@@ -107,3 +107,13 @@ struct SenseyeTask: Codable {
         self.pulseRate = pulseRate
     }
 }
+
+enum AppStorageKeys: String {
+    case cameraType
+    case username
+
+    func callAsFunction() -> String {
+        return self.rawValue
+    }
+}
+

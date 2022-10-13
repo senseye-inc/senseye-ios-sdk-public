@@ -14,7 +14,7 @@ import Combine
 @available(iOS 15.0.0, *)
 extension LoginView {
     class ViewModel: ObservableObject {
-        @AppStorage("username") var username: String = ""
+        @AppStorage(AppStorageKeys.username()) var username: String = ""
         @Published var password: String = ""
         @Published var isUserSignedIn = false
         @Published var isShowingAlert = false

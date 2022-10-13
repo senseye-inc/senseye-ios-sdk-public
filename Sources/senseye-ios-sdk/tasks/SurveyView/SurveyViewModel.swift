@@ -10,11 +10,12 @@ import Combine
 
 @available(iOS 14.0, *)
 class SurveyViewModel: ObservableObject {
-    
-    @AppStorage("isShowingDebugToggle") var isShowingDebugToggle: Bool?
-    @AppStorage("selectedAge") var selectedAge: Int?
-    @AppStorage("selectedEyeColor") var selectedEyeColor: String?
-    @AppStorage("selectedGender") var selectedGender: String?
+
+    @AppStorage(AppStorageKeys.username()) var username: String?
+    @Published var isShowingDebugToggle: Bool?
+    @Published var selectedAge: Int?
+    @Published var selectedEyeColor: String?
+    @Published var selectedGender: String?
     @Published var debugModeEnabled: Bool = false
     @Published var shouldEnableStartButton: Bool = false
     @Published var currentDownloadStatusMessage: String = ""
@@ -26,6 +27,7 @@ class SurveyViewModel: ObservableObject {
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
+        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
         addSubscribers()
     }
 

@@ -98,11 +98,11 @@ extension LoginView {
                 TextField("", text: $vm.username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
-                if vm.username != "" {
+                if !vm.username.isEmpty {
                     Button {
                         vm.username = ""
                     } label: {
-                        Image(systemName: "x.square.fill")
+                        Image(systemName: "x.circle.fill")
                     }
                 }
             }.foregroundColor(.senseyeTextColor)

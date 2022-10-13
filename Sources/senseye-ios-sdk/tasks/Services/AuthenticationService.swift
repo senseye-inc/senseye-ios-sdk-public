@@ -34,7 +34,6 @@ public class AuthenticationService: ObservableObject {
     
     weak var delegate: AuthenticationServiceDelegate?
     @Published var authError: AlertItem? = nil
-    @AppStorage("isShowingDebugToggle") var isShowingDebugToggle: Bool?
     var authErrorPublished: Published<AlertItem?> { _authError }
     var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
 
@@ -78,7 +77,6 @@ public class AuthenticationService: ObservableObject {
      - completeSignOut: Optional completion action
      */
     public func signOut(completeSignOut: (()->())? = nil ) {
-        reset()
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
             completeSignOut?()
             return
@@ -144,10 +142,6 @@ public class AuthenticationService: ObservableObject {
         guard let username = self.accountUsername, let password = self.accountPassword else {
             Log.error("No account username or account password set")
             return
-        }
-        
-        if username.contains("@senseye.co") {
-            isShowingDebugToggle = true
         }
 
         Amplify.Auth.signIn(username: username, password: password) { [self] result in
@@ -229,10 +223,6 @@ public class AuthenticationService: ObservableObject {
             return
         }
         completion(currentSignedInUser)
-    }
-    
-    func reset() {
-        isShowingDebugToggle = false
     }
 }
 

@@ -51,8 +51,8 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published private(set) var uploadProgress: Double = 0.0
     @Published private(set) var numberOfTasksCompleted: Int = 0
     @Published private(set) var isFinished: Bool = false
-    @AppStorage("username") var username: String = ""
-    
+    @AppStorage(AppStorageKeys.username()) var username: String?
+
     private var numberOfUploadsComplete: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
@@ -197,6 +197,7 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
         let sessionTimeStamp = Date().currentTimeMillis()
+        let username = self.username ?? "unknown"
         self.s3FolderName = "\(username)_\(sessionTimeStamp)"
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
@@ -204,6 +205,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let versionName = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         let versionCode = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
         let deviceType = UIDevice().type
+        @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
         let currentTiemzone = TimeZone.current
         let currentBrightnessInt = Int(UIScreen.main.brightness)
         let osVersion = UIDevice.current.systemVersion
@@ -217,12 +219,40 @@ class FileUploadAndPredictionService: ObservableObject {
             networkType = "\(connectionType)"
         }
         
-        let phoneDetails = PhoneDetails(os: "iOS", osVersion: osVersion, brand: "Apple", deviceType: deviceType.rawValue)
-        let phoneSettings = PhoneSettings(idlenessTimerDisabled: idlenessTimerDisabled, brightness: currentBrightnessInt, freeSpace: nil, networkType: networkType, downloadSpeed: nil, uploadSpeed: nil)
-        
-        self.sessionInfo = SessionInfo(versionCode: versionCode, age: age, eyeColor: eyeColor, versionName: versionName, gender: gender, folderName: s3FolderName, username: username, timezone: currentTiemzone.identifier, isDebugModeEnabled: isDebugModeEnabled.description, phoneSettings: phoneSettings, phoneDetails: phoneDetails, tasks: [])
+        let phoneDetails = PhoneDetails(
+            os: "iOS",
+            osVersion: osVersion,
+            brand: "Apple",
+            deviceType: deviceType.rawValue,
+            cameraType: cameraType
+        )
+
+        let phoneSettings = PhoneSettings(
+            idlenessTimerDisabled: idlenessTimerDisabled,
+            brightness: currentBrightnessInt,
+            freeSpace: nil,
+            networkType: networkType,
+            downloadSpeed: nil,
+            uploadSpeed: nil
+        )
+
+        sessionInfo = SessionInfo(
+            versionCode: versionCode,
+            age: age,
+            eyeColor: eyeColor,
+            versionName: versionName,
+            gender: gender,
+            folderName: s3FolderName,
+            username: username,
+            timezone: currentTiemzone.identifier,
+            isDebugModeEnabled: isDebugModeEnabled.description,
+            phoneSettings: phoneSettings,
+            phoneDetails: phoneDetails,
+            tasks: []
+        )
+        Log.info("Session info initialized: \(sessionInfo)")
     }
-    
+
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?) {
         self.currentTaskFrameTimestamps = frameTimestamps
     }
@@ -241,6 +271,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private func uploadSessionJsonFile() {
         
         let currentTimeStamp = Date().currentTimeMillis()
+        let username = self.username ?? "unknown"
         let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
         self.jsonMetadataURL = s3HostBucketUrl + jsonFileName
 

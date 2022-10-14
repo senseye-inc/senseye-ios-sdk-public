@@ -67,8 +67,8 @@ struct SurveyView: View {
                 Spacer()
                 HStack(spacing: 100) {
                     Button {
+                        viewModel.onBackButton()
                         tabController.proceedToPreviousTab()
-                        viewModel.reset()
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")
                             .resizable()
@@ -78,15 +78,16 @@ struct SurveyView: View {
                     }
 
                     Button {
+                        viewModel.onStartButton()
                         tabController.proceedToNextTab()
-                        viewModel.updateDebugModeFlag()
-                        viewModel.createSessionJsonFile()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }.disabled(viewModel.shouldEnableStartButton == false)
                 }
             }
-        }.sheet(isPresented: self.$isPresentingSettingsView) {
+        }
+        .onAppear { viewModel.onAppear() }
+        .sheet(isPresented: self.$isPresentingSettingsView) {
             isPresentingSettingsView = false
         } content: {
             SettingsView()

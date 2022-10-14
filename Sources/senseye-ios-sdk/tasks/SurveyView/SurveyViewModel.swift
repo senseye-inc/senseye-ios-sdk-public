@@ -27,7 +27,6 @@ class SurveyViewModel: ObservableObject {
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
-        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
         addSubscribers()
     }
 
@@ -42,17 +41,29 @@ class SurveyViewModel: ObservableObject {
     func updateDebugModeFlag() {
         fileUploadService.isDebugModeEnabled = self.debugModeEnabled
     }
-    
-    func reset() {
+
+    func onAppear() {
+        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
+    }
+
+    func onStartButton() {
+        updateDebugModeFlag()
+        createSessionJsonFile()
+        resetSurveyResponses()
+    }
+
+    func onBackButton() {
+        resetSurveyResponses()
+    }
+
+    private func resetSurveyResponses() {
         debugModeEnabled = false
-        fileUploadService.isDebugModeEnabled = false
-        isShowingDebugToggle = false
         selectedAge = nil
         selectedGender = nil
         selectedEyeColor = nil
     }
     
-    func createSessionJsonFile() {
+    private func createSessionJsonFile() {
         var surveyInput : [String: String] = [:]
         surveyInput["age"] = String(selectedAge ?? -1)
         surveyInput["gender"] = selectedGender
@@ -60,7 +71,7 @@ class SurveyViewModel: ObservableObject {
         fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: surveyInput)
     }
     
-    func addSubscribers() {
+    private func addSubscribers() {
         imageService.$finishedDownloadingAllImages
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { finishedImageDownload in

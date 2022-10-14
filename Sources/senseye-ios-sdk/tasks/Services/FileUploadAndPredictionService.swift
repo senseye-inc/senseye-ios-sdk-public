@@ -245,7 +245,7 @@ class FileUploadAndPredictionService: ObservableObject {
             folderName: s3FolderName,
             username: username,
             timezone: currentTiemzone.identifier,
-            isDebugModeEnabled: isDebugModeEnabled.description,
+            isDebugModeEnabled: isDebugModeEnabled,
             phoneSettings: phoneSettings,
             phoneDetails: phoneDetails,
             tasks: []

@@ -75,6 +75,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
         xMarkColor = .white
         plrTimer = nil
         isFinished = false
+        eventBackgroundColor.removeAll()
         timestampsOfBackgroundSwap.removeAll()
     }
     

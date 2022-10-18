@@ -40,7 +40,6 @@ struct CalibrationView: View {
             }
         }
         .onDisappear {
-            Log.info("onDisappear triggered")
             viewModel.reset()
         }
         .fullScreenCover(isPresented: $viewModel.shouldShowConfirmationView) {

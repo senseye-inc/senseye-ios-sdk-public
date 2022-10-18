@@ -10,50 +10,63 @@ import SwiftUI
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel : SurveyViewModel
+    @State var isPresentingSettingsView: Bool = false
 
-    init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
-        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService))
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService) {
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService))
     }
     
     var body: some View {
         ZStack {
-            Color.senseyePrimary
-                .edgesIgnoringSafeArea(.all)
-            VStack {
-                Spacer()
-
+            Color.senseyePrimary.edgesIgnoringSafeArea(.all)
+            VStack(spacing: 20) {
+                HStack {
+                    Spacer()
+                    HeaderView()
+                        .padding(.leading, 10)
+                    Spacer()
+                    Button(action: {
+                        isPresentingSettingsView.toggle()
+                    }, label: {
+                        Image(systemName: "line.3.horizontal.circle.fill")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                            .foregroundColor(.senseyeTextColor)
+                            .padding(.horizontal, 10)
+                    })
+                }
                 VStack {
                     Text("Let's get started.")
                         .font(.title)
                         .foregroundColor(.senseyeSecondary)
                         .bold()
-                    Text("First, please take a moment to log your recent activity.")
+                    Text("Please enter your information below.")
                         .foregroundColor(.senseyeTextColor)
                         .bold()
                         .multilineTextAlignment(.center)
                 }
 
                 Spacer()
-
                 agePicker
-
                 genderPicker
-
                 eyeColorPicker
-                
-                Toggle(isOn: $viewModel.debugModeEnabled) {
-                    Text("Enable Debug Mode")
-                        .foregroundColor(.white)
-                }.padding()
-                    
-                
+                if viewModel.isShowingDebugToggle ?? false {
+                    Toggle(isOn: $viewModel.debugModeEnabled) {
+                        Text("Enable Debug Mode")
+                            .foregroundColor(.white)
+                    }.padding()
+                }
+                if !viewModel.shouldEnableStartButton {
+                    Text(viewModel.currentDownloadStatusMessage)
+                        .font(.system(size: 10))
+                        .foregroundColor(.senseyeTextColor)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                }
                 Spacer()
-                
-                
-                Spacer()
-
                 HStack(spacing: 100) {
                     Button {
+                        viewModel.onBackButton()
                         tabController.proceedToPreviousTab()
                     } label: {
                         Image(systemName: "arrow.left.circle.fill")
@@ -64,15 +77,21 @@ struct SurveyView: View {
                     }
 
                     Button {
+                        viewModel.onStartButton()
                         tabController.proceedToNextTab()
-                        viewModel.updateDebugModeFlag()
-                        viewModel.createSessionJsonFile()
                     } label: {
                         SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
-                    }
+                    }.disabled(viewModel.shouldEnableStartButton == false)
                 }
             }
         }
+        .onAppear { viewModel.onAppear() }
+        .sheet(isPresented: self.$isPresentingSettingsView) {
+            isPresentingSettingsView = false
+        } content: {
+            SettingsView()
+        }
+
     }
 }
 

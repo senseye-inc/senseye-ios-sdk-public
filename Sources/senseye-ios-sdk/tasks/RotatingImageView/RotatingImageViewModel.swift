@@ -24,7 +24,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
             if (fileUploadService.isDebugModeEnabled) {
                 return fileUploadService.debugModeTaskTiming
             } else {
-                return 5.0
+                return 2.5
             }
         }
     }
@@ -128,12 +128,15 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         imageService.$imagesForBlock
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] imageSetForBlock in
+                Log.info("in callback of imagesForBlock ---")
                 guard let self = self else {
                     return
                 }
-                Log.info("\(imageSetForBlock)")
-                self.images = imageSetForBlock
-                self.showImages()
+                Log.info("image set count \(imageSetForBlock.count)")
+                if (!(imageSetForBlock.isEmpty || imageSetForBlock.count != 8) && self.currentImageIndex == 0) {
+                    self.images = imageSetForBlock
+                    self.showImages()
+                }
             })
             .store(in: &cancellables)
     }

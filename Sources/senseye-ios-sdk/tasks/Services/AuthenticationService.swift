@@ -39,7 +39,6 @@ public class AuthenticationService: ObservableObject {
 
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
-    var enableDebugMode = false
 
     /**
      Authenticates the user session and handles subsequent all sign in flows.
@@ -123,8 +122,10 @@ public class AuthenticationService: ObservableObject {
         let doesUserMatchCurrentSignIn = currentSignedInUser == self.accountUsername
         
         if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
-            self.signOut {
-                completion()
+            DispatchQueue.main.async {
+                self.signOut {
+                    completion()
+                }
             }
         } else {
             completion()
@@ -216,7 +217,7 @@ public class AuthenticationService: ObservableObject {
 
     func getUsername(completion: @escaping ((String) -> Void)) {
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
-            print("Error getting signed in user")
+            Log.error("Error getting signed in user")
             return
         }
         completion(currentSignedInUser)

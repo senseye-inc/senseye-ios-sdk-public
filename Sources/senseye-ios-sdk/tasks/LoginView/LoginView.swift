@@ -27,8 +27,12 @@ struct LoginView: View {
                 }
                 .padding()
                 
-                Text("Having trouble logging in?")
-                    .foregroundColor(.senseyeTextColor)
+                Button {
+                    vm.isShowingSafari.toggle()
+                } label: {
+                    Text("Having trouble logging in?")
+                        .foregroundColor(.senseyeTextColor)
+                }
                 
                 Button(action: {
                     vm.login()
@@ -53,6 +57,9 @@ struct LoginView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $vm.isShowingSafari, content: {
+            SFSafariViewWrapper(url: vm.supportURL)
+        })
         .onAppear {
             vm.onAppear()
         }
@@ -86,10 +93,18 @@ extension LoginView {
         VStack(alignment: .leading, spacing: 5) {
             Text("username".uppercased())
                 .foregroundColor(.senseyeTextColor)
-            TextField("", text: $vm.username)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .foregroundColor(.senseyeTextColor)
+            HStack {
+                TextField("", text: $vm.username)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if !vm.username.isEmpty {
+                    Button {
+                        vm.username = ""
+                    } label: {
+                        Image(systemName: "x.circle.fill")
+                    }
+                }
+            }.foregroundColor(.senseyeTextColor)
             Divider()
                 .background(Color.senseyeTextColor)
         }
@@ -99,7 +114,6 @@ extension LoginView {
     var headerView: some View {
         VStack {
             HeaderView()
-                .padding()
             Image("holding_phone_icon")
             Text("Login to get started")
                 .foregroundColor(.senseyeTextColor)

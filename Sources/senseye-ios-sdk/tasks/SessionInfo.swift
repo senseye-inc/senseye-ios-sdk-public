@@ -9,11 +9,20 @@ import Foundation
 import UIKit
 // MARK: - SessionInfo
 struct SessionInfo: Codable {
-    let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone, isDebugModeEnabled: String?
+    let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone: String?
+    let isDebugModeEnabled: Bool?
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
     var tasks: [SenseyeTask]
     var predictionJobID: String?
+    var asDictionary : [String:Any]? {
+        let mirror = Mirror(reflecting: self)
+        let dict = Dictionary(uniqueKeysWithValues: mirror.children.lazy.map({ (label:String?, value:Any) -> (String, Any)? in
+            guard let label = label else { return nil }
+            return (label, value)
+        }).compactMap { $0 })
+        return dict
+    }
 }
 
 enum TaskBlockCategory: String, Codable {
@@ -34,7 +43,7 @@ struct PhoneSettings: Codable {
 
 // MARK: - PhoneDetails
 struct PhoneDetails: Codable {
-    let os, osVersion, brand, deviceType: String?
+    let os, osVersion, brand, deviceType: String?, cameraType: String?
 }
 
 // MARK: - SenseyeTask
@@ -48,6 +57,9 @@ struct SenseyeTask: Codable {
     let blockNumber: Int?
     let category: TaskBlockCategory?
     let subcategory: TaskBlockSubcategory?
+    let plethysmograph: [UInt8]?
+    let pulseRate: [UInt8]?
+    let spo2: [UInt8]?
 
     enum CodingKeys: String, CodingKey {
         case taskID = "taskId"
@@ -60,9 +72,27 @@ struct SenseyeTask: Codable {
         case blockNumber = "blockNumber"
         case category = "category"
         case subcategory = "subcategory"
+        case plethysmograph
+        case pulseRate = "pulse_rate"
+        case spo2
+
     }
 
-    init(taskID: String, frameTimestamps: [Int64], timestamps: [Int64]? = nil, eventXLOC: [CGFloat]? = nil, eventYLOC: [CGFloat]? = nil, eventImageID: [String]? = nil, eventBackgroundColor: [String]? = nil, blockNumber: Int? = nil, category: TaskBlockCategory? = nil, subcategory: TaskBlockSubcategory? = nil) {
+    init(
+        taskID: String,
+        frameTimestamps: [Int64],
+        timestamps: [Int64]? = nil,
+        eventXLOC: [CGFloat]? = nil,
+        eventYLOC: [CGFloat]? = nil,
+        eventImageID: [String]? = nil,
+        eventBackgroundColor: [String]? = nil,
+        blockNumber: Int? = nil,
+        category: TaskBlockCategory? = nil,
+        subcategory: TaskBlockSubcategory? = nil,
+        plethysmograph: [UInt8]? = nil,
+        pulseRate: [UInt8]? = nil,
+        spo2: [UInt8]? = nil
+    ) {
         self.taskID = taskID
         self.timestamps = timestamps
         self.eventXLOC = eventXLOC
@@ -73,5 +103,18 @@ struct SenseyeTask: Codable {
         self.blockNumber = blockNumber
         self.category = category
         self.subcategory = subcategory
+        self.plethysmograph = plethysmograph
+        self.spo2 = spo2
+        self.pulseRate = pulseRate
     }
 }
+
+enum AppStorageKeys: String {
+    case cameraType
+    case username
+
+    func callAsFunction() -> String {
+        return self.rawValue
+    }
+}
+

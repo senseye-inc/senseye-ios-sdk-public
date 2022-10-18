@@ -20,8 +20,12 @@ struct SenseyeTabView: View {
                 .tag(TabType.loginView)
                 .gesture(DragGesture())
 
-            SurveyView(fileUploadAndPredictionService: fileUploadService)
+            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService)
                 .tag(TabType.surveyView)
+                .gesture(DragGesture())
+            
+            HRCalibrationView(fileUploadService: fileUploadService)
+                .tag(TabType.hrCalibrationView)
                 .gesture(DragGesture())
 
             CalibrationView(fileUploadAndPredictionService: fileUploadService)
@@ -42,7 +46,7 @@ struct SenseyeTabView: View {
 
             CameraView()
                 .tag(TabType.cameraView)
-                .gesture(DragGesture())
+                .disableScrolling(disabled: true)
         }
         .onAppear {
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())

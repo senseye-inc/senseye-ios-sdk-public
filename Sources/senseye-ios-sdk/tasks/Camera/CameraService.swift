@@ -12,7 +12,6 @@ import SwiftUI
 import SwiftyJSON
 import Combine
 
-@MainActor
 class CameraService: NSObject, ObservableObject {
     
     private var captureVideoDataOutput = AVCaptureVideoDataOutput()
@@ -38,12 +37,14 @@ class CameraService: NSObject, ObservableObject {
     @Published var isCompliantInCurrentFrame: Bool = false
     @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle", statusBackgroundColor: .red)
     
-    @AppStorage("username") var username: String = ""
-    
+    @AppStorage(AppStorageKeys.username()) var username: String?
+    @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
+
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     private var surveyInput : [String: String] = [:]
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
+    private let videoBufferQueue = DispatchQueue(label: "com.senseye.videoBufferQueue")
     
     private var cameraComplianceViewModel = CameraComplianceViewModel()
     
@@ -57,11 +58,10 @@ class CameraService: NSObject, ObservableObject {
         }
         self.authenticationService = authenticationService
         self.fileUploadService = fileUploadService
-        if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
-            let cameraType = cameraInfo.deviceType.rawValue
-            fileUploadService.createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: ["cameraType": cameraType])
-        }
         super.init()
+        if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
+            cameraType = cameraInfo.deviceType.rawValue
+        }
         addSubscribers()
     }
     
@@ -74,7 +74,7 @@ class CameraService: NSObject, ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     func start() {
         if isSimulatorEnabled {
             simulateStart()
@@ -138,10 +138,8 @@ class CameraService: NSObject, ObservableObject {
             connection.videoOrientation = .portrait
             connection.isVideoMirrored = true
             captureSession.commitConfiguration()
-            DispatchQueue.global(qos: .background).async {
-                Task {
-                    await self.captureSession.startRunning()
-                }
+            videoBufferQueue.async { [weak self] in
+                self?.captureSession.startRunning()
             }
         } catch {
             Log.error("videoDeviceInput error")
@@ -185,7 +183,8 @@ class CameraService: NSObject, ObservableObject {
 
     func startRecordingForTask(taskId: String) {
         let currentTimeStamp = Date().currentTimeMillis()
-        guard let fileUrl = fileDestUrl?.appendingPathComponent("\(self.username)_\(currentTimeStamp)_\(taskId).mp4") else {
+        let username = self.username ?? "unknown"
+        guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
             return
         }
         setupTaskRecordingToStart() {
@@ -277,20 +276,22 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
-                videoWriterInput.append(sampleBuffer)
-                guard let sourceTime = sessionAtSourceTime, let startTaskTime = startOfTaskMillis else {
-                    return
-                }
-                let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-                let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
-                let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
-                let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
-                
-                frameTimestampsForTask.append(outputBufferTimestampAsMillis)
-                if (!startedCameraRecording) {
-                    if isSimulatorEnabled { return }
-                    DispatchQueue.main.async {
-                        self.startedCameraRecording = true
+                videoBufferQueue.async { [weak self] in
+                    self?.videoWriterInput.append(sampleBuffer)
+                    guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
+                        return
+                    }
+                    let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                    let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
+                    let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
+                    let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
+                    
+                    self?.frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                    if let hasStartedRecording = self?.startedCameraRecording, let isSimulatorBuild = self?.isSimulatorEnabled {
+                        if !hasStartedRecording || isSimulatorBuild { return }
+                        DispatchQueue.main.async {
+                            self?.startedCameraRecording = true
+                        }
                     }
                 }
             }

@@ -9,19 +9,17 @@ import SwiftUI
 
 struct FacialComplianceLabelView: View {
     
-    @Binding var currentComplianceIcon: String
-    @Binding var currentComplianceLabel: String
-    @Binding var currentComplianceColor: Color
+    @Binding var currentComplianceInfo: FacialComplianceStatus
     
     var body: some View {
         Spacer()
-        Label(currentComplianceLabel, systemImage: currentComplianceIcon)
+        Label(currentComplianceInfo.statusMessage, systemImage: currentComplianceInfo.statusIcon)
             .font(.headline)
             .padding()
             .background(.gray.opacity(0.5))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(currentComplianceColor, lineWidth: 4)
+                    .stroke(currentComplianceInfo.statusBackgroundColor, lineWidth: 4)
             )
     }
     

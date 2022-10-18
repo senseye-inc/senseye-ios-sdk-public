@@ -52,17 +52,19 @@ class CameraComplianceViewModel: ObservableObject {
             faceDetectionResult = FacialComplianceStatus.faceNotDetected()
             return
         }
-        let leftEye = firstFaceResult.landmarks?.leftEye
-        let leftPupil = firstFaceResult.landmarks?.leftPupil
-        let rightEye =  firstFaceResult.landmarks?.rightEye
-        let rightPupil = firstFaceResult.landmarks?.rightPupil
         
-        let foundPupilsAndEyes = (leftEye != nil && leftPupil != nil && rightEye != nil && rightPupil != nil)
-        if (foundPupilsAndEyes) {
-            faceDetectionResult = FacialComplianceStatus.faceDetected()
-            Log.info("Found a face")
+        
+        
+        
+        
+        if let leftEye = firstFaceResult.landmarks?.leftEye,
+           let leftPupil = firstFaceResult.landmarks?.leftPupil,
+           let rightEye =  firstFaceResult.landmarks?.rightEye,
+           let rightPupil = firstFaceResult.landmarks?.rightPupil {
+           faceDetectionResult = FacialComplianceStatus.faceDetected()
+           Log.info("Found a face")
         } else {
-            faceDetectionResult = FacialComplianceStatus.faceNotDetected()
+           faceDetectionResult = FacialComplianceStatus.faceNotDetected()
         }
     }
     

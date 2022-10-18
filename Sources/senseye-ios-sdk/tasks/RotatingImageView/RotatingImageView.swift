@@ -6,7 +6,6 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct RotatingImageView: View {
     
     @EnvironmentObject var tabController: TabController

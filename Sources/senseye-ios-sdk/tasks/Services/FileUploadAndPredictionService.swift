@@ -12,7 +12,6 @@ import SwiftyJSON
 import Combine
 import SwiftUI
 
-@available(iOS 14.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
     // MARK: - Published Properties
     var uploadProgress: Double { get }
@@ -44,7 +43,6 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 /**
  FileUploadAndPredictionService is responsible for communicating with backend service.
  */
-@available(iOS 14.0, *)
 class FileUploadAndPredictionService: ObservableObject {
     var authenticationService: AuthenticationService?
 
@@ -356,7 +354,6 @@ class FileUploadAndPredictionService: ObservableObject {
     
 }
 
-@available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
     var isFinishedPublisher: Published<Bool>.Publisher { $isFinished }

@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel : SurveyViewModel
@@ -96,7 +95,6 @@ struct SurveyView: View {
     }
 }
 
-@available(iOS 15.0, *)
 extension SurveyView {
 
     var agePicker: some View {

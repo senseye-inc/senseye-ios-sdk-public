@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-@available(iOS 15.0, *)
+
 struct UserConfirmationView: View {
     
     @EnvironmentObject var tabController: TabController

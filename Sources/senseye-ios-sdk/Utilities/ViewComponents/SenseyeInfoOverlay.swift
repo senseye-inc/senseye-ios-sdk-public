@@ -4,7 +4,7 @@
 //
 
 import SwiftUI
-@available(iOS 15.0, *)
+
 struct SenseyeInfoOverlay: View {
 
     @Binding var showingOverlay: Bool

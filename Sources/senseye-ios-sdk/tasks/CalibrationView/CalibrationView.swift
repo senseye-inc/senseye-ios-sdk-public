@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct CalibrationView: View {
 
     @StateObject var viewModel: CalibrationViewModel

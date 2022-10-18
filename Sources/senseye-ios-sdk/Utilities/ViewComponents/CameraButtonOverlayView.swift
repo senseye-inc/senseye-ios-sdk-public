@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
-@available(iOS 14.0.0, *)
+
 struct CameraButtonOverlayView: View {
 
     @Binding var callToActionText: String
 
     var body: some View {
         VStack {
-            Spacer()
             HStack {
                 ZStack {
                     Circle()

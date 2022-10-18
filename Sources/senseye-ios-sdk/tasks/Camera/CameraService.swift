@@ -10,8 +10,8 @@ import AVFoundation
 import UIKit
 import SwiftUI
 import SwiftyJSON
+import Combine
 
-@available(iOS 14.0, *)
 class CameraService: NSObject, ObservableObject {
     
     private var captureVideoDataOutput = AVCaptureVideoDataOutput()
@@ -34,6 +34,8 @@ class CameraService: NSObject, ObservableObject {
     @Published var shouldSetupCaptureSession: Bool = false
     @Published var shouldShowCameraPermissionsDeniedAlert: Bool = false
     @Published var startedCameraRecording: Bool = false
+    @Published var isCompliantInCurrentFrame: Bool = false
+    @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle", statusBackgroundColor: .red)
     
     @AppStorage(AppStorageKeys.username()) var username: String?
     @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
@@ -43,6 +45,10 @@ class CameraService: NSObject, ObservableObject {
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
     private let videoBufferQueue = DispatchQueue(label: "com.senseye.videoBufferQueue")
+    
+    private var cameraComplianceViewModel = CameraComplianceViewModel()
+    
+    var cancellables = Set<AnyCancellable>()
     
     init(authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         if let realCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
@@ -56,6 +62,17 @@ class CameraService: NSObject, ObservableObject {
         if let cameraInfo = frontCameraDevice as? AVCaptureDevice {
             cameraType = cameraInfo.deviceType.rawValue
         }
+        addSubscribers()
+    }
+    
+    private func addSubscribers() {
+        cameraComplianceViewModel.$faceDetectionResult
+            .receive(on: DispatchQueue.main)
+            .sink { updatedCompliance in
+                Log.info("setting the updated compliance in cameraservice")
+                self.currentComplianceInfo = updatedCompliance
+            }
+            .store(in: &cancellables)
     }
 
     func start() {
@@ -229,7 +246,6 @@ class CameraService: NSObject, ObservableObject {
     }
 }
 
-@available(iOS 14.0, *)
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     internal func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -245,6 +261,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             DispatchQueue.main.async {
                 self.frame = context.createCGImage(ciImage, from: ciImage.extent)
             }
+            cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
             return
         }
         
@@ -284,7 +301,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
 }
 
-@available(iOS 14.0, *)
 extension CameraService {
     private func canWrite() -> Bool {
         return startedTaskRecording
@@ -331,7 +347,6 @@ extension CameraService {
 }
 
 // MARK: - Simulator
-@available(iOS 14.0, *)
 extension CameraService {
     
     fileprivate func simulateStart() {

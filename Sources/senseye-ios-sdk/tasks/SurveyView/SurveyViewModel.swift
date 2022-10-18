@@ -8,7 +8,6 @@ import Foundation
 import SwiftUI
 import Combine
 
-@available(iOS 14.0, *)
 class SurveyViewModel: ObservableObject {
 
     @AppStorage(AppStorageKeys.username()) var username: String?
@@ -43,7 +42,7 @@ class SurveyViewModel: ObservableObject {
     }
 
     func onAppear() {
-        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
+        isShowingDebugToggle = username?.contains("dkman94") ?? false
     }
 
     func onStartButton() {

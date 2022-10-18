@@ -47,7 +47,6 @@ struct TabItem: Hashable {
     }
 }
 
-@available(iOS 14.0, *)
 @MainActor
 class TabController: ObservableObject {
 

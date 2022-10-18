@@ -9,7 +9,6 @@ import Amplify
 import SwiftUI
 import Foundation
 
-@available(iOS 13.0, *)
 protocol AuthenticationServiceProtocol {
     func signOut(completeSignOut: (()->())? )
     func signIn(accountUsername: String, accountPassword: String)
@@ -29,7 +28,6 @@ protocol AuthenticationServiceDelegate: AnyObject {
 /**
  The AuthenticationService for the SDK  lets developers authenticate sessions through Senseye's backend  service.
  */
-@available(iOS 14.0, *)
 public class AuthenticationService: ObservableObject {
     
     weak var delegate: AuthenticationServiceDelegate?
@@ -226,5 +224,4 @@ public class AuthenticationService: ObservableObject {
     }
 }
 
-@available(iOS 14.0, *)
 extension AuthenticationService: AuthenticationServiceProtocol { }

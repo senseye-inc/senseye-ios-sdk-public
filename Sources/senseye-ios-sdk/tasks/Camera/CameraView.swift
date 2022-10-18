@@ -10,7 +10,6 @@ import AVFoundation
 import Amplify
 import Combine
 
-@available(iOS 15.0, *)
 struct CameraView: View {
     
     @EnvironmentObject var cameraService: CameraService
@@ -22,6 +21,7 @@ struct CameraView: View {
             ZStack {
                 FrameView(image: $cameraService.frame)
                 VStack {
+                    FacialComplianceLabelView(currentComplianceInfo: $cameraService.currentComplianceInfo)
                     Button { } label: {
                         CameraButtonOverlayView(callToActionText: $vm.callToActionText)
                             .onTapGesture(count: 2) {

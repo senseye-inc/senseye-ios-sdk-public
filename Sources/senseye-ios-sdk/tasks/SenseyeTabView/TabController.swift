@@ -15,6 +15,7 @@ enum TabType {
     case loginView
     case surveyView
     case calibrationView
+    case attentionBiasFaceView
     case hrCalibrationView
 }
 
@@ -105,6 +106,13 @@ class TabController: ObservableObject {
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 23, category: .negative, subcategory: .frustrating))
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 24, category: .negativeArousal, subcategory: .desctruction))
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
+        
+        // Attention Bias Face Task
+        taskTabOrdering += [
+            TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView),
+            (TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                     taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                     isTaskItem: true))]
         
         //Ending Calibration
         taskTabOrdering += [

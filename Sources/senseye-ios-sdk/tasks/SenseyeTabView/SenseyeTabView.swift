@@ -48,6 +48,10 @@ struct SenseyeTabView: View {
             CameraView()
                 .tag(TabType.cameraView)
                 .disableScrolling(disabled: true)
+            
+            AttentionBiasFaceView(fileUploadAndPredictionService: fileUploadService)
+                .tag(TabType.attentionBiasFaceView)
+                .gesture(DragGesture())
         }
         .onAppear {
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())

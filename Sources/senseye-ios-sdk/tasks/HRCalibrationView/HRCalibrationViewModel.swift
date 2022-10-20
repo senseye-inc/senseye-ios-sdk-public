@@ -43,7 +43,7 @@ class HRCalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     
     func addTaskInfoToJson() {
         let startAndEndTimestampsOfHR = [startingTimestamp, endingTimestamp]
-        let taskInfo = SenseyeTask(taskID: "hr_calibration", frameTimestamps: [], timestamps: startAndEndTimestampsOfHR)
+        let taskInfo = SenseyeTask(taskID: "hr_calibration", frameTimestamps: [], timestamps: startAndEndTimestampsOfHR, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
     

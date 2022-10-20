@@ -29,7 +29,9 @@ struct CalibrationView: View {
             }
         }
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "calibration")
+            let taskID = tabController.taskIDForCurrentTab()
+            viewModel.taskID = taskID
+            cameraService.startRecordingForTask(taskId: taskID)
             DispatchQueue.main.async {
                 viewModel.startCalibration()
             }

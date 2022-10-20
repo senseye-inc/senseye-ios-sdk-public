@@ -84,7 +84,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "attention_bias_face", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli)
+        let taskInfo = SenseyeTask(taskID: "attention_bias_face", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
     

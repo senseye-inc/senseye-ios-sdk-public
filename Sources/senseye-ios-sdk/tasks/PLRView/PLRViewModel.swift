@@ -82,7 +82,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor, blockNumber: blockNumber)
+        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor, blockNumber: blockNumber, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

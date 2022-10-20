@@ -11,6 +11,7 @@ import SwiftUI
 class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
     var pathIndex: Int = 0
     var hasStartedTask = false
+    var taskID: String = ""
     private var taskTiming: Double {
         get {
             if (fileUploadService.isDebugModeEnabled) {
@@ -90,7 +91,7 @@ class CalibrationViewModel: ObservableObject, TaskViewModelProtocol {
             eventXLOC.append(xCoordinate)
             eventYLOC.append(yCoordinate)
         }
-        let taskInfo = SenseyeTask(taskID: "calibration", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, eventXLOC: eventXLOC, eventYLOC: eventYLOC)
+        let taskInfo = SenseyeTask(taskID: taskID, frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, eventXLOC: eventXLOC, eventYLOC: eventYLOC, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

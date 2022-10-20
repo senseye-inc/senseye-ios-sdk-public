@@ -9,7 +9,7 @@ import SwiftUI
 
 @available(iOS 14.0, *)
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
-
+    
     @Published var backgroundColor: Color = .black
     @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
@@ -26,6 +26,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
 
     var currentInterval: Int = 0
+    var blockNumber: Int?
     private var timestampsOfBackgroundSwap: [Int64] = []
     private var eventBackgroundColor: [String] = []
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -81,7 +82,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor)
+        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor, blockNumber: blockNumber)
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

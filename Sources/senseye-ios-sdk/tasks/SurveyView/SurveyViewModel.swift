@@ -43,7 +43,7 @@ class SurveyViewModel: ObservableObject {
     }
 
     func onAppear() {
-        isShowingDebugToggle = username?.contains("dkman94") ?? false
+        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
     }
 
     func onStartButton() {

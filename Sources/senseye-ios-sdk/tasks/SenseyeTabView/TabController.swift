@@ -73,7 +73,7 @@ class TabController: ObservableObject {
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
             TabItem(
-                taskId: "calibration_view_1",
+                taskId: "calibration_1",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
                 taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
@@ -110,7 +110,7 @@ class TabController: ObservableObject {
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
             TabItem(
-                taskId: "calibration_view_2",
+                taskId: "calibration_2",
                 tabType: .calibrationView,
                 taskTitle: "Calibration",
                 taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
@@ -179,6 +179,11 @@ class TabController: ObservableObject {
     func reset() {
         currentTabIndex = 0
         open(taskTabOrdering[currentTabIndex])
+    }
+    
+    func taskIDForCurrentTab() -> String {
+        let currentTab = taskTabOrdering[currentTabIndex]
+        return currentTab.taskId
     }
 
     private func open(_ tab: TabItem) {

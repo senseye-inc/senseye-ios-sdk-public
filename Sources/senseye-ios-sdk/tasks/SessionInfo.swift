@@ -60,6 +60,7 @@ struct SenseyeTask: Codable {
     let plethysmograph: [UInt8]?
     let pulseRate: [UInt8]?
     let spo2: [UInt8]?
+    let videoPath: String?
 
     enum CodingKeys: String, CodingKey {
         case taskID = "taskId"
@@ -75,6 +76,7 @@ struct SenseyeTask: Codable {
         case plethysmograph
         case pulseRate = "pulse_rate"
         case spo2
+        case videoPath
 
     }
 
@@ -91,7 +93,8 @@ struct SenseyeTask: Codable {
         subcategory: TaskBlockSubcategory? = nil,
         plethysmograph: [UInt8]? = nil,
         pulseRate: [UInt8]? = nil,
-        spo2: [UInt8]? = nil
+        spo2: [UInt8]? = nil,
+        videoPath: String? = nil
     ) {
         self.taskID = taskID
         self.timestamps = timestamps
@@ -106,6 +109,7 @@ struct SenseyeTask: Codable {
         self.plethysmograph = plethysmograph
         self.spo2 = spo2
         self.pulseRate = pulseRate
+        self.videoPath = videoPath
     }
 }
 

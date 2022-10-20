@@ -26,6 +26,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
     func getLatestFrameTimestampArray() -> [Int64]
+    func getVideoPath() -> String
     func reset()
     var isDebugModeEnabled: Bool { get set }
     var debugModeTaskTiming: Double { get }
@@ -64,6 +65,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionUploadFileKeys: [String] = []
     private var currentTaskFrameTimestamps: [Int64]? = []
     private var sessionInfo: SessionInfo? = nil
+    private var currentVideoPath: String? = nil
     private var s3FolderName: String = ""
     private var jsonMetadataURL: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
@@ -100,6 +102,7 @@ class FileUploadAndPredictionService: ObservableObject {
      */
     func uploadData(fileUrl: URL) {
         let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
+        currentVideoPath = "\(s3HostBucketUrl)\(fileNameKey)"
         let filename = fileUrl
         
         guard let _ = self.hostApiKey else {
@@ -250,7 +253,7 @@ class FileUploadAndPredictionService: ObservableObject {
             phoneDetails: phoneDetails,
             tasks: []
         )
-        Log.info("Session info initialized: \(sessionInfo)")
+        Log.info("Session info initialized: \(String(describing: sessionInfo))")
     }
 
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?) {
@@ -259,6 +262,10 @@ class FileUploadAndPredictionService: ObservableObject {
     
     func getLatestFrameTimestampArray() -> [Int64] {
         return currentTaskFrameTimestamps ?? []
+    }
+    
+    func getVideoPath() -> String {
+        return currentVideoPath ?? ""
     }
 
     func addTaskRelatedInfo(for taskInfo: SenseyeTask) {
@@ -276,7 +283,9 @@ class FileUploadAndPredictionService: ObservableObject {
         self.jsonMetadataURL = s3HostBucketUrl + jsonFileName
 
         do {
-            let encodedData = try JSONEncoder().encode(sessionInfo)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            let encodedData = try encoder.encode(sessionInfo)
             var uploadS3URLs: [String] = []
             for localFileNameKey in currentSessionUploadFileKeys {
                 uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
@@ -347,6 +356,7 @@ class FileUploadAndPredictionService: ObservableObject {
         isDebugModeEnabled = false
         isFinished = false
         jsonMetadataURL = ""
+        currentVideoPath = ""
         uploadProgress = 0
         numberOfUploadsComplete = 0
         currentTaskFrameTimestamps?.removeAll()

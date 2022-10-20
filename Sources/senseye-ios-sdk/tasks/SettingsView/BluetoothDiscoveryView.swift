@@ -58,5 +58,8 @@ struct BluetoothDiscoveryView: View {
                 Spacer()
             }
         }
+        .onAppear {
+            viewModel.reconnectToLastPeripheral()
+        }
     }
 }

@@ -353,10 +353,12 @@ class FileUploadAndPredictionService: ObservableObject {
         hostApiKey = nil
         isDebugModeEnabled = false
         isFinished = false
+        shouldStopBluetooth = false
         jsonMetadataURL = ""
         currentVideoPath = ""
         uploadProgress = 0
         numberOfUploadsComplete = 0
+        numberOfTasksCompleted = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
         UserDefaults.standard.resetUser()

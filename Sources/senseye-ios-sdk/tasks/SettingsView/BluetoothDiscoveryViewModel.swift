@@ -28,6 +28,7 @@ class BluetoothDiscoveryViewModel: ObservableObject {
 
         bluetoothService.onConnected = { [weak self] in
             self?.startConnectionTimestamp = Date().currentTimeMillis()
+            Log.info("BLE startConnectionTimestamp \(String(describing: self?.startConnectionTimestamp))")
         }
         
         bluetoothService.onDataUpdated = { data in
@@ -41,8 +42,8 @@ class BluetoothDiscoveryViewModel: ObservableObject {
         bluetoothService.$discoveredPeripherals
             .receive(on: DispatchQueue.main)
             .sink { [weak self] peripherals in
-                guard let self = self else { return }
-                self.discoveredPeripheral = peripherals.first
+                guard let self = self, !peripherals.isEmpty else { return }
+                self.discoveredPeripheral = peripherals.sorted(by: {$0.rssi > $1.rssi }).first
             }
             .store(in: &cancellables)
         
@@ -54,6 +55,7 @@ class BluetoothDiscoveryViewModel: ObservableObject {
                     self.endConnectionTimestamp = Date().currentTimeMillis()
                     self.bluetoothService.disconnectFromPeripheral()
                     self.addTaskInfoToJson()
+                    self.reset()
                 }
             }
             .store(in: &cancellables)
@@ -77,5 +79,15 @@ class BluetoothDiscoveryViewModel: ObservableObject {
         )
         Log.info("Adding Heart Rate data points of \(String(describing: taskInfo.timestamps?.count)) elements")
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
+    }
+
+    func reconnectToLastPeripheral() {
+        bluetoothService.reconnectToLastPeripheral()
+    }
+
+    func reset() {
+        receivedBytes = []
+        startConnectionTimestamp = 0
+        endConnectionTimestamp = 0
     }
 }

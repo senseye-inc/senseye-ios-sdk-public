@@ -17,7 +17,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var isDeviceConnected: Bool = false
     private var subscribedCharacteristics: [String: [CBCharacteristic]] = [:]
 
-    private var connectedPeripheral: CBPeripheral?
+    private var lastConnectedPeripheral: CBPeripheral?
     private let decoder = JSONDecoder()
 
     var onDiscovered: (()->())?
@@ -41,27 +41,42 @@ class BluetoothService: NSObject, ObservableObject {
         manager.scanForPeripherals(withServices: nil, options: options)
     }
 
-    func connect(to peripheral: CBPeripheral) {
+    func connect(to peripheral: CBPeripheral, isReconnection: Bool = false) {
         // stop scanning to preserve battery and free up radio to manage connection
-        manager.stopScan()
+        if !isReconnection {
+            manager.stopScan()
+        }
 
         // options dict provides instructions to handling notificaitons to user during connection and disconnection events while the app is backgrounded
         // The outcome of connect is success, fail, or no feedback
-        // connection attempts don't timeout and it's possible the periph is no longer available. The next ttime the periph becomes avail, it may succesfully conect
+        // connection attempts don't timeout and it's possible the periph is no longer available. The next time the periph becomes avail, it may succesfully connect
         manager.connect(peripheral, options: nil)
-        connectedPeripheral = peripheral
+        lastConnectedPeripheral = peripheral
     }
 
     func disconnectFromPeripheral() {
         // unset notifications then discconect from peripherals
-        guard let connectedPeripheral = connectedPeripheral else {
-            Log.info("Not connected peripheral to disconnect from")
+        guard let lastConnectedPeripheral = lastConnectedPeripheral else {
+            Log.info("No connected peripheral to disconnect from")
             return
         }
-        subscribedCharacteristics[connectedPeripheral.identifier.uuidString]?.forEach({ characteristic in
-            connectedPeripheral.setNotifyValue(false, for: characteristic)
+        
+        subscribedCharacteristics[lastConnectedPeripheral.identifier.uuidString]?.forEach({ characteristic in
+            Log.info("Unsetting notification for BLE characteristic: \(characteristic)")
+            lastConnectedPeripheral.setNotifyValue(false, for: characteristic)
         })
-        manager.cancelPeripheralConnection(connectedPeripheral)
+        manager.cancelPeripheralConnection(lastConnectedPeripheral)
+    }
+
+    func reconnectToLastPeripheral() {
+        guard let lastConnectedPeripheral = lastConnectedPeripheral else {
+            Log.info("No previous peripheral had been connected")
+            return
+        }
+        //directly returns list of found peripherals corresponding to the list of UUID passed in
+        if let peripheral = manager.retrievePeripherals(withIdentifiers: [lastConnectedPeripheral.identifier]).first {
+            connect(to: peripheral, isReconnection: true)
+        }
     }
 
 }
@@ -104,15 +119,15 @@ extension BluetoothService: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         Log.info("Central did connect to \(peripheral.identifier.uuidString)")
-        connectedPeripheral = peripheral
+        lastConnectedPeripheral = peripheral
         // assign BLECentral as delegate to connected peripheral
-        connectedPeripheral?.delegate = self
+        lastConnectedPeripheral?.delegate = self
         // send the services we're interested in the connected peripheral. If service is discovered, it'll hit the peripheralDidDiscoverServices method
         // passing in nil means search all possible services
         let targetServices: [CBUUID]? = [
             CBUUID(string: BLEIdentifiers.berryMedService),
         ]
-        connectedPeripheral?.discoverServices(targetServices)
+        lastConnectedPeripheral?.discoverServices(targetServices)
         isDeviceConnected = true
         onConnected?()
     }
@@ -122,11 +137,10 @@ extension BluetoothService: CBCentralManagerDelegate {
         Log.error("Central failed to connect")
     }
 
-    // on any disconnect
+    // invoked on ANY disconnect. However from iOS 6.0 the device remains connected for about 40-50 seconds (or more), so no didDiscoverPeripheral will be invoked in that timeframe.
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         isDeviceConnected = false
         discoveredPeripherals.removeAll()
-        connectedPeripheral = nil
         if let error = error {
             Log.error("didDisconnectPeripheral error: \(error.localizedDescription)")
             // TODO: to attempt to reconnect, you have to repeart process of service and characteristic discovery

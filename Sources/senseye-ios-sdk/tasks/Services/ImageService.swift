@@ -165,15 +165,22 @@ class ImageService: ObservableObject {
             self.currentDownloadCount = "\(latestCount) of \(self.allImageNames.count)"
         }
     }
+
+    func getCategory(of imageId: String) -> AffectiveImageCategory? {
+        return affectiveImageSets.first { (_, affectiveImageSet) in
+            affectiveImageSet.imageIds.contains(imageId)
+        }?.1.category
+    }
 }
 
-enum AffectiveImageCategory {
+enum AffectiveImageCategory: String {
     case positive
     case neutral
     case negative
     case negativeArousal
     case facialExpression
 }
+
 struct AffectiveImageSet {
     let category: AffectiveImageCategory
     let imageIds: [String]

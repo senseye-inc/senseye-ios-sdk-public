@@ -15,7 +15,8 @@ class SurveyViewModel: ObservableObject {
     @Published var selectedAge: Int?
     @Published var selectedEyeColor: String?
     @Published var selectedGender: String?
-    @Published var debugModeEnabled: Bool = false
+    @Published var isDebugModeEnabled: Bool = false
+    @Published var isCensorModeEnabled: Bool = false
     @Published var shouldEnableStartButton: Bool = false
     @Published var currentDownloadStatusMessage: String = ""
     private var cancellables = Set<AnyCancellable>()
@@ -38,7 +39,11 @@ class SurveyViewModel: ObservableObject {
     }
     
     func updateDebugModeFlag() {
-        fileUploadService.isDebugModeEnabled = self.debugModeEnabled
+        fileUploadService.isDebugModeEnabled = self.isDebugModeEnabled
+    }
+
+    func updateCensorModeFlag() {
+        fileUploadService.isCensorModeEnabled = self.isCensorModeEnabled
     }
 
     func onAppear() {
@@ -47,6 +52,7 @@ class SurveyViewModel: ObservableObject {
 
     func onStartButton() {
         updateDebugModeFlag()
+        updateCensorModeFlag()
         createSessionJsonFile()
         resetSurveyResponses()
     }
@@ -56,7 +62,8 @@ class SurveyViewModel: ObservableObject {
     }
 
     private func resetSurveyResponses() {
-        debugModeEnabled = false
+        isDebugModeEnabled = false
+        isCensorModeEnabled = false
         selectedAge = nil
         selectedGender = nil
         selectedEyeColor = nil

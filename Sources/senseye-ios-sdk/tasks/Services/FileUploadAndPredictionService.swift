@@ -28,6 +28,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func getVideoPath() -> String
     func reset()
     var isDebugModeEnabled: Bool { get set }
+    var isCensorModeEnabled: Bool { get set }
     var debugModeTaskTiming: Double { get }
 
     var authenticationService: AuthenticationService? { get set }
@@ -70,6 +71,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
     var isDebugModeEnabled: Bool = false
+    var isCensorModeEnabled: Bool = false
     let debugModeTaskTiming = 0.5
     var taskCount: Int = 0
     var isFinalUpload: Bool {
@@ -247,6 +249,7 @@ class FileUploadAndPredictionService: ObservableObject {
             username: username,
             timezone: currentTiemzone.identifier,
             isDebugModeEnabled: isDebugModeEnabled,
+            isCensorModeEnabled: isCensorModeEnabled,
             phoneSettings: phoneSettings,
             phoneDetails: phoneDetails,
             tasks: []
@@ -352,6 +355,7 @@ class FileUploadAndPredictionService: ObservableObject {
         sessionInfo = nil
         hostApiKey = nil
         isDebugModeEnabled = false
+        isCensorModeEnabled = false
         isFinished = false
         shouldStopBluetooth = false
         jsonMetadataURL = ""

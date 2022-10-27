@@ -11,6 +11,7 @@ import UIKit
 struct SessionInfo: Codable {
     let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone: String?
     let isDebugModeEnabled: Bool?
+    let isCensorModeEnabled: Bool?
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
     var tasks: [SenseyeTask]

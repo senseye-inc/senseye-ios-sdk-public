@@ -51,10 +51,16 @@ struct SurveyView: View {
                 genderPicker
                 eyeColorPicker
                 if viewModel.isShowingDebugToggle ?? false {
-                    Toggle(isOn: $viewModel.debugModeEnabled) {
-                        Text("Enable Debug Mode")
-                            .foregroundColor(.white)
-                    }.padding()
+                    VStack {
+                        Toggle(isOn: $viewModel.isDebugModeEnabled) {
+                            Text("Enable Debug Mode")
+                                .foregroundColor(.white)
+                        }.padding()
+                        Toggle(isOn: $viewModel.isCensorModeEnabled) {
+                            Text("Enable Censor Mode")
+                                .foregroundColor(.white)
+                        }.padding()
+                    }
                 }
                 if !viewModel.shouldEnableStartButton {
                     Text(viewModel.currentDownloadStatusMessage)

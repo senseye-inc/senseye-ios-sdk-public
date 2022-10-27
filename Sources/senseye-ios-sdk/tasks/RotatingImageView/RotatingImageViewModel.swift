@@ -28,6 +28,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
             }
         }
     }
+
+    private var isCensorModeEnabled: Bool { fileUploadService.isCensorModeEnabled }
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
@@ -120,7 +122,12 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func updateCurrentImage() {
-        currentImage = images[currentImageIndex].1
+        let category = imageService.getCategory(of: images[currentImageIndex].0)
+        if isCensorModeEnabled, category == .negativeArousal {
+            currentImage = Image(uiImage: ["🙈","🙉","🙊"].randomElement()!.textToImage()!)
+        } else {
+            currentImage = images[currentImageIndex].1
+        }
     }
     
     func addSubscribers() {

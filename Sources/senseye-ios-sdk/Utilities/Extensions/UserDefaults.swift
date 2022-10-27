@@ -6,10 +6,21 @@
 //
 
 import Foundation
+
+enum AppStorageKeys: String, CaseIterable {
+    case cameraType
+    case username
+
+    func callAsFunction() -> String {
+        return self.rawValue
+    }
+}
+
 extension UserDefaults {
     func resetUser() {
-        let domain = Bundle.main.bundleIdentifier!
-        UserDefaults.standard.removePersistentDomain(forName: domain)
-        UserDefaults.standard.synchronize()
+        AppStorageKeys.allCases.forEach {
+            Log.info("Removing user default: \($0())")
+            self.removeObject(forKey: $0())
+        }
     }
 }

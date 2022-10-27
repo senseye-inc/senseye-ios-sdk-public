@@ -112,13 +112,3 @@ struct SenseyeTask: Codable {
         self.videoPath = videoPath
     }
 }
-
-enum AppStorageKeys: String {
-    case cameraType
-    case username
-
-    func callAsFunction() -> String {
-        return self.rawValue
-    }
-}
-

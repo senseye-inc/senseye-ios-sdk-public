@@ -60,16 +60,11 @@ extension LoginView {
             return "\(version ?? "Error getting version") (\(build ?? "Error getting build"))"
         }
 
-        /**
-         On any view load, any current user is signed out
-         # TODO: handle signout at a previous load state or make signout dependent on last account activity idle time
-         */
         func onAppear() {
             authenticationService.delegate = self
-            if (self.isUserSignedIn) {
-                self.authenticationService.signOut(completeSignOut: nil)
-            }
-            Log.debug("isSignedIn is \(self.isUserSignedIn)")
+            self.authenticationService.signOut(completeSignOut: nil)
+            username = ""
+            Log.info("isSignedIn is \(self.isUserSignedIn)", shouldLogContext: true)
         }
         
     }
@@ -83,7 +78,7 @@ extension LoginView.ViewModel: AuthenticationServiceDelegate {
     }
     
     func didSuccessfullySignIn() {
-        Log.info("Successful sign in")
+        Log.info("Successful sign in", shouldLogContext: true)
         DispatchQueue.main.async {
             self.isUserSignedIn = true
             self.isFetchingAuthorization = false
@@ -91,7 +86,7 @@ extension LoginView.ViewModel: AuthenticationServiceDelegate {
     }
  
     func didSuccessfullySignOut() {
-        Log.info("Successful signed out")
+        Log.info("Successful signed out", shouldLogContext: true)
         DispatchQueue.main.async {
             self.isUserSignedIn = false
         }

@@ -33,7 +33,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     @Published var shouldShowConfirmationView: Bool = false
     @Published var isLoading: Bool = true
-    @Published var images: [(String, Image)] = []
+    @Published var images: [SenseyeImage] = []
     @Published var isFinished: Bool = false
     @Published var currentImageIndex: Int = 0
     
@@ -44,7 +44,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
     var numberOfImagesShown = 0
-    var currentImage: Image?
+    var currentImage: UIImage?
 
     var finishedAllTasks: Bool {
         numberOfImagesShown >= images.count
@@ -90,8 +90,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         let timestamp = Date().currentTimeMillis()
         timestampsOfImageSwap.append(timestamp)
         let currentImage = images[currentImageIndex]
-        eventImageID.append(currentImage.0)
-        Log.info("Adding Image: \(currentImage.0) swap event timestamp \(currentImageIndex) --- \(timestamp)")
+        eventImageID.append(currentImage.imageName)
+        Log.info("Adding Image: \(currentImage.imageName) swap event timestamp \(currentImageIndex) --- \(timestamp)")
     }
     
     func removeLastImageSet() {
@@ -99,11 +99,9 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func checkForImages() {
-        guard let currentBlockNumber = self.tabInfo?.taskBlockNumber else {
-            return
-        }
         Log.info("in check for images ---")
-        imageService.updateImagesForBlock(blockNumber: currentBlockNumber)
+        guard let currentBlockNumber = self.tabInfo?.taskBlockNumber, let imageSetIDs = imageService.affectiveImageSets[currentBlockNumber]?.imageIds else { return }
+        imageService.updateImagesForBlock(imageSetIds: imageSetIDs)
         addSubscribers()
     }
     
@@ -122,11 +120,11 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func updateCurrentImage() {
-        let category = imageService.getCategory(of: images[currentImageIndex].0)
+        let category = imageService.getCategory(of: images[currentImageIndex].imageName)
         if isCensorModeEnabled, category == .negativeArousal {
-            currentImage = Image(uiImage: ["🙈","🙉","🙊"].randomElement()!.textToImage()!)
+            currentImage = ["🙈","🙉","🙊"].randomElement()!.textToImage()!
         } else {
-            currentImage = images[currentImageIndex].1
+            currentImage = images[currentImageIndex].image
         }
     }
     

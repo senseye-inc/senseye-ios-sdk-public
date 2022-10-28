@@ -19,6 +19,7 @@ class SurveyViewModel: ObservableObject {
     @Published var isCensorModeEnabled: Bool = false
     @Published var shouldEnableStartButton: Bool = false
     @Published var currentDownloadStatusMessage: String = ""
+    @Published var currentDownloadCountString: String = ""
     private var cancellables = Set<AnyCancellable>()
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -82,8 +83,13 @@ class SurveyViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { finishedImageDownload in
                 self.shouldEnableStartButton = finishedImageDownload
-                self.currentDownloadStatusMessage = "Downloading the Image Set, please give it a few minutes.. \(self.imageService.currentDownloadCount)"
+                self.currentDownloadStatusMessage = "Downloading the Image Set, please give it a few minutes.."
             })
+            .store(in: &cancellables)
+        
+        imageService.$currentDownloadCount
+            .receive(on: DispatchQueue.main)
+            .sink { self.currentDownloadCountString = $0 }
             .store(in: &cancellables)
     }
 }

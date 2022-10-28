@@ -48,7 +48,7 @@ struct SenseyeTabView: View {
                 .tag(TabType.cameraView)
                 .disableScrolling(disabled: true)
             
-            AttentionBiasFaceView(fileUploadAndPredictionService: fileUploadService)
+            AttentionBiasFaceView(fileUploadAndPredictionService: fileUploadService, imageService: imageService)
                 .tag(TabType.attentionBiasFaceView)
                 .gesture(DragGesture())
         }

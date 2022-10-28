@@ -16,8 +16,8 @@ struct AttentionBiasFaceView: View {
     @EnvironmentObject var tabController: TabController
     @EnvironmentObject var cameraService: CameraService
     
-    init(fileUploadAndPredictionService: FileUploadAndPredictionService) {
-        _viewModel = StateObject(wrappedValue: AttentionBiasFaceViewModel(fileUploadService: fileUploadAndPredictionService))
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService) {
+        _viewModel = StateObject(wrappedValue: AttentionBiasFaceViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService))
     }
     
     var body: some View {
@@ -29,7 +29,7 @@ struct AttentionBiasFaceView: View {
         .onAppear {
             cameraService.startRecordingForTask(taskId: "AttentionBiasFace")
             DispatchQueue.main.async {
-                viewModel.start()
+                viewModel.checkForImages()
             }
         }
         .onChange(of: viewModel.isFinished) { isFinished in
@@ -56,7 +56,7 @@ struct AttentionBiasFaceView: View {
 }
 
 struct SingleFaceView: View {
-    var image: String?
+    var image: UIImage?
     var isShowingImages: Bool
     let showDot: Bool
     var body: some View {
@@ -64,18 +64,29 @@ struct SingleFaceView: View {
             if showDot {
                 dotView
             }
-            Text(image ?? "empty")
-                .font(.system(size: 150))
-                .opacity(isShowingImages ? 1.0 : 0.0)
+            if let image = image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 300)
+                    .opacity(isShowingImages ? 1.0 : 0.0)
+            }
         }
+    }
+    
+    var dotView: some View {
+        Circle()
+            .foregroundColor(.white)
+            .frame(height: 40)
+            .opacity((isShowingImages) ? 0.0: 1.0)
     }
 }
 
 
 struct CurrentFaceBlockView: View {
     
-    let currentTopImage: String?
-    let currentBottomImage: String?
+    let currentTopImage: UIImage?
+    let currentBottomImage: UIImage?
     let isShowingImages: Bool
     let dotLocation: DotLocation?
     let isShowingXMark: Bool
@@ -91,14 +102,5 @@ struct CurrentFaceBlockView: View {
                 .opacity(isShowingXMark ? 1.0 : 0.0)
             SingleFaceView(image: currentBottomImage, isShowingImages: isShowingImages, showDot: dotLocation == .bottom ? true : false)
         }
-    }
-}
-
-extension SingleFaceView {
-    var dotView: some View {
-        Circle()
-            .foregroundColor(.white)
-            .frame(height: 40)
-            .opacity((isShowingImages) ? 0.0: 1.0)
     }
 }

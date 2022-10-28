@@ -63,11 +63,14 @@ struct SurveyView: View {
                     }
                 }
                 if !viewModel.shouldEnableStartButton {
-                    Text(viewModel.currentDownloadStatusMessage)
-                        .font(.system(size: 10))
-                        .foregroundColor(.senseyeTextColor)
-                        .bold()
-                        .multilineTextAlignment(.center)
+                    VStack {
+                        Text(viewModel.currentDownloadStatusMessage)
+                            .bold()
+                        Text(viewModel.currentDownloadCountString)
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.senseyeTextColor)
+                    .multilineTextAlignment(.center)
                 }
                 Spacer()
                 HStack(spacing: 100) {

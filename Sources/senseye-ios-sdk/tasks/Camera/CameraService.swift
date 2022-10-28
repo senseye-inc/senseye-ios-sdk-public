@@ -43,6 +43,7 @@ class CameraService: NSObject, ObservableObject {
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
     private let videoBufferQueue = DispatchQueue(label: "com.senseye.videoBufferQueue")
+    private var sessionExifBrightnessValues: [Double] = []
     
     init(authenticationService: AuthenticationServiceProtocol, fileUploadService: FileUploadAndPredictionServiceProtocol) {
         if let realCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
@@ -192,6 +193,8 @@ class CameraService: NSObject, ObservableObject {
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()
+        let sessionAverageExifBrightness = getSessionAverageExifBrightness()
+        fileUploadService.setAverageExifBrightness(to: sessionAverageExifBrightness)
         Log.info("Capture session stopped")
     }
     
@@ -233,6 +236,24 @@ class CameraService: NSObject, ObservableObject {
           Log.error("Video Writer error --> \(error.localizedDescription)")
       }
     }
+    
+    private func handleBrightness(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        //Retrieving EXIF data of camara frame buffer
+        let rawMetaData = CMCopyDictionaryOfAttachments(allocator: nil, target: sampleBuffer, attachmentMode: CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
+        let metadata = CFDictionaryCreateMutableCopy(nil, 0, rawMetaData) as NSMutableDictionary
+        guard
+            let exifData = metadata.value(forKey: "{Exif}") as? NSMutableDictionary,
+            let exifBrightnessValue : Double = exifData[kCGImagePropertyExifBrightnessValue as String] as? Double else { return }
+        sessionExifBrightnessValues.append(exifBrightnessValue)
+    }
+    
+    private func getSessionAverageExifBrightness() -> Double? {
+        guard !sessionExifBrightnessValues.isEmpty else { return nil }
+        let sum = sessionExifBrightnessValues.reduce(0.0, +)
+        return sum / Double(sessionExifBrightnessValues.count)
+    }
+    
+    
 }
 
 @available(iOS 14.0, *)
@@ -276,6 +297,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                     let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
                     let frameRate = (self?.frontCameraDevice as? AVCaptureDevice)?.activeFormat
                     self?.frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                    self?.handleBrightness(output, didOutput: sampleBuffer, from: connection)
                     if let hasStartedRecording = self?.startedCameraRecording, let isSimulatorBuild = self?.isSimulatorEnabled {
                         if !hasStartedRecording || isSimulatorBuild { return }
                         DispatchQueue.main.async {

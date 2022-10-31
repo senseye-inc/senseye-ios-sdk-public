@@ -16,6 +16,7 @@ struct SessionInfo: Codable {
     let phoneDetails: PhoneDetails?
     var averageExifBrightness: Double?
     var tasks: [SenseyeTask]
+    let userGroups: [String]?
     var predictionJobID: String?
     var asDictionary : [String:Any]? {
         let mirror = Mirror(reflecting: self)

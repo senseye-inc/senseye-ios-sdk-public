@@ -239,6 +239,8 @@ class FileUploadAndPredictionService: ObservableObject {
             downloadSpeed: nil,
             uploadSpeed: nil
         )
+        
+        let cognitoUserGroupIds = authenticationService?.accountUserGroups.map { $0.groupId } ?? []
 
         sessionInfo = SessionInfo(
             versionCode: versionCode,
@@ -253,7 +255,8 @@ class FileUploadAndPredictionService: ObservableObject {
             isCensorModeEnabled: isCensorModeEnabled,
             phoneSettings: phoneSettings,
             phoneDetails: phoneDetails,
-            tasks: []
+            tasks: [],
+            userGroups: cognitoUserGroupIds
         )
         Log.info("Session info initialized: \(String(describing: sessionInfo))")
     }

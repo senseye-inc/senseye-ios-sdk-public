@@ -24,10 +24,13 @@ class SurveyViewModel: ObservableObject {
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
+    let authentcationService: AuthenticationService
+    let userGroupConfig = CognitoUserGroupConfig()
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService, authenticationService: AuthenticationService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
+        self.authentcationService = authenticationService
         addSubscribers()
     }
 
@@ -48,7 +51,9 @@ class SurveyViewModel: ObservableObject {
     }
 
     func onAppear() {
-        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
+        isShowingDebugToggle = authentcationService.accountUserGroups.contains(where: { userGroup in
+            userGroup.isDebugEligibile
+        })
     }
 
     func onStartButton() {

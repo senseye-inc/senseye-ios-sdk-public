@@ -8,6 +8,10 @@
 import Amplify
 import SwiftUI
 import Foundation
+import AWSCognitoAuthPlugin
+import AWSDataStorePlugin
+import AWSS3StoragePlugin
+import AWSPluginsCore
 
 protocol AuthenticationServiceProtocol {
     func signOut(completeSignOut: (()->())? )
@@ -39,6 +43,9 @@ public class AuthenticationService: ObservableObject {
 
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
+    
+    var accountUserGroups: [CognitoUserGroup] = []
+    private let userGroupConfig = CognitoUserGroupConfig()
 
     /**
      Authenticates the user session and handles subsequent all sign in flows.
@@ -185,11 +192,13 @@ public class AuthenticationService: ObservableObject {
                 case .done:
                     // Use has successfully signed in to the app
                     Log.debug("done")
-                    DispatchQueue.main.async {
-                        self.isSignedIn = signinResult.isSignedIn
+                    self.setCurrentUserPool {
+                        DispatchQueue.main.async {
+                            self.isSignedIn = signinResult.isSignedIn
+                        }
+                        self.delegate?.didSuccessfullySignIn()
+                        Log.info("Auth.signIn complete \(signinResult.isSignedIn)")
                     }
-                    self.delegate?.didSuccessfullySignIn()
-                    Log.info("Auth.signIn complete \(signinResult.isSignedIn)")
                 }
             } catch(let error) {
                 // TODO: Insert delegate or completion handler for failed sign in.
@@ -221,6 +230,44 @@ public class AuthenticationService: ObservableObject {
             return
         }
         completion(currentSignedInUser)
+    }
+    
+    private func setCurrentUserPool(completion: @escaping () -> Void) {
+        Amplify.Auth.fetchAuthSession { result in
+            switch result {
+            case .success(let session):
+                do {
+                    // Get cognito user pool token
+                    if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
+                        print(try cognitoTokenProvider.getCognitoTokens().get().accessToken)
+                        let tokens = try cognitoTokenProvider.getCognitoTokens().get()
+                        print("Id token - \(tokens.idToken) ")
+
+                        let tokenClaims = try AWSAuthService().getTokenClaims(tokenString: tokens.idToken).get()
+                        print("Token Claims: \(tokenClaims)")
+                        
+                        if let groups = (tokenClaims["cognito:groups"] as? NSArray) as Array? {
+                            var cognitoGroups: [String] = []
+                            for group in groups {
+                                print("Cognito group: \(group)")
+                                if let groupString = group as? String {
+                                    cognitoGroups.append(groupString)
+                                }
+                            }
+                            self.accountUserGroups = cognitoGroups.compactMap({ groupId in
+                                self.userGroupConfig.userGroupForGroupId(groupId: groupId)
+                            })
+                            print(self.accountUserGroups)
+                            completion()
+                        }
+                    }
+                } catch {
+                    Log.error("Fetch user pool failed with error \(error)")
+                }
+            case .failure(let error):
+                Log.error("Fetch session failed with error \(error)")
+            }
+        }
     }
 }
 

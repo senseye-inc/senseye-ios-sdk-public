@@ -12,8 +12,8 @@ struct SurveyView: View {
     @StateObject var viewModel : SurveyViewModel
     @State var isPresentingSettingsView: Bool = false
 
-    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService) {
-        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService))
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService, authenticationService: AuthenticationService) {
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService, authenticationService: authenticationService))
     }
     
     var body: some View {

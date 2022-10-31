@@ -58,6 +58,11 @@ struct SenseyeTabView: View {
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
         })
+        .onChange(of: tabController.shouldRefreshAllTabs, perform: { newValue in
+            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            Log.info("task count ---- \(tabController.numberOfTasks())")
+            tabController.shouldRefreshAllTabs = false
+        })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)
         .navigationBarHidden(true)

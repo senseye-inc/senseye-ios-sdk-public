@@ -83,30 +83,22 @@ public class AuthenticationService: ObservableObject {
      */
     public func signOut(completeSignOut: (()->())? = nil ) {
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
+            Log.info("No user to signout", shouldLogContext: true)
             completeSignOut?()
             return
         }
-        
-        Amplify.Auth.fetchAuthSession { result in
+
+        Amplify.Auth.signOut { result in
             switch result {
-            case .success(let currentSession):
-                if (currentSession.isSignedIn) {
-                    Amplify.Auth.signOut { result in
-                        switch result {
-                        case .success():
-                            DispatchQueue.main.async {
-                                self.isSignedIn = currentSession.isSignedIn
-                                Log.info("\(currentSignedInUser) signed out: \(self.isSignedIn)")
-                                self.delegate?.didSuccessfullySignOut()
-                                completeSignOut?()
-                            }
-                        case .failure(let error):
-                            Log.warn("Amplify auth signout failed in \(#function) with error \(error)")
-                        }
-                    }
+            case .success():
+                DispatchQueue.main.async {
+                    self.isSignedIn = false
+                    Log.info("Signed out currentSignedInUser \(currentSignedInUser)")
+                    self.delegate?.didSuccessfullySignOut()
+                    completeSignOut?()
                 }
             case .failure(let error):
-                Log.error("Fetch session failed in \(#function) with error \(error)")
+                Log.warn("Amplify auth signout failed in \(#function) with error \(error)")
             }
         }
     }

@@ -34,12 +34,12 @@ struct LoginView: View {
                         .foregroundColor(.senseyeTextColor)
                 }
                 
-                Button(action: {
+                Button {
                     vm.login()
-                }, label: {
+                } label: {
                     SenseyeButton(text: "login", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                         .padding()
-                })
+                }
                 .disabled(vm.username.isEmpty || vm.password.isEmpty || vm.isFetchingAuthorization)
                 .alert(vm.alertItem?.title ?? "", isPresented: $vm.isShowingAlert) {
                     Button(vm.alertItem?.alertButtonText ?? "") { }

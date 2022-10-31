@@ -42,6 +42,12 @@ class SurveyViewModel: ObservableObject {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""
     }
     
+    var isInternalTestingGroup: Bool {
+        authentcationService.accountUserGroups.contains(where: { userGroup in
+            userGroup.isDebugEligibile
+        })
+    }
+    
     func updateDebugModeFlag() {
         fileUploadService.isDebugModeEnabled = self.isDebugModeEnabled
     }
@@ -51,11 +57,9 @@ class SurveyViewModel: ObservableObject {
     }
 
     func onAppear() {
-        isShowingDebugToggle = authentcationService.accountUserGroups.contains(where: { userGroup in
-            userGroup.isDebugEligibile
-        })
+        isShowingDebugToggle = isInternalTestingGroup
     }
-
+    
     func onStartButton() {
         updateDebugModeFlag()
         updateCensorModeFlag()

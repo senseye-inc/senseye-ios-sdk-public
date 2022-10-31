@@ -45,6 +45,7 @@ class CameraService: NSObject, ObservableObject {
     private var latestFileUrl: URL?
     private var frameTimestampsForTask: [Int64] = []
     private let videoBufferQueue = DispatchQueue(label: "com.senseye.videoBufferQueue")
+    private var sessionExifBrightnessValues: [Double] = []
     
     private var cameraComplianceViewModel = CameraComplianceViewModel()
     
@@ -88,6 +89,7 @@ class CameraService: NSObject, ObservableObject {
         switch frontCameraDevice.videoAuthorizationStatus {
         case .authorized: // The user has previously granted access to the camera.
             self.setupCaptureSession()
+            self.configureCameraForHighestFrameRate()
         case .notDetermined: // The user has not yet been asked for camera access.
             frontCameraDevice.requestAccessForVideo { granted in
                 guard granted else {
@@ -117,8 +119,6 @@ class CameraService: NSObject, ObservableObject {
         }
         
         do {
-            self.configureCameraForHighestFrameRate(device: frontCameraDevice)
-
             captureSession.beginConfiguration()
             let videoDeviceInput = try AVCaptureDeviceInput(device: frontCameraDevice)
             if captureSession.canAddInput(videoDeviceInput) {
@@ -146,11 +146,17 @@ class CameraService: NSObject, ObservableObject {
         }
     }
     
-    private func configureCameraForHighestFrameRate(device: AVCaptureDevice) {
+    private func configureCameraForHighestFrameRate() {
+        
+        guard let frontCameraDevice = (frontCameraDevice as? AVCaptureDevice) else {
+            Log.error("Error configuring frameRate")
+            return
+        }
+        
         var bestFormat: AVCaptureDevice.Format?
         var bestFrameRateRange: AVFrameRateRange?
         
-        for format in device.formats {
+        for format in frontCameraDevice.formats {
             for range in format.videoSupportedFrameRateRanges {
                 if range.maxFrameRate > bestFrameRateRange?.maxFrameRate ?? 0 {
                     bestFormat = format
@@ -160,21 +166,21 @@ class CameraService: NSObject, ObservableObject {
         }
         
         guard let bestFormat = bestFormat, let bestFrameRateRange = bestFrameRateRange else {
-            Log.error("Capture Device format is nil for \(device).\n bestFormat: \(String(describing: bestFormat))/n bestFrameRate: \(String(describing: bestFrameRateRange))")
+            Log.error("Capture Device format is nil for \(frontCameraDevice).\n bestFormat: \(String(describing: bestFormat))/n bestFrameRate: \(String(describing: bestFrameRateRange))")
             return
         }
         do {
-            try device.lockForConfiguration()
+            try frontCameraDevice.lockForConfiguration()
             
             // Set the device's active format.
-            device.activeFormat = bestFormat
+            frontCameraDevice.activeFormat = bestFormat
             
             // Set the device's min/max frame duration.
             let duration = bestFrameRateRange.minFrameDuration
-            device.activeVideoMinFrameDuration = duration
-            device.activeVideoMaxFrameDuration = duration
+            frontCameraDevice.activeVideoMinFrameDuration = duration
+            frontCameraDevice.activeVideoMaxFrameDuration = duration
             
-            device.unlockForConfiguration()
+            frontCameraDevice.unlockForConfiguration()
         } catch {
             // Handle error.
             Log.error("Unable to set device format", shouldLogContext: true)
@@ -204,6 +210,8 @@ class CameraService: NSObject, ObservableObject {
     
     func stopCaptureSession() {
         self.captureSession.stopRunning()
+        let sessionAverageExifBrightness = getSessionAverageExifBrightness()
+        fileUploadService.setAverageExifBrightness(to: sessionAverageExifBrightness)
         Log.info("Capture session stopped")
     }
     
@@ -239,11 +247,30 @@ class CameraService: NSObject, ObservableObject {
           }
           
           videoWriter.startWriting()
+          Log.info("started the video writer ---")
       }
       catch let error {
           Log.error("Video Writer error --> \(error.localizedDescription)")
       }
     }
+    
+    private func handleBrightness(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        //Retrieving EXIF data of camara frame buffer
+        let rawMetaData = CMCopyDictionaryOfAttachments(allocator: nil, target: sampleBuffer, attachmentMode: CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
+        let metadata = CFDictionaryCreateMutableCopy(nil, 0, rawMetaData) as NSMutableDictionary
+        guard
+            let exifData = metadata.value(forKey: "{Exif}") as? NSMutableDictionary,
+            let exifBrightnessValue : Double = exifData[kCGImagePropertyExifBrightnessValue as String] as? Double else { return }
+        sessionExifBrightnessValues.append(exifBrightnessValue)
+    }
+    
+    private func getSessionAverageExifBrightness() -> Double? {
+        guard !sessionExifBrightnessValues.isEmpty else { return nil }
+        let sum = sessionExifBrightnessValues.reduce(0.0, +)
+        return sum / Double(sessionExifBrightnessValues.count)
+    }
+    
+    
 }
 
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -261,7 +288,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             DispatchQueue.main.async {
                 self.frame = context.createCGImage(ciImage, from: ciImage.extent)
             }
-            cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
+            if (fileUploadService.isDebugModeEnabled) {
+                cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
+            }
             return
         }
         
@@ -285,8 +314,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                     let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
                     let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))
                     let outputBufferTimestampAsMillis = startTaskTime + diffInMillis
-                    
+                    let frameRate = (self?.frontCameraDevice as? AVCaptureDevice)?.activeFormat
                     self?.frameTimestampsForTask.append(outputBufferTimestampAsMillis)
+                    self?.handleBrightness(output, didOutput: sampleBuffer, from: connection)
                     if let hasStartedRecording = self?.startedCameraRecording, let isSimulatorBuild = self?.isSimulatorEnabled {
                         if !hasStartedRecording || isSimulatorBuild { return }
                         DispatchQueue.main.async {

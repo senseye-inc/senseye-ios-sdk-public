@@ -56,8 +56,15 @@ class TabController: ObservableObject {
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
+    var areInternalTestingTasksEnabled: Bool = false
     
     init() {
+        updateCurrentTabSet()
+    }
+    
+    func updateCurrentTabSet() {
+        taskTabOrdering.removeAll()
+        
         //Initial Tabs
         taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
                             TabItem(taskId: "survey_view", tabType: .surveyView)]
@@ -122,11 +129,13 @@ class TabController: ObservableObject {
                 taskDescription: "Stare at the cross for the duration of the task.",
                 isTaskItem: true))
         
-        taskTabOrdering += [
-            TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView),
-            (TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
-                     taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
-                     isTaskItem: true))]
+        if (areInternalTestingTasksEnabled) {
+            taskTabOrdering += [
+                TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView),
+                (TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                         taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                         isTaskItem: true))]
+        }
         
         //Ending Calibration
         taskTabOrdering += [
@@ -139,12 +148,15 @@ class TabController: ObservableObject {
                 isTaskItem: true
             ),
             TabItem(taskId: "results_view", tabType: .resultsView)]
-                            
+        Log.info("task count ---- \(self.numberOfTasks())")
+        self.shouldRefreshAllTabs = true
     }
 
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1
     }
+    
+    var shouldRefreshAllTabs: Bool = false
 
     func refreshSameTab() {
         currentTabIndex-=1

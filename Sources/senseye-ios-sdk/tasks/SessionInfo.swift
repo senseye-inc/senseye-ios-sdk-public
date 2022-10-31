@@ -14,6 +14,7 @@ struct SessionInfo: Codable {
     let isCensorModeEnabled: Bool?
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
+    var averageExifBrightness: Double?
     var tasks: [SenseyeTask]
     var predictionJobID: String?
     var asDictionary : [String:Any]? {
@@ -37,7 +38,7 @@ enum TaskBlockSubcategory: String, Codable {
 // MARK: - PhoneSetting
 struct PhoneSettings: Codable {
     let idlenessTimerDisabled: Bool
-    let brightness, freeSpace: Int?
+    let screenBrightness, freeSpace: Int?
     let networkType: String?
     let downloadSpeed, uploadSpeed: Int?
 }
@@ -113,13 +114,3 @@ struct SenseyeTask: Codable {
         self.videoPath = videoPath
     }
 }
-
-enum AppStorageKeys: String {
-    case cameraType
-    case username
-
-    func callAsFunction() -> String {
-        return self.rawValue
-    }
-}
-

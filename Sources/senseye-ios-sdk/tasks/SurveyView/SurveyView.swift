@@ -94,7 +94,11 @@ struct SurveyView: View {
                 }
             }
         }
-        .onAppear { viewModel.onAppear() }
+        .onAppear {
+            viewModel.onAppear()
+            tabController.areInternalTestingTasksEnabled = viewModel.isInternalTestingGroup
+            tabController.updateCurrentTabSet()
+        }
         .sheet(isPresented: self.$isPresentingSettingsView) {
             isPresentingSettingsView = false
         } content: {

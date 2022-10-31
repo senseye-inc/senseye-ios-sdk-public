@@ -8,7 +8,7 @@ import Foundation
 import SwiftUI
 
 class PLRViewModel: ObservableObject, TaskViewModelProtocol {
-
+    
     @Published var backgroundColor: Color = .black
     @Published var xMarkColor: Color = .white
     @Published var shouldShowConfirmationView: Bool = false
@@ -25,6 +25,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
 
     var currentInterval: Int = 0
+    var blockNumber: Int?
     private var timestampsOfBackgroundSwap: [Int64] = []
     private var eventBackgroundColor: [String] = []
     private let fileUploadService: FileUploadAndPredictionServiceProtocol
@@ -80,7 +81,7 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor, videoPath: fileUploadService.getVideoPath())
+        let taskInfo = SenseyeTask(taskID: "plr", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfBackgroundSwap, eventBackgroundColor: eventBackgroundColor, blockNumber: blockNumber, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
 }

@@ -27,6 +27,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func getLatestFrameTimestampArray() -> [Int64]
     func getVideoPath() -> String
     func reset()
+    func setAverageExifBrightness(to averageExifBrightness: Double?)
     var isDebugModeEnabled: Bool { get set }
     var isCensorModeEnabled: Bool { get set }
     var debugModeTaskTiming: Double { get }
@@ -210,7 +211,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let deviceType = UIDevice().type
         @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
         let currentTiemzone = TimeZone.current
-        let currentBrightnessInt = Int(UIScreen.main.brightness)
+        let currentScreenBrightnessInt = Int(UIScreen.main.brightness)
         let osVersion = UIDevice.current.systemVersion
         let reachability = NetworkReachabilityManager.default?.status
         let idlenessTimerDisabled = UIApplication.shared.isIdleTimerDisabled
@@ -232,7 +233,7 @@ class FileUploadAndPredictionService: ObservableObject {
 
         let phoneSettings = PhoneSettings(
             idlenessTimerDisabled: idlenessTimerDisabled,
-            brightness: currentBrightnessInt,
+            screenBrightness: currentScreenBrightnessInt,
             freeSpace: nil,
             networkType: networkType,
             downloadSpeed: nil,
@@ -267,6 +268,10 @@ class FileUploadAndPredictionService: ObservableObject {
     
     func getVideoPath() -> String {
         return currentVideoPath ?? ""
+    }
+    
+    func setAverageExifBrightness(to averageExifBrightness: Double?) {
+        self.sessionInfo?.averageExifBrightness = averageExifBrightness
     }
 
     func addTaskRelatedInfo(for taskInfo: SenseyeTask) {

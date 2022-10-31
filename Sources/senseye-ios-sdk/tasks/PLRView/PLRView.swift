@@ -28,6 +28,7 @@ struct PLRView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
+            viewModel.blockNumber = tabController.activeTabBlockNumber
             cameraService.startRecordingForTask(taskId: "PLR")
             DispatchQueue.main.async {
                 viewModel.showPLR()

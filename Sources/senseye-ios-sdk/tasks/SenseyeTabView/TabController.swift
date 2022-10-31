@@ -60,6 +60,7 @@ class TabController: ObservableObject {
     
     init() {
         updateCurrentTabSet()
+        areInternalTestingTasksEnabled = false
     }
     
     func updateCurrentTabSet() {

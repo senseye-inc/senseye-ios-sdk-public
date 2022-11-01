@@ -40,12 +40,13 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
         if plrTimer == nil {
             Log.info("PLRViewModel creating timer")
             hasStartedTask = true
+            addTimestampAndBackgroundColor()
             plrTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [weak self] timer in
                 guard let self = self else { return }
                 self.currentInterval += 1
                 if self.currentInterval <= 1 {
                     self.toggleColors()
-                    self.timestampsOfBackgroundSwap.append(Date().self.currentTimeMillis())
+                    self.addTimestampAndBackgroundColor()
                 } else {
                     self.shouldShowConfirmationView.toggle()
                     self.isFinished = true
@@ -66,6 +67,10 @@ class PLRViewModel: ObservableObject, TaskViewModelProtocol {
     private func toggleColors() {
         backgroundColor = (backgroundColor == .white ? .black : .white)
         xMarkColor = (xMarkColor == .black ? .white : .black)
+    }
+    
+    private func addTimestampAndBackgroundColor() {
+        self.timestampsOfBackgroundSwap.append(Date().self.currentTimeMillis())
         eventBackgroundColor.append(xMarkColor.toHex() ?? "")
     }
 

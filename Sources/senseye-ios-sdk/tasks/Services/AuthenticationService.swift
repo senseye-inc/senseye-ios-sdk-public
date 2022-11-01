@@ -233,15 +233,12 @@ public class AuthenticationService: ObservableObject {
                     if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
                         print(try cognitoTokenProvider.getCognitoTokens().get().accessToken)
                         let tokens = try cognitoTokenProvider.getCognitoTokens().get()
-                        print("Id token - \(tokens.idToken) ")
 
                         let tokenClaims = try AWSAuthService().getTokenClaims(tokenString: tokens.idToken).get()
-                        print("Token Claims: \(tokenClaims)")
                         
                         if let groups = (tokenClaims["cognito:groups"] as? NSArray) as Array? {
                             var cognitoGroups: [String] = []
                             for group in groups {
-                                print("Cognito group: \(group)")
                                 if let groupString = group as? String {
                                     cognitoGroups.append(groupString)
                                 }
@@ -249,7 +246,6 @@ public class AuthenticationService: ObservableObject {
                             self.accountUserGroups = cognitoGroups.compactMap({ groupId in
                                 self.userGroupConfig.userGroupForGroupId(groupId: groupId)
                             })
-                            print(self.accountUserGroups)
                             completion()
                         }
                     }

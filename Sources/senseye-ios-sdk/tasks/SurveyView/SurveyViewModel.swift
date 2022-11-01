@@ -24,13 +24,13 @@ class SurveyViewModel: ObservableObject {
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
-    let authentcationService: AuthenticationService
+    let authenticationService: AuthenticationService
     let userGroupConfig = CognitoUserGroupConfig()
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService, authenticationService: AuthenticationService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
-        self.authentcationService = authenticationService
+        self.authenticationService = authenticationService
         addSubscribers()
     }
 
@@ -43,7 +43,7 @@ class SurveyViewModel: ObservableObject {
     }
     
     var isInternalTestingGroup: Bool {
-        authentcationService.accountUserGroups.contains(where: { userGroup in
+        authenticationService.accountUserGroups.contains(where: { userGroup in
             userGroup.isDebugEligibile
         })
     }

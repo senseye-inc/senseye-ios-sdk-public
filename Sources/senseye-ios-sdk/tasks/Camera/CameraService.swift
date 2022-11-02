@@ -225,6 +225,7 @@ class CameraService: NSObject, ObservableObject {
     
     func clearLatestFileRecording() {
         latestFileUrl = nil
+        frameTimestampsForTask.removeAll()
     }
 
     func goToSettings() {
@@ -306,7 +307,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoBufferQueue.async { [weak self] in
-                    self?.videoWriterInput.append(sampleBuffer)
                     guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
                         return
                     }
@@ -323,6 +323,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                             self?.startedCameraRecording = true
                         }
                     }
+                    self?.videoWriterInput.append(sampleBuffer)
                 }
             }
         }

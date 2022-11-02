@@ -15,11 +15,14 @@ struct CognitoUserGroup {
 class CognitoUserGroupConfig {
 
     let userGroups: [CognitoUserGroup] = [CognitoUserGroup(groupId: "senseye_user_group", isDebugEligibile: true)]
+    let defaultUserGroup: CognitoUserGroup = CognitoUserGroup(groupId: "app_default", isDebugEligibile: false)
     
-    func userGroupForGroupId(groupId: String) -> CognitoUserGroup? {
-        return userGroups.first { userGroup in
-            userGroup.groupId == groupId
+    func userGroupForGroupId(groupId: String) -> CognitoUserGroup {
+        let filteredGroup = userGroups.first { userGroup in userGroup.groupId == groupId }
+        guard let knownUserGroup = filteredGroup else {
+            return defaultUserGroup
         }
+        return knownUserGroup
     }
     
 }

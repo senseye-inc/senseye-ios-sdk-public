@@ -231,18 +231,12 @@ public class AuthenticationService: ObservableObject {
                 do {
                     // Get cognito user pool token
                     if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
-                        print(try cognitoTokenProvider.getCognitoTokens().get().accessToken)
                         let tokens = try cognitoTokenProvider.getCognitoTokens().get()
 
                         let tokenClaims = try AWSAuthService().getTokenClaims(tokenString: tokens.idToken).get()
                         
                         if let groups = (tokenClaims["cognito:groups"] as? NSArray) as Array? {
-                            var cognitoGroups: [String] = []
-                            for group in groups {
-                                if let groupString = group as? String {
-                                    cognitoGroups.append(groupString)
-                                }
-                            }
+                            var cognitoGroups: [String] = groups.compactMap({ "\($0)" })
                             self.accountUserGroups = cognitoGroups.compactMap({ groupId in
                                 self.userGroupConfig.userGroupForGroupId(groupId: groupId)
                             })

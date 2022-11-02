@@ -124,11 +124,21 @@ class TabController: ObservableObject {
                 isTaskItem: true))
         
         if (areInternalTestingTasksEnabled) {
-            taskTabOrdering += [
-                TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView),
-                (TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
-                         taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
-                         isTaskItem: true))]
+            taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                                           isTaskItem: true))
+            taskTabOrdering.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(
+                taskId: "plr_view",
+                tabType: .plrView,
+                taskTitle: "PLR",
+                taskDescription: "Stare at the cross for the duration of the task.",
+                isTaskItem: true))
+            taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                                           isTaskItem: true))
         }
         
         //Ending Calibration

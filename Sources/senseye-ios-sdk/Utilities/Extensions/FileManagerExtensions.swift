@@ -39,15 +39,27 @@ extension FileManager {
         var senseyeImages: [SenseyeImage] = []
         for folderName in folderNames {
             for imageName in imageNames {
-                if let url = getURLForImage(imageName: imageName, folderName: folderName),
-                   FileManager.default.fileExists(atPath: url.path),
-                   let savedImage = UIImage(contentsOfFile: url.path) {
+                if let url = getURLForImage(imageName: imageName, folderName: folderName), FileManager.default.fileExists(atPath: url.path) {
+                    let savedImage = downsample(imageAt: url, to: UIScreen.main.bounds.size, scale: .infinity)
                     let newSenseyeImage = SenseyeImage(image: savedImage, imageName: imageName)
                     senseyeImages.append(newSenseyeImage)
                 }
             }
         }
         return senseyeImages
+    }
+    
+    private func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> UIImage {
+        let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, imageSourceOptions)!
+        let maxDimentionInPixels = max(pointSize.width, pointSize.height) * scale
+        let downsampledOptions = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                          kCGImageSourceShouldCacheImmediately: true,
+                                    kCGImageSourceCreateThumbnailWithTransform: true,
+                                           kCGImageSourceThumbnailMaxPixelSize: maxDimentionInPixels] as CFDictionary
+        let downsampledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampledOptions)!
+        
+        return UIImage(cgImage: downsampledImage)
     }
     
     private func createFolderIfNeeded(folderName: String) {

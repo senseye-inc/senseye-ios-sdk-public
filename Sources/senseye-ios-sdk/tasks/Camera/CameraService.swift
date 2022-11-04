@@ -287,14 +287,15 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             let ciImage = CIImage(cvPixelBuffer: imageBuffer)
             let context = CIContext()
             DispatchQueue.main.async {
-                self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+                autoreleasepool {
+                    self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+                }
             }
             if (fileUploadService.isDebugModeEnabled) {
                 cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
             }
             return
         }
-        
         //Task has started --> start up the VideoWriter
         if writable, sessionAtSourceTime == nil {
             sessionAtSourceTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)

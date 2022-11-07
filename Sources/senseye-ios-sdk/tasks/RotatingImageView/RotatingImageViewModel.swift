@@ -124,7 +124,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         if isCensorModeEnabled, category == .negativeArousal {
             currentImage = ["🙈","🙉","🙊"].randomElement()!.textToImage()!
         } else {
-            currentImage = images[currentImageIndex].image
+            let retreivedImage = UIImage(contentsOfFile: images[currentImageIndex].imageUrl)
+            currentImage = retreivedImage
         }
     }
     

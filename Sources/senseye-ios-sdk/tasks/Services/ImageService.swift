@@ -130,15 +130,18 @@ class ImageService: ObservableObject {
                 Amplify.Storage.downloadData(key: imageId.1).resultPublisher
                     .retry(2)
                     .receive(on: DispatchQueue.global())
-                    .compactMap({UIImage(data: $0)})
+                    .compactMap({
+                        UIImage(data: $0)
+                    })
                     .sink { _ in
                     } receiveValue: { [weak self] image in
                         guard let self = self else {
                             return
                         }
                         Log.info("completed download for image: \(imageId)")
-                        self.fileManager.saveImage(image: image, imageName: imageId.0, folderName: folderName)
-                        let newSenseyeImage = SenseyeImage(image: image, imageName: imageId.0)
+                        let downsizedImage = image.scaleForDevicePreservingAspectRatio()
+                        let savedFileUrl = self.fileManager.saveImage(image: downsizedImage, imageName: imageId.0, folderName: folderName)
+                        let newSenseyeImage = SenseyeImage(imageUrl: savedFileUrl, imageName: imageId.0)
                         self.fullImageSet.append(newSenseyeImage)
                         Log.info("current count \(self.fullImageSet.count) of \(self.allImageNames.count)")
                         if self.fullImageSet.count == self.allImageNames.count {

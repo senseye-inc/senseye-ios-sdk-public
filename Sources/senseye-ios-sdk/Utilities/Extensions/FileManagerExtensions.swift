@@ -16,17 +16,21 @@ extension FileManager {
      - Parameter imageName: The image name to be used as an appending path component within the folder name
      - Parameter folderNames: The names of the folders where the images will be saved within the documents directory
      */
-    func saveImage(image: UIImage, imageName: String, folderName: String) {
+    func saveImage(image: UIImage, imageName: String, folderName: String) -> String {
         createFolderIfNeeded(folderName: folderName)
         
         guard let data = image.pngData(),
               let url = getURLForImage(imageName: imageName, folderName: folderName)
-        else { return }
+        else {
+            return ""
+        }
         
         do {
             try data.write(to: url)
+            return url.path
         } catch let error {
             Log.error("Error saving image: \(error). Imagename: \(imageName)")
+            return ""
         }
     }
     
@@ -40,26 +44,12 @@ extension FileManager {
         for folderName in folderNames {
             for imageName in imageNames {
                 if let url = getURLForImage(imageName: imageName, folderName: folderName), FileManager.default.fileExists(atPath: url.path) {
-                    let savedImage = downsample(imageAt: url, to: UIScreen.main.bounds.size, scale: .infinity)
-                    let newSenseyeImage = SenseyeImage(image: savedImage, imageName: imageName)
+                    let newSenseyeImage = SenseyeImage(imageUrl: url.path, imageName: imageName)
                     senseyeImages.append(newSenseyeImage)
                 }
             }
         }
         return senseyeImages
-    }
-    
-    private func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> UIImage {
-        let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
-        let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, imageSourceOptions)!
-        let maxDimentionInPixels = max(pointSize.width, pointSize.height) * scale
-        let downsampledOptions = [kCGImageSourceCreateThumbnailFromImageAlways: true,
-                                          kCGImageSourceShouldCacheImmediately: true,
-                                    kCGImageSourceCreateThumbnailWithTransform: true,
-                                           kCGImageSourceThumbnailMaxPixelSize: maxDimentionInPixels] as CFDictionary
-        let downsampledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampledOptions)!
-        
-        return UIImage(cgImage: downsampledImage)
     }
     
     private func createFolderIfNeeded(folderName: String) {

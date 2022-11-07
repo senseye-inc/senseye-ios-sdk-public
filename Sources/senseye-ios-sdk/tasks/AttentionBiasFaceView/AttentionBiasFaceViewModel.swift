@@ -91,8 +91,8 @@ class AttentionBiasFaceViewModel: ObservableObject {
     }
     
     private func showFaces() {
-        currentTopImage = images[imageInterval].image
-        currentBottomImage = images[imageInterval + 1].image
+        currentTopImage = UIImage(contentsOfFile: images[imageInterval].imageUrl)
+        currentBottomImage = UIImage(contentsOfFile: images[imageInterval + 1].imageUrl)
         isShowingImages = true
         DispatchQueue.main.asyncAfter(deadline: .now() + facesDisplayTime) {
             self.showDot()

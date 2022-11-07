@@ -30,7 +30,7 @@ extension Array where Element: Reorderable {
 }
 
 struct SenseyeImage: Reorderable {
-    let image: UIImage
+    let imageUrl: String
     let imageName: String
     
     typealias OrderElement = String

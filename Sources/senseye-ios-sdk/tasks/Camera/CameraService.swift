@@ -305,10 +305,10 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoBufferQueue.async { [weak self] in
-                    self?.videoWriterInput.append(sampleBuffer)
                     guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
                         return
                     }
+                    self?.videoWriterInput.append(sampleBuffer)
                     let bufferTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
                     let diffOfBufferAndSessionStart = CMTimeSubtract(bufferTimestamp, sourceTime)
                     let diffInMillis = Int64((CMTimeGetSeconds(diffOfBufferAndSessionStart)*1000))

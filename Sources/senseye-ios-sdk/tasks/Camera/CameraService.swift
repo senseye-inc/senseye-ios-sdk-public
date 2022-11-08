@@ -70,7 +70,6 @@ class CameraService: NSObject, ObservableObject {
         cameraComplianceViewModel.$faceDetectionResult
             .receive(on: DispatchQueue.main)
             .sink { updatedCompliance in
-                Log.info("setting the updated compliance in cameraservice")
                 self.currentComplianceInfo = updatedCompliance
             }
             .store(in: &cancellables)
@@ -287,9 +286,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             let ciImage = CIImage(cvPixelBuffer: imageBuffer)
             let context = CIContext()
             DispatchQueue.main.async {
-                autoreleasepool {
-                    self.frame = context.createCGImage(ciImage, from: ciImage.extent)
-                }
+                self.frame = context.createCGImage(ciImage, from: ciImage.extent)
             }
             if (fileUploadService.isDebugModeEnabled) {
                 cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
@@ -308,6 +305,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         if output == captureVideoDataOutput {
             if videoWriterInput.isReadyForMoreMediaData {
                 videoBufferQueue.async { [weak self] in
+                    self?.videoWriterInput.append(sampleBuffer)
                     guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
                         return
                     }
@@ -324,7 +322,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                             self?.startedCameraRecording = true
                         }
                     }
-                    self?.videoWriterInput.append(sampleBuffer)
                 }
             }
         }

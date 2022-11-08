@@ -147,7 +147,6 @@ class FileUploadAndPredictionService: ObservableObject {
         Log.debug("About to upload - video url: \(filename)")
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
-        
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { newProgressValue in
@@ -157,7 +156,6 @@ class FileUploadAndPredictionService: ObservableObject {
                 Log.info("latestProgress -- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
             }
             .store(in: &self.cancellables)
-
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
             .retry(2)
@@ -175,6 +173,8 @@ class FileUploadAndPredictionService: ObservableObject {
             }
         }
         .store(in: &self.cancellables)
+        
+        storageOperation.start()
     }
     
     private func setUserAttributes() {

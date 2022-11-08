@@ -32,7 +32,6 @@ class CameraComplianceViewModel: ObservableObject {
     private var sequenceHandler = VNSequenceRequestHandler()
     
     func runImageDetection(sampleBuffer: CMSampleBuffer) {
-        Log.info("Running detection ---- ")
         let detectFaceLandmarksRequest = VNDetectFaceLandmarksRequest(completionHandler: detectedFaceLandmarks)
         detectFaceLandmarksRequest.revision = VNDetectFaceLandmarksRequestRevision3
         do {
@@ -48,7 +47,6 @@ class CameraComplianceViewModel: ObservableObject {
     private func detectedFaceLandmarks(request: VNRequest, error: Error?) {
         
         guard let results = request.results as? [VNFaceObservation], let firstFaceResult = results.first else {
-            Log.info("No faces found - error")
             faceDetectionResult = FacialComplianceStatus.faceNotDetected()
             return
         }
@@ -62,7 +60,6 @@ class CameraComplianceViewModel: ObservableObject {
            let rightEye =  firstFaceResult.landmarks?.rightEye,
            let rightPupil = firstFaceResult.landmarks?.rightPupil {
            faceDetectionResult = FacialComplianceStatus.faceDetected()
-           Log.info("Found a face")
         } else {
            faceDetectionResult = FacialComplianceStatus.faceNotDetected()
         }

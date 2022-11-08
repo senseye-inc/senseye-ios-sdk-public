@@ -51,10 +51,6 @@ class CameraComplianceViewModel: ObservableObject {
             return
         }
         
-        
-        
-        
-        
         if let leftEye = firstFaceResult.landmarks?.leftEye,
            let leftPupil = firstFaceResult.landmarks?.leftPupil,
            let rightEye =  firstFaceResult.landmarks?.rightEye,

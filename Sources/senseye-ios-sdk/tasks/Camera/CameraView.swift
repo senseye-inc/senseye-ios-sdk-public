@@ -14,14 +14,22 @@ struct CameraView: View {
     
     @EnvironmentObject var cameraService: CameraService
     @EnvironmentObject var tabController: TabController
-    @StateObject var vm: CameraViewModel = CameraViewModel()
+    @StateObject var vm: CameraViewModel
+    
+    init(fileUploadService: FileUploadAndPredictionService) {
+        _vm = StateObject(wrappedValue: CameraViewModel(fileUploadService: fileUploadService))
+    }
     
     var body: some View {
         GeometryReader { _ in
             ZStack {
                 FrameView(image: $cameraService.frame)
                 VStack {
-                    FacialComplianceLabelView(currentComplianceInfo: $cameraService.currentComplianceInfo)
+                    if (vm.shouldShowFacialComplianceLabel) {
+                        FacialComplianceLabelView(currentComplianceInfo: $cameraService.currentComplianceInfo)
+                    } else {
+                        Spacer()
+                    }
                     Button { } label: {
                         CameraButtonOverlayView(callToActionText: $vm.callToActionText)
                             .onTapGesture(count: 2) {

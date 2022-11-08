@@ -17,13 +17,18 @@ class CameraViewModel: ObservableObject {
     @Published var isShowingOverlay: Bool = true
     @Published var shouldProceedToNextTab: Bool = false
     @Published var callToActionText: String = ""
-
-    private var cancellables: Set<AnyCancellable> = []
-
-    init() {
-        addSubscribers()
+    var shouldShowFacialComplianceLabel: Bool {
+        return self.fileUploadService.isDebugModeEnabled
     }
 
+    private var cancellables: Set<AnyCancellable> = []
+    private let fileUploadService: FileUploadAndPredictionServiceProtocol
+
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
+        self.fileUploadService = fileUploadService
+        addSubscribers()
+    }
+    
     func onAppear() {
         currentOverlayInterval = Timing.instructionTimeout
         currentCameraPreviewTimeInterval = Timing.cameraPreviewTimeout

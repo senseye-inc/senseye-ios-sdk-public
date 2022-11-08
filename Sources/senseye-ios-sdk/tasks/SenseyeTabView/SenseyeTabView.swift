@@ -44,7 +44,7 @@ struct SenseyeTabView: View {
                 .tag(TabType.resultsView)
                 .gesture(DragGesture())
 
-            CameraView()
+            CameraView(fileUploadService: fileUploadService)
                 .tag(TabType.cameraView)
                 .disableScrolling(disabled: true)
             

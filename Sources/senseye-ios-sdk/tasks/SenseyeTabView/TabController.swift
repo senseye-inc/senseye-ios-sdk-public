@@ -53,14 +53,13 @@ class TabController: ObservableObject {
     private var taskTabOrdering: [TabItem] = []
     
     @Published var activeTabType: TabType = .loginView
+    @Published var areInternalTestingTasksEnabled: Bool = false
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
-    var areInternalTestingTasksEnabled: Bool = false
     
     init() {
         updateCurrentTabSet()
-        areInternalTestingTasksEnabled = false
     }
     
     func updateCurrentTabSet() {
@@ -114,16 +113,9 @@ class TabController: ObservableObject {
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 24, category: .negativeArousal, subcategory: .desctruction))
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
         
-        taskTabOrdering.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
-        taskTabOrdering.append(
-            TabItem(
-                taskId: "plr_view",
-                tabType: .plrView,
-                taskTitle: "PLR",
-                taskDescription: "Stare at the cross for the duration of the task.",
-                isTaskItem: true))
         
         if (areInternalTestingTasksEnabled) {
+            Log.info("Internal Tasks are enabled!")
             taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
             taskTabOrdering.append(TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
                                            taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
@@ -152,14 +144,11 @@ class TabController: ObservableObject {
                 isTaskItem: true
             ),
             TabItem(taskId: "results_view", tabType: .resultsView)]
-        self.shouldRefreshAllTabs = true
     }
 
     var areAllTabsComplete: Bool {
         currentTabIndex >= taskTabOrdering.count - 1
     }
-    
-    var shouldRefreshAllTabs: Bool = false
 
     func refreshSameTab() {
         currentTabIndex-=1

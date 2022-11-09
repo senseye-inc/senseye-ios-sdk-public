@@ -58,6 +58,7 @@ class SurveyViewModel: ObservableObject {
 
     func onAppear() {
         isShowingDebugToggle = isInternalTestingGroup
+        isDebugModeEnabled = false
     }
     
     func onStartButton() {
@@ -72,7 +73,6 @@ class SurveyViewModel: ObservableObject {
     }
 
     private func resetSurveyResponses() {
-        isDebugModeEnabled = false
         isCensorModeEnabled = false
         selectedAge = nil
         selectedGender = nil

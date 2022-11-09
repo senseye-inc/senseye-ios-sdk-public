@@ -96,15 +96,15 @@ struct SurveyView: View {
         }
         .onAppear {
             viewModel.onAppear()
-            tabController.areInternalTestingTasksEnabled = viewModel.isInternalTestingGroup
-            tabController.updateCurrentTabSet()
         }
         .sheet(isPresented: self.$isPresentingSettingsView) {
             isPresentingSettingsView = false
         } content: {
             SettingsView()
         }
-
+        .onChange(of: viewModel.isDebugModeEnabled) { newValue in
+            tabController.areInternalTestingTasksEnabled = newValue
+        }
     }
 }
 

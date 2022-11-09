@@ -58,10 +58,10 @@ struct SenseyeTabView: View {
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
         })
-        .onChange(of: tabController.shouldRefreshAllTabs, perform: { newValue in
+        .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            tabController.updateCurrentTabSet()
             Log.info("task count ---- \(tabController.numberOfTasks())")
-            tabController.shouldRefreshAllTabs = false
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

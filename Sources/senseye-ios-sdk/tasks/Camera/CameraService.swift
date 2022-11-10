@@ -88,7 +88,6 @@ class CameraService: NSObject, ObservableObject {
         switch frontCameraDevice.videoAuthorizationStatus {
         case .authorized: // The user has previously granted access to the camera.
             self.setupCaptureSession()
-            self.configureCameraForHighestFrameRate()
         case .notDetermined: // The user has not yet been asked for camera access.
             frontCameraDevice.requestAccessForVideo { granted in
                 guard granted else {
@@ -119,6 +118,10 @@ class CameraService: NSObject, ObservableObject {
         
         do {
             captureSession.beginConfiguration()
+            captureSession.sessionPreset = .inputPriority
+
+            configureCameraForHighestFrameRate()
+
             let videoDeviceInput = try AVCaptureDeviceInput(device: frontCameraDevice)
             if captureSession.canAddInput(videoDeviceInput) {
                 captureSession.addInput(videoDeviceInput)
@@ -140,6 +143,7 @@ class CameraService: NSObject, ObservableObject {
             videoBufferQueue.async { [weak self] in
                 self?.captureSession.startRunning()
             }
+            Log.info("activeVideoMinFrameDuration \(frontCameraDevice.activeVideoMinFrameDuration), activeVideoMaxFrameDuration \(frontCameraDevice.activeVideoMaxFrameDuration)")
         } catch {
             Log.error("videoDeviceInput error")
         }

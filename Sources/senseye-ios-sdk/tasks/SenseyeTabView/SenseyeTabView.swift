@@ -59,9 +59,9 @@ struct SenseyeTabView: View {
             cameraService.stopCaptureSession()
         })
         .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
-            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
             tabController.updateCurrentTabSet()
             Log.info("task count ---- \(tabController.numberOfTasks())")
+            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

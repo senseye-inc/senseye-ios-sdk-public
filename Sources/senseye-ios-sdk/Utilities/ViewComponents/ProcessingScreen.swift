@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 struct ProcessingScreen: View {
     var body: some View {
         ZStack {

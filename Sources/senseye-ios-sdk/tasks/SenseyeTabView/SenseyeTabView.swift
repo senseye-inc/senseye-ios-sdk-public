@@ -6,7 +6,6 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct SenseyeTabView: View {
 
     @EnvironmentObject var authenticationService: AuthenticationService
@@ -21,7 +20,7 @@ struct SenseyeTabView: View {
                 .tag(TabType.loginView)
                 .gesture(DragGesture())
 
-            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService)
+            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService, authenticationService: authenticationService)
                 .tag(TabType.surveyView)
                 .gesture(DragGesture())
             
@@ -45,15 +44,24 @@ struct SenseyeTabView: View {
                 .tag(TabType.resultsView)
                 .gesture(DragGesture())
 
-            CameraView()
+            CameraView(fileUploadService: fileUploadService)
                 .tag(TabType.cameraView)
                 .disableScrolling(disabled: true)
+            
+            AttentionBiasFaceView(fileUploadAndPredictionService: fileUploadService, imageService: imageService)
+                .tag(TabType.attentionBiasFaceView)
+                .gesture(DragGesture())
         }
         .onAppear {
             fileUploadService.setTaskCount(to: tabController.numberOfTasks())
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
+        })
+        .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
+            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            tabController.updateCurrentTabSet()
+            Log.info("task count ---- \(tabController.numberOfTasks())")
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

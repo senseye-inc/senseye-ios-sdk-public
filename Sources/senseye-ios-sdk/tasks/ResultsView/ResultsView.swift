@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 struct ResultsView: View {
     
     @StateObject var viewModel: ResultsViewModel
@@ -79,7 +78,6 @@ struct ResultsView: View {
     }
 }
 
-@available(iOS 14.0, *)
 struct ResultNameAndImageStack: View {
     
     let resultName: String

@@ -12,7 +12,6 @@ import SwiftyJSON
 import Combine
 import SwiftUI
 
-@available(iOS 14.0, *)
 protocol FileUploadAndPredictionServiceProtocol {
     // MARK: - Published Properties
     var uploadProgress: Double { get }
@@ -30,6 +29,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     func reset()
     func setAverageExifBrightness(to averageExifBrightness: Double?)
     var isDebugModeEnabled: Bool { get set }
+    var isCensorModeEnabled: Bool { get set }
     var debugModeTaskTiming: Double { get }
 
     var authenticationService: AuthenticationService? { get set }
@@ -46,7 +46,6 @@ protocol FileUploadAndPredictionServiceDelegate: AnyObject {
 /**
  FileUploadAndPredictionService is responsible for communicating with backend service.
  */
-@available(iOS 14.0, *)
 class FileUploadAndPredictionService: ObservableObject {
     var authenticationService: AuthenticationService?
 
@@ -73,6 +72,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
     
     var isDebugModeEnabled: Bool = false
+    var isCensorModeEnabled: Bool = false
     let debugModeTaskTiming = 0.5
     var taskCount: Int = 0
     var isFinalUpload: Bool {
@@ -147,7 +147,6 @@ class FileUploadAndPredictionService: ObservableObject {
         Log.debug("About to upload - video url: \(filename)")
 
         let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
-        
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { newProgressValue in
@@ -157,7 +156,6 @@ class FileUploadAndPredictionService: ObservableObject {
                 Log.info("latestProgress -- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
             }
             .store(in: &self.cancellables)
-
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
             .retry(2)
@@ -175,6 +173,8 @@ class FileUploadAndPredictionService: ObservableObject {
             }
         }
         .store(in: &self.cancellables)
+        
+        storageOperation.start()
     }
     
     private func setUserAttributes() {
@@ -239,6 +239,8 @@ class FileUploadAndPredictionService: ObservableObject {
             downloadSpeed: nil,
             uploadSpeed: nil
         )
+        
+        let cognitoUserGroupIds = authenticationService?.accountUserGroups.map { $0.groupId } ?? []
 
         sessionInfo = SessionInfo(
             versionCode: versionCode,
@@ -250,9 +252,11 @@ class FileUploadAndPredictionService: ObservableObject {
             username: username,
             timezone: currentTiemzone.identifier,
             isDebugModeEnabled: isDebugModeEnabled,
+            isCensorModeEnabled: isCensorModeEnabled,
             phoneSettings: phoneSettings,
             phoneDetails: phoneDetails,
-            tasks: []
+            tasks: [],
+            userGroups: cognitoUserGroupIds
         )
         Log.info("Session info initialized: \(String(describing: sessionInfo))")
     }
@@ -359,6 +363,7 @@ class FileUploadAndPredictionService: ObservableObject {
         sessionInfo = nil
         hostApiKey = nil
         isDebugModeEnabled = false
+        isCensorModeEnabled = false
         isFinished = false
         shouldStopBluetooth = false
         jsonMetadataURL = ""
@@ -373,7 +378,6 @@ class FileUploadAndPredictionService: ObservableObject {
     
 }
 
-@available(iOS 14.0, *)
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
     var isFinishedPublisher: Published<Bool>.Publisher { $isFinished }

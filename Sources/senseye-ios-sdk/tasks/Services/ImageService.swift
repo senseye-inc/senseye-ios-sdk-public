@@ -9,10 +9,9 @@ import SwiftUI
 import Combine
 import Amplify
 
-@available(iOS 14.0, *)
 class ImageService: ObservableObject {
     private var authenticationService: AuthenticationService?
-
+    
     init(authenticationService: AuthenticationService) {
         self.fileManager = FileManager.default
         self.authenticationService = authenticationService
@@ -20,12 +19,13 @@ class ImageService: ObservableObject {
     }
     
     private var fullImageSet: [SenseyeImage] = []
-    @Published var imagesForBlock: [(String, Image)] = []
+    @Published var imagesForBlock: [SenseyeImage] = []
     @Published var finishedDownloadingAllImages = false
     @Published var currentDownloadCount: String  = ""
     
     private let fileManager: FileManager
-    private let folderName = "affective_images"
+    private let affectiveImageFolderName = "affective_images"
+    private let faceFolderName = "attention_bias_faces"
     private var cancellables = Set<AnyCancellable>()
     private var startedInitialDownload = false
     
@@ -33,7 +33,9 @@ class ImageService: ObservableObject {
         fullImageSet.count >= allImageNames.count
     }
     
-    private var affectiveImageSets: [Int: AffectiveImageSet] = [
+    var senseyeFaceIds = ["face1_angry", "face1_happy", "face1_neutral1", "face1_neutral2", "face1_sad", "face2_angry", "face2_happy", "face2_neutral1", "face2_neutral2", "face2_sad", "face3_angry", "face3_happy", "face3_neutral1", "face3_neutral2", "face3_sad", "face4_angry", "face4_happy", "face4_neutral1", "face4_neutral2", "face4_sad", "face5_angry", "face5_happy", "face5_neutral2", "face5_sad", "face6_angry", "face6_happy", "face6_neutral1", "face6_neutral2", "face6_sad"]
+    
+    var affectiveImageSets: [Int: AffectiveImageSet] = [
         1: AffectiveImageSet(category: .positive, imageIds: ["beach_1", "beach_2", "beach_6", "lake_2", "lake_7", "outside_5", "rainbow_1", "sunset_4"]),
         2: AffectiveImageSet(category: .neutral, imageIds: ["acorns_1", "pinecone", "beach", "fire_7", "fire_9", "leaves_3", "leaves_1", "snow_storm"]),
         3: AffectiveImageSet(category: .negative, imageIds: ["carsplash2", "garbage_dump_4", "dog_destroy", "gumshoe", "icecream", "kidmess", "spiltmilk", "trash"]),
@@ -65,12 +67,12 @@ class ImageService: ObservableObject {
         let imageNames = affectiveImageSets.flatMap { (key: Int, value: AffectiveImageSet) in
             return value.imageIds
         }
-        return imageNames
+        return imageNames + senseyeFaceIds
     }
-
+    
     func addSubscribers() {
         guard let authenticationService = self.authenticationService else { return }
-
+        
         authenticationService.$isSignedIn
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .receive(on: DispatchQueue.global(qos: .utility))
@@ -85,7 +87,7 @@ class ImageService: ObservableObject {
     }
     
     private func getImages() {
-        let allPreviouslyDownloadImages = fileManager.getImages(imageNames: allImageNames, folderName: folderName)
+        let allPreviouslyDownloadImages = fileManager.getImages(imageNames: allImageNames, folderNames: [affectiveImageFolderName, faceFolderName])
         let allPreviouslyDownloadedImageKeys = Set(allPreviouslyDownloadImages.map { $0.imageName })
         self.fullImageSet = allPreviouslyDownloadImages
         let fullImageNameSet = Set(allImageNames)
@@ -102,15 +104,8 @@ class ImageService: ObservableObject {
         }
     }
     
-    func updateImagesForBlock(blockNumber: Int) {
-        guard let imageSetIds = affectiveImageSets[blockNumber]?.imageIds else {
-            return
-        }
-        let senseyeImageFilesForIds = fullImageSet.filter { senseyeImage in
-            imageSetIds.contains(senseyeImage.imageName)
-        }
-        let imageSetForBlock = senseyeImageFilesForIds.map { ($0.imageName,Image(uiImage: $0.image)) }
-        self.imagesForBlock = imageSetForBlock
+    func updateImagesForBlock(imageSetIds: [String]) {
+        self.imagesForBlock = fullImageSet.filter { imageSetIds.contains($0.imageName) }
     }
     
     private func downloadSpecificImages(imageIds: [String]) {
@@ -119,26 +114,34 @@ class ImageService: ObservableObject {
             let imagesToDownloadFromBlock: [(String, String)] = imageSet.imageIds.filter { imageIds.contains($0) }.map {
                 ($0, "\(s3ImageFolder)/\($0).png")
             }
-            downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock)
+            downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock, folderName: affectiveImageFolderName)
         }
+        let facialExpressionImagesToDownloadFromBlock: [(String, String)] = senseyeFaceIds.filter { imageIds.contains($0) }.map {
+            ($0, "\(faceFolderName)/\($0).jpg")
+        }
+        downloadImagesToFileManager(s3ImageIds: facialExpressionImagesToDownloadFromBlock, folderName: faceFolderName)
     }
     
-    private func downloadImagesToFileManager(s3ImageIds: [(String, String)]) {
+    private func downloadImagesToFileManager(s3ImageIds: [(String, String)], folderName: String) {
         for imageId in s3ImageIds {
             let currentImageSetList = self.fullImageSet.map {$0.imageName}
             //Additional check to make sure we're only download images we don't have
             if(!currentImageSetList.contains(imageId.1)) {
                 Amplify.Storage.downloadData(key: imageId.1).resultPublisher
+                    .retry(2)
                     .receive(on: DispatchQueue.global())
-                    .compactMap({UIImage(data: $0)})
+                    .compactMap({
+                        UIImage(data: $0)
+                    })
                     .sink { _ in
                     } receiveValue: { [weak self] image in
                         guard let self = self else {
                             return
                         }
                         Log.info("completed download for image: \(imageId)")
-                        self.fileManager.saveImage(image: image, imageName: imageId.0, folderName: self.folderName)
-                        let newSenseyeImage = SenseyeImage(image: image, imageName: imageId.0)
+                        let downsizedImage = image.scaleForDevicePreservingAspectRatio()
+                        let savedFileUrl = self.fileManager.saveImage(image: downsizedImage, imageName: imageId.0, folderName: folderName)
+                        let newSenseyeImage = SenseyeImage(imageUrl: savedFileUrl, imageName: imageId.0)
                         self.fullImageSet.append(newSenseyeImage)
                         Log.info("current count \(self.fullImageSet.count) of \(self.allImageNames.count)")
                         if self.fullImageSet.count == self.allImageNames.count {
@@ -166,16 +169,40 @@ class ImageService: ObservableObject {
             self.currentDownloadCount = "\(latestCount) of \(self.allImageNames.count)"
         }
     }
+
+    func getCategory(of imageId: String) -> AffectiveImageCategory? {
+        return affectiveImageSets.first { (_, affectiveImageSet) in
+            affectiveImageSet.imageIds.contains(imageId)
+        }?.1.category
+    }
 }
 
-enum AffectiveImageCategory {
+enum AffectiveImageCategory: String {
     case positive
     case neutral
     case negative
     case negativeArousal
     case facialExpression
 }
+
 struct AffectiveImageSet {
     let category: AffectiveImageCategory
     let imageIds: [String]
+}
+
+// MARK: - Attention Bias Face Task
+struct SenseyeFaceSet {
+    let faces: (String, String)
+    let dotLocation: DotLocation
+}
+
+enum DotLocation {
+    case top, bottom
+}
+
+enum AffectiveFaceType {
+    case happy
+    case sad
+    case neutral
+    case angry
 }

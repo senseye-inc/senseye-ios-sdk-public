@@ -9,7 +9,6 @@ import XCTest
 import Combine
 @testable import senseye_ios_sdk
 
-@available(iOS 15.0, *)
 class ResultsViewModelTests: XCTestCase {
     
     var model: ResultsViewModel!

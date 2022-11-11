@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 extension Color {
     static let senseyePrimary = Color("senseyePrimary")
     static let senseyeSecondary = Color("senseyeSecondary")

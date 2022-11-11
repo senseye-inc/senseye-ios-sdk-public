@@ -15,6 +15,7 @@ enum TabType {
     case loginView
     case surveyView
     case calibrationView
+    case attentionBiasFaceView
     case hrCalibrationView
 }
 
@@ -46,18 +47,24 @@ struct TabItem: Hashable {
     }
 }
 
-@available(iOS 14.0, *)
 @MainActor
 class TabController: ObservableObject {
 
     private var taskTabOrdering: [TabItem] = []
     
     @Published var activeTabType: TabType = .loginView
+    @Published var areInternalTestingTasksEnabled: Bool = false
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
     
     init() {
+        updateCurrentTabSet()
+    }
+    
+    func updateCurrentTabSet() {
+        taskTabOrdering.removeAll()
+        
         //Initial Tabs
         taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
                             TabItem(taskId: "survey_view", tabType: .surveyView)]
@@ -68,7 +75,7 @@ class TabController: ObservableObject {
                     taskTitle: "Heart Rate Calibration",
                     taskDescription: "Relax and sit still for 3 minutes while we measure your baseline heart rate!",
                     isTaskItem: true)]
-        
+
         //Starting Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
@@ -106,6 +113,26 @@ class TabController: ObservableObject {
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 24, category: .negativeArousal, subcategory: .desctruction))
         taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
         
+        
+        if (areInternalTestingTasksEnabled) {
+            Log.info("Internal Tasks are enabled!")
+            taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                                           isTaskItem: true))
+            taskTabOrdering.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(
+                taskId: "plr_view",
+                tabType: .plrView,
+                taskTitle: "PLR",
+                taskDescription: "Stare at the cross for the duration of the task.",
+                isTaskItem: true))
+            taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
+                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+                                           isTaskItem: true))
+        }
+        
         //Ending Calibration
         taskTabOrdering += [
             TabItem(taskId: "camera_view_calibration", tabType: .cameraView),
@@ -117,7 +144,6 @@ class TabController: ObservableObject {
                 isTaskItem: true
             ),
             TabItem(taskId: "results_view", tabType: .resultsView)]
-                            
     }
 
     var areAllTabsComplete: Bool {

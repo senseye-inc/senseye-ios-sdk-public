@@ -14,19 +14,23 @@ extension FileManager {
      
      - Parameter image: The UIImage to be saved as PNG data
      - Parameter imageName: The image name to be used as an appending path component within the folder name
-     - Parameter folderName: The name of the folder where the image will be saved within the documents directory
+     - Parameter folderNames: The names of the folders where the images will be saved within the documents directory
      */
-    func saveImage(image: UIImage, imageName: String, folderName: String) {
+    func saveImage(image: UIImage, imageName: String, folderName: String) -> String {
         createFolderIfNeeded(folderName: folderName)
         
         guard let data = image.pngData(),
               let url = getURLForImage(imageName: imageName, folderName: folderName)
-        else { return }
+        else {
+            return ""
+        }
         
         do {
             try data.write(to: url)
+            return url.path
         } catch let error {
             Log.error("Error saving image: \(error). Imagename: \(imageName)")
+            return ""
         }
     }
     
@@ -35,14 +39,14 @@ extension FileManager {
      - Parameter imageNames: A array of strings used to retrieve images by name
      - Parameter folderName: The folder name as a string where the images are stored
      */
-    func getImages(imageNames: [String], folderName: String) -> [SenseyeImage] {
+    func getImages(imageNames: [String], folderNames: [String]) -> [SenseyeImage] {
         var senseyeImages: [SenseyeImage] = []
-        for imageName in imageNames {
-            if let url = getURLForImage(imageName: imageName, folderName: folderName),
-               FileManager.default.fileExists(atPath: url.path),
-               let savedImage = UIImage(contentsOfFile: url.path) {
-                let newSenseyeImage = SenseyeImage(image: savedImage, imageName: imageName)
-                senseyeImages.append(newSenseyeImage)
+        for folderName in folderNames {
+            for imageName in imageNames {
+                if let url = getURLForImage(imageName: imageName, folderName: folderName), FileManager.default.fileExists(atPath: url.path) {
+                    let newSenseyeImage = SenseyeImage(imageUrl: url.path, imageName: imageName)
+                    senseyeImages.append(newSenseyeImage)
+                }
             }
         }
         return senseyeImages

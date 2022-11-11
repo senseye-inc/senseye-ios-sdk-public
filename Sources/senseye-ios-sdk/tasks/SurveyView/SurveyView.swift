@@ -7,14 +7,13 @@
 
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct SurveyView: View {
     @EnvironmentObject var tabController: TabController
     @StateObject var viewModel : SurveyViewModel
     @State var isPresentingSettingsView: Bool = false
 
-    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService) {
-        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService))
+    init(fileUploadAndPredictionService: FileUploadAndPredictionService, imageService: ImageService, authenticationService: AuthenticationService) {
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(fileUploadService: fileUploadAndPredictionService, imageService: imageService, authenticationService: authenticationService))
     }
     
     var body: some View {
@@ -52,17 +51,26 @@ struct SurveyView: View {
                 genderPicker
                 eyeColorPicker
                 if viewModel.isShowingDebugToggle ?? false {
-                    Toggle(isOn: $viewModel.debugModeEnabled) {
-                        Text("Enable Debug Mode")
-                            .foregroundColor(.white)
-                    }.padding()
+                    VStack {
+                        Toggle(isOn: $viewModel.isDebugModeEnabled) {
+                            Text("Enable Debug Mode")
+                                .foregroundColor(.white)
+                        }.padding()
+                        Toggle(isOn: $viewModel.isCensorModeEnabled) {
+                            Text("Enable Censor Mode")
+                                .foregroundColor(.white)
+                        }.padding()
+                    }
                 }
                 if !viewModel.shouldEnableStartButton {
-                    Text(viewModel.currentDownloadStatusMessage)
-                        .font(.system(size: 10))
-                        .foregroundColor(.senseyeTextColor)
-                        .bold()
-                        .multilineTextAlignment(.center)
+                    VStack {
+                        Text(viewModel.currentDownloadStatusMessage)
+                            .bold()
+                        Text(viewModel.currentDownloadCountString)
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.senseyeTextColor)
+                    .multilineTextAlignment(.center)
                 }
                 Spacer()
                 HStack(spacing: 100) {
@@ -86,17 +94,20 @@ struct SurveyView: View {
                 }
             }
         }
-        .onAppear { viewModel.onAppear() }
+        .onAppear {
+            viewModel.onAppear()
+        }
         .sheet(isPresented: self.$isPresentingSettingsView) {
             isPresentingSettingsView = false
         } content: {
             SettingsView()
         }
-
+        .onChange(of: viewModel.isDebugModeEnabled) { newValue in
+            tabController.areInternalTestingTasksEnabled = newValue
+        }
     }
 }
 
-@available(iOS 15.0, *)
 extension SurveyView {
 
     var agePicker: some View {

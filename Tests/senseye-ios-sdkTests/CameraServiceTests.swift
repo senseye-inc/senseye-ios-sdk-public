@@ -10,8 +10,6 @@ import CoreMotion
 @testable import senseye_ios_sdk
 import AVFoundation
 
-@available(iOS 13.0, *)
-
 @MainActor class CameraServiceTests: XCTestCase {
     
     var cameraService: CameraService!

@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-@available(iOS 15.0.0, *)
+
 struct LoginView: View {
     
     // ViewModel class is extension of LoginView
@@ -72,7 +72,6 @@ struct LoginView: View {
     }
 }
 
-@available(iOS 15.0.0, *)
 extension LoginView {
     init(authenticationService: AuthenticationService) {
         _vm = StateObject(wrappedValue: ViewModel(authenticationService: authenticationService))

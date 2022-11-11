@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-@available(iOS 15.0, *)
 struct SenseyePicker: View {
     let title: String
     let currentValue: String?

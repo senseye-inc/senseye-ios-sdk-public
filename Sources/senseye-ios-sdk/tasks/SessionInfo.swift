@@ -11,10 +11,12 @@ import UIKit
 struct SessionInfo: Codable {
     let versionCode, age, eyeColor, versionName, gender, folderName, username, timezone: String?
     let isDebugModeEnabled: Bool?
+    let isCensorModeEnabled: Bool?
     let phoneSettings: PhoneSettings?
     let phoneDetails: PhoneDetails?
     var averageExifBrightness: Double?
     var tasks: [SenseyeTask]
+    let userGroups: [String]?
     var predictionJobID: String?
     var asDictionary : [String:Any]? {
         let mirror = Mirror(reflecting: self)

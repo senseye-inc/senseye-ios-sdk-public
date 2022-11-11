@@ -8,7 +8,6 @@ import Foundation
 import SwiftUI
 import Combine
 
-@available(iOS 14.0, *)
 class SurveyViewModel: ObservableObject {
 
     @AppStorage(AppStorageKeys.username()) var username: String?
@@ -16,17 +15,22 @@ class SurveyViewModel: ObservableObject {
     @Published var selectedAge: Int?
     @Published var selectedEyeColor: String?
     @Published var selectedGender: String?
-    @Published var debugModeEnabled: Bool = false
+    @Published var isDebugModeEnabled: Bool = false
+    @Published var isCensorModeEnabled: Bool = false
     @Published var shouldEnableStartButton: Bool = false
     @Published var currentDownloadStatusMessage: String = ""
+    @Published var currentDownloadCountString: String = ""
     private var cancellables = Set<AnyCancellable>()
     
     var fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
+    let authenticationService: AuthenticationService
+    let userGroupConfig = CognitoUserGroupConfig()
     
-    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
+    init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService, authenticationService: AuthenticationService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
+        self.authenticationService = authenticationService
         addSubscribers()
     }
 
@@ -38,16 +42,28 @@ class SurveyViewModel: ObservableObject {
         selectedAge != 0 && selectedEyeColor != "" && selectedGender != ""
     }
     
+    var isInternalTestingGroup: Bool {
+        authenticationService.accountUserGroups.contains(where: { userGroup in
+            userGroup.isDebugEligibile
+        })
+    }
+    
     func updateDebugModeFlag() {
-        fileUploadService.isDebugModeEnabled = self.debugModeEnabled
+        fileUploadService.isDebugModeEnabled = self.isDebugModeEnabled
+    }
+
+    func updateCensorModeFlag() {
+        fileUploadService.isCensorModeEnabled = self.isCensorModeEnabled
     }
 
     func onAppear() {
-        isShowingDebugToggle = username?.contains("@senseye.co") ?? false
+        isShowingDebugToggle = isInternalTestingGroup
+        isDebugModeEnabled = false
     }
-
+    
     func onStartButton() {
         updateDebugModeFlag()
+        updateCensorModeFlag()
         createSessionJsonFile()
         resetSurveyResponses()
     }
@@ -57,7 +73,7 @@ class SurveyViewModel: ObservableObject {
     }
 
     private func resetSurveyResponses() {
-        debugModeEnabled = false
+        isCensorModeEnabled = false
         selectedAge = nil
         selectedGender = nil
         selectedEyeColor = nil
@@ -76,8 +92,13 @@ class SurveyViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { finishedImageDownload in
                 self.shouldEnableStartButton = finishedImageDownload
-                self.currentDownloadStatusMessage = "Downloading the Image Set, please give it a few minutes.. \(self.imageService.currentDownloadCount)"
+                self.currentDownloadStatusMessage = "Downloading the Image Set, please give it a few minutes.."
             })
+            .store(in: &cancellables)
+        
+        imageService.$currentDownloadCount
+            .receive(on: DispatchQueue.main)
+            .sink { self.currentDownloadCountString = $0 }
             .store(in: &cancellables)
     }
 }

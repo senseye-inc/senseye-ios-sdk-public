@@ -7,7 +7,6 @@
 import XCTest
 @testable import senseye_ios_sdk
 
-@available(iOS 15.0, *)
 class LoginViewModelTests: XCTestCase {
     
     var model: LoginView.ViewModel!

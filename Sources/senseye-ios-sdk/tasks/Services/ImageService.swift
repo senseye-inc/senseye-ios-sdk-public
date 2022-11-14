@@ -117,7 +117,7 @@ class ImageService: ObservableObject {
             downloadImagesToFileManager(s3ImageIds: imagesToDownloadFromBlock, folderName: affectiveImageFolderName)
         }
         let facialExpressionImagesToDownloadFromBlock: [(String, String)] = senseyeFaceIds.filter { imageIds.contains($0) }.map {
-            ($0, "\(faceFolderName)/\($0).jpg")
+            ($0, "\(faceFolderName)/\($0).png")
         }
         downloadImagesToFileManager(s3ImageIds: facialExpressionImagesToDownloadFromBlock, folderName: faceFolderName)
     }
@@ -127,13 +127,25 @@ class ImageService: ObservableObject {
             let currentImageSetList = self.fullImageSet.map {$0.imageName}
             //Additional check to make sure we're only download images we don't have
             if(!currentImageSetList.contains(imageId.1)) {
-                Amplify.Storage.downloadData(key: imageId.1).resultPublisher
+                Log.info("started download for image: \(imageId)")
+                let downloadImageTask = Amplify.Storage.downloadData(key: imageId.1)
+                downloadImageTask
+                    .progressPublisher
+                    .sink { progress in
+                        print("Progress: \(progress)")
+                    }
+                    .store(in: &self.cancellables)
+                downloadImageTask
+                    .resultPublisher
                     .retry(2)
                     .receive(on: DispatchQueue.global())
                     .compactMap({
                         UIImage(data: $0)
                     })
-                    .sink { _ in
+                    .sink {
+                        if case let .failure(storageError) = $0 {
+                                    print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+                        }
                     } receiveValue: { [weak self] image in
                         guard let self = self else {
                             return
@@ -149,7 +161,9 @@ class ImageService: ObservableObject {
                         } else {
                             self.handleUpdatedImageDownload(latestCount: self.fullImageSet.count)
                         }
-                    }.store(in: &cancellables)
+                    }
+                    .store(in: &cancellables)
+                downloadImageTask.start()
             }
         }
     }

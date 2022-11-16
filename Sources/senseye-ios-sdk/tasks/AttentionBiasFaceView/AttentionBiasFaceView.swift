@@ -27,7 +27,9 @@ struct AttentionBiasFaceView: View {
             CurrentFaceBlockView(currentTopImage: viewModel.currentTopImage, currentBottomImage: viewModel.currentBottomImage, isShowingImages: viewModel.isShowingImages, dotLocation: viewModel.dotLocation, isShowingXMark: viewModel.isShowingXMark)
         }
         .onAppear {
-            cameraService.startRecordingForTask(taskId: "AttentionBiasFace")
+            let taskID = tabController.taskIDForCurrentTab()
+            viewModel.taskID = taskID
+            cameraService.startRecordingForTask(taskId: taskID)
             DispatchQueue.main.async {
                 viewModel.checkForImages()
             }

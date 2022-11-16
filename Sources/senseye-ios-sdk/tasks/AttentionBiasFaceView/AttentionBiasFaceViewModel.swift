@@ -14,6 +14,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     @Published var isFinished: Bool = false
     @Published var shouldShowConfirmationView: Bool = false
     
+    var taskID: String = ""
     var isShowingXMark = true
     var dotLocation: DotLocation?
     var currentTopImage: UIImage?
@@ -84,6 +85,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     private func showFixationPeriod() {
         dotLocation = nil
         isShowingXMark = true
+        addCurrentTimeToStimuliTimestamps()
         DispatchQueue.main.asyncAfter(deadline: .now() + fixationDisplayTime) {
             self.isShowingXMark = false
             self.showFaces()
@@ -94,6 +96,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
         currentTopImage = UIImage(contentsOfFile: images[imageInterval].imageUrl)
         currentBottomImage = UIImage(contentsOfFile: images[imageInterval + 1].imageUrl)
         isShowingImages = true
+        addCurrentTimeToStimuliTimestamps()
         DispatchQueue.main.asyncAfter(deadline: .now() + facesDisplayTime) {
             self.showDot()
             self.imageInterval += 2
@@ -103,6 +106,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     private func showDot() {
         isShowingImages = false
         dotLocation = faceSets[dotInterval].dotLocation
+        addCurrentTimeToStimuliTimestamps()
         DispatchQueue.main.asyncAfter(deadline: .now() + dotDisplayTime) {
             if self.imageInterval < self.images.count {
                 self.showFixationPeriod()
@@ -115,8 +119,13 @@ class AttentionBiasFaceViewModel: ObservableObject {
         }
     }
     
+    private func addCurrentTimeToStimuliTimestamps() {
+        let timestamp = Date().currentTimeMillis()
+        timestampsOfStimuli.append(timestamp)
+    }
+    
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: "attention_bias_face", frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli)
+        let taskInfo = SenseyeTask(taskID: taskID, frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
     

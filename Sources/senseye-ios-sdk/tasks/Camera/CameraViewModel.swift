@@ -37,7 +37,7 @@ class CameraViewModel: ObservableObject {
         cameraPreviewTimer = nil
         overlayTimer = nil
         startOverlayTimerCountdown()
-        callToActionText = "Task starts in \(self.currentCameraPreviewTimeInterval)s"
+        callToActionText =  String(format: "Task starts in %ds".localizedString, currentCameraPreviewTimeInterval)
     }
 
     func onDisappear() {
@@ -90,7 +90,7 @@ class CameraViewModel: ObservableObject {
                     return
                 }
                 self.currentCameraPreviewTimeInterval -= 1
-                self.callToActionText = "Task starts in \(self.currentCameraPreviewTimeInterval)s"
+                self.callToActionText = String(format: "Task starts in %ds".localizedString, self.currentCameraPreviewTimeInterval)
 
                 if self.currentCameraPreviewTimeInterval == 0 {
                     self.stopCountdown(for: &self.cameraPreviewTimer)

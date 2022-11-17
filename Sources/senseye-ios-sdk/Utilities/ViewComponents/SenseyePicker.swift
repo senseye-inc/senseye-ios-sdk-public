@@ -14,7 +14,7 @@ struct SenseyePicker: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline) {
             VStack(alignment: .leading, spacing: 20) {
-                Text(title.uppercased())
+                Text(title)
                     .foregroundColor(.senseyeSecondary)
                     .bold()
                 Text(currentValue ?? "N/A")

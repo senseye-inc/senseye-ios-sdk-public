@@ -30,14 +30,14 @@ struct LoginView: View {
                 Button {
                     vm.isShowingSafari.toggle()
                 } label: {
-                    Text("Having trouble logging in?")
+                    Text(Strings.loginHelp)
                         .foregroundColor(.senseyeTextColor)
                 }
                 
                 Button {
                     vm.login()
                 } label: {
-                    SenseyeButton(text: "login", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                    SenseyeButton(text: Strings.loginButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                         .padding()
                 }
                 .disabled(vm.username.isEmpty || vm.password.isEmpty || vm.isFetchingAuthorization)
@@ -79,7 +79,7 @@ extension LoginView {
     
     var passwordField: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("password".uppercased())
+            Text(Strings.passwordTitle)
                 .foregroundColor(.senseyeTextColor)
             SecureField("", text: $vm.password)
                 .foregroundColor(.senseyeTextColor)
@@ -91,7 +91,7 @@ extension LoginView {
     
     var usernameField: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("username".uppercased())
+            Text(Strings.usernameTitle)
                 .foregroundColor(.senseyeTextColor)
             HStack {
                 TextField("", text: $vm.username)
@@ -115,7 +115,7 @@ extension LoginView {
         VStack {
             HeaderView()
             Image("holding_phone_icon")
-            Text("Login to get started")
+            Text(Strings.loginCallToAction)
                 .foregroundColor(.senseyeTextColor)
                 .padding()
         }

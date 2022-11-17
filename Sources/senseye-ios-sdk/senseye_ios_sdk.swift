@@ -12,6 +12,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
     func didCompleteTasksAndReturnResult(result: String)
 }
 
+
 public class SenseyeSDK {
     
     weak var delegate: SenseyeTaskCompletionDelegate?

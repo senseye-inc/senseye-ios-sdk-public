@@ -36,11 +36,11 @@ struct SurveyView: View {
                     })
                 }
                 VStack {
-                    Text("Let's get started.")
+                    Text(Strings.surveyViewCallToActionText)
                         .font(.title)
                         .foregroundColor(.senseyeSecondary)
                         .bold()
-                    Text("Please enter your information below.")
+                    Text(Strings.surveyViewInstructions)
                         .foregroundColor(.senseyeTextColor)
                         .bold()
                         .multilineTextAlignment(.center)
@@ -53,7 +53,7 @@ struct SurveyView: View {
                 if viewModel.isShowingDebugToggle ?? false {
                     VStack {
                         Toggle(isOn: $viewModel.isDebugModeEnabled) {
-                            Text("Enable Debug Mode")
+                            Text(Strings.debugModeDescription)
                                 .foregroundColor(.white)
                         }.padding()
                         Toggle(isOn: $viewModel.isCensorModeEnabled) {
@@ -89,7 +89,7 @@ struct SurveyView: View {
                         viewModel.onStartButton()
                         tabController.proceedToNextTab()
                     } label: {
-                        SenseyeButton(text: "start", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                        SenseyeButton(text: Strings.startButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }.disabled(viewModel.shouldEnableStartButton == false)
                 }
             }
@@ -117,7 +117,7 @@ extension SurveyView {
                 }
             }
         } label: {
-            SenseyePicker(title: "age", currentValue: viewModel.selectedAge?.description)
+            SenseyePicker(title: Strings.ageTitle, currentValue: viewModel.selectedAge?.description)
         }
     }
 
@@ -125,12 +125,12 @@ extension SurveyView {
         Menu {
             Picker("", selection: $viewModel.selectedGender) {
                 ForEach(viewModel.genderOptions, id: \.self) { gender in
-                    Text("\(gender)")
-                        .tag(Optional(gender))
+                    Text(gender.localizedStringKey)
+                        .tag(Optional(gender.localizedString))
                 }
             }
         } label: {
-            SenseyePicker(title: "gender", currentValue: viewModel.selectedGender)
+            SenseyePicker(title: Strings.ageTitle, currentValue: "\(viewModel.selectedGender ?? "N/A")")
         }
     }
 
@@ -138,12 +138,12 @@ extension SurveyView {
         Menu {
             Picker("", selection: $viewModel.selectedEyeColor) {
                 ForEach(viewModel.eyeColorOptions, id: \.self) { eyeColor in
-                    Text("\(eyeColor)")
-                        .tag(Optional(eyeColor))
+                    Text(eyeColor.localizedStringKey)
+                        .tag(Optional(eyeColor.localizedString))
                 }
             }
         } label: {
-            SenseyePicker(title: "eye color", currentValue: viewModel.selectedEyeColor)
+            SenseyePicker(title: Strings.eyeColorTitle, currentValue: "\(viewModel.selectedEyeColor ?? "N/A")")
         }
     }
 }

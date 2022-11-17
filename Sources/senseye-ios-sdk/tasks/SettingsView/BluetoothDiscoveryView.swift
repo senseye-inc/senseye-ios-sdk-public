@@ -32,14 +32,14 @@ struct BluetoothDiscoveryView: View {
                 if bluetoothService.isDeviceConnected {
                     ZStack {
                         HStack {
-                            Text("Connected")
+                            Text(Strings.connectedTitle)
                             Image(systemName: "checkmark.circle.fill")
                         }
                         .font(.title)
                         .foregroundColor(.senseyeSecondary)
                     }
                 } else if viewModel.discoveredPeripheral == nil {
-                    ProgressView("Searching for devices…")
+                    ProgressView(Strings.searchingForDevices)
                         .progressViewStyle(.circular)
                         .foregroundColor(.senseyeSecondary)
                         .tint(.senseyeSecondary)

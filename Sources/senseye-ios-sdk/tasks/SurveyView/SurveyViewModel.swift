@@ -34,8 +34,8 @@ class SurveyViewModel: ObservableObject {
         addSubscribers()
     }
 
-    var eyeColorOptions: [String] = ["Blue", "Green", "Brown", "Black", "Hazel"].sorted().reversed()
-    var genderOptions: [String] = ["Male", "Female", "Other"]
+    var eyeColorOptions: [String] = [Strings.blueColor, Strings.greenColor, Strings.brownColor, Strings.hazelColor, Strings.blackColor].sorted().reversed()
+    var genderOptions: [String] = [Strings.maleGender, Strings.femalGender, Strings.otherGender]
     var ageRange: Range<Int> = (18..<66)
 
     var surveyIsEmpty: Bool {
@@ -92,7 +92,7 @@ class SurveyViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { finishedImageDownload in
                 self.shouldEnableStartButton = finishedImageDownload
-                self.currentDownloadStatusMessage = "Downloading the Image Set, please give it a few minutes.."
+                self.currentDownloadStatusMessage = Strings.imageDownloadingTitle
             })
             .store(in: &cancellables)
         

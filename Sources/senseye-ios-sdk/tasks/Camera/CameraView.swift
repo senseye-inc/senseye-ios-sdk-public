@@ -58,12 +58,12 @@ struct CameraView: View {
                 }
             }
             .edgesIgnoringSafeArea(.all)
-            .alert("Need Camera Access", isPresented: $cameraService.shouldShowCameraPermissionsDeniedAlert) {
-                Button("Go to settings") {
+            .alert(Strings.needCameraAccess, isPresented: $cameraService.shouldShowCameraPermissionsDeniedAlert) {
+                Button(Strings.gotoSettingsButtonTitle) {
                     cameraService.goToSettings()
                 }
             } message: {
-                Text("Change camera permissions in your settings.")
+                Text(Strings.cameraPermissionsDescripton)
             }
         }
     }

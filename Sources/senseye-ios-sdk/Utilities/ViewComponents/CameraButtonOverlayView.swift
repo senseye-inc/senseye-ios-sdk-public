@@ -20,7 +20,7 @@ struct CameraButtonOverlayView: View {
                         .opacity(0.2)
                         .frame(width: 200, height: 200)
                     VStack {
-                        Text("Ready?".uppercased())
+                        Text(Strings.readyButtonTitle)
                             .font(.title)
                         Text(callToActionText)
                     }

@@ -40,7 +40,7 @@ struct ResultsView: View {
                                 .frame(width: 91, height: 91)
                                 .padding()
 
-                            Text("You have completed the diagnostic, please speak with your health care provider for further information.")
+                            Text(Strings.resultsViewDescription)
                                 .foregroundColor(.senseyeTextColor)
                                 .multilineTextAlignment(.center)
                                 .padding()
@@ -52,7 +52,7 @@ struct ResultsView: View {
                                     viewModel.reset()
                                 }
                             } label: {
-                                SenseyeButton(text: "Complete Session", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                                SenseyeButton(text: Strings.completionSessionButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                             }.padding(.top, 40)
                         }
                     } else {
@@ -63,7 +63,7 @@ struct ResultsView: View {
                                 .frame(width: 91, height: 91)
                                 .padding()
 
-                            Text("Please wait. Results processing.")
+                            Text(Strings.resultsProcessing)
                                 .foregroundColor(.senseyeTextColor)
                                 .multilineTextAlignment(.center)
                                 .padding()

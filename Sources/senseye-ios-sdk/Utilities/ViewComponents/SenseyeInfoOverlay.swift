@@ -7,16 +7,9 @@ import SwiftUI
 
 struct SenseyeInfoOverlay: View {
 
+    let title: String
+    let description: String
     @Binding var showingOverlay: Bool
-
-    private var title: String
-    private var description: String
-
-    init(title: String, description: String, showingOverlay: Binding<Bool>) {
-        self.title = title
-        self.description = description
-        self._showingOverlay = showingOverlay
-    }
 
     var body: some View {
         ZStack {
@@ -39,18 +32,18 @@ struct SenseyeInfoOverlay: View {
                     .padding()
                     .font(.body)
                     .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
 
                 Button(action: {
                     DispatchQueue.main.async {
                         showingOverlay.toggle()
                     }
                 }, label: {
-                    SenseyeButton(text: "Continue", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                    SenseyeButton(text: Strings.continueButtonText, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                 })
                 .foregroundColor(.white)
                 .interactiveDismissDisabled()
             }
+            .multilineTextAlignment(.center)
             .padding()
         }
         .frame(height: 650)

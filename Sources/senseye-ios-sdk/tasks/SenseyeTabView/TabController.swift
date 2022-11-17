@@ -5,7 +5,7 @@
 //  Created by Frank Oftring on 7/8/22.
 //
 
-import Foundation
+import SwiftUI
 
 enum TabType {
     case imageView
@@ -72,9 +72,10 @@ class TabController: ObservableObject {
         taskTabOrdering += [
             TabItem(taskId: "heart_rate_calibration",
                     tabType: .hrCalibrationView,
-                    taskTitle: "Heart Rate Calibration",
-                    taskDescription: "Relax and sit still for 3 minutes while we measure your baseline heart rate!",
+                    taskTitle: Strings.heartRateCalibrationTaskName,
+                    taskDescription: Strings.heartRateTaskInstructions,
                     isTaskItem: true)]
+
 
         //Starting Calibration
         taskTabOrdering += [
@@ -82,8 +83,8 @@ class TabController: ObservableObject {
             TabItem(
                 taskId: "calibration_1",
                 tabType: .calibrationView,
-                taskTitle: "Calibration",
-                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                taskTitle: Strings.calibrationTaskName,
+                taskDescription: Strings.calibrationTaskInstructions,
                 isTaskItem: true)]
         
         //Image Set Blocks
@@ -139,8 +140,8 @@ class TabController: ObservableObject {
             TabItem(
                 taskId: "calibration_2",
                 tabType: .calibrationView,
-                taskTitle: "Calibration",
-                taskDescription: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.",
+                taskTitle: Strings.calibrationTaskName,
+                taskDescription: Strings.calibrationTaskInstructions,
                 isTaskItem: true
             ),
             TabItem(taskId: "results_view", tabType: .resultsView)]
@@ -225,8 +226,8 @@ class TabController: ObservableObject {
         items.append(TabItem(
             taskId: "affective_image_set_\(blockNumber)",
             tabType: .imageView,
-            taskTitle: "Image Set - Block \(blockNumber)",
-            taskDescription: "8 different images will come across the screen. \n Note: Some of the images may be disturbing.",
+            taskTitle: String(format: "Image Set - Block %d".localizedString, blockNumber),
+            taskDescription: Strings.affectiveImageTaskDescription,
             blockNumber: blockNumber,
             category: category,
             subcategory: subcategory,
@@ -237,8 +238,8 @@ class TabController: ObservableObject {
             TabItem(
                 taskId: "plr_view",
                 tabType: .plrView,
-                taskTitle: "PLR",
-                taskDescription: "Stare at the cross for the duration of the task.",
+                taskTitle: Strings.plrTaskDescription,
+                taskDescription: Strings.plrTaskInstructions,
                 blockNumber: blockNumber,
                 isTaskItem: true))
         return items

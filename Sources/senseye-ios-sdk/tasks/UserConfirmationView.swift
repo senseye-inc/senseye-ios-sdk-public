@@ -27,7 +27,7 @@ struct UserConfirmationView: View {
             VStack {
                 Spacer()
                 
-                Text("Was this a good recording for \(tabController.titleForCurrentTab())?")
+                Text(String(format: "Was this a good recording for %@".localizedString, tabController.titleForCurrentTab()))
                     .font(.title)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
@@ -38,7 +38,7 @@ struct UserConfirmationView: View {
                     Button {
                         isShowingAlert = true
                     } label: {
-                        SenseyeButton(text: "No", foregroundColor: .senseyePrimary, fillColor: .red)
+                        SenseyeButton(text: Strings.noButtonTitle, foregroundColor: .senseyePrimary, fillColor: .red)
                     }
                     Button {
                         yesAction()
@@ -46,18 +46,18 @@ struct UserConfirmationView: View {
                             dismiss()
                         }
                     } label: {
-                        SenseyeButton(text: "Yes", foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
+                        SenseyeButton(text: Strings.yesButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                     }
                 }
             }
         }
-        .alert("Thank You", isPresented: $isShowingAlert) {
-            Button("Return") {
+        .alert(Strings.thankYouAlert, isPresented: $isShowingAlert) {
+            Button(Strings.returnButton) {
                 dismiss()
                 noAction()
             }
         } message: {
-            Text("Please tap return to restart the task")
+            Text(Strings.restartTask)
         }
 
     }

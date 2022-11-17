@@ -13,7 +13,7 @@ struct SenseyeButton: View {
     let fillColor: Color
     
     var body: some View {
-        Text(text.uppercased())
+        Text(text)
             .foregroundColor(foregroundColor)
             .padding()
             .frame(minWidth: 147, minHeight: 52)

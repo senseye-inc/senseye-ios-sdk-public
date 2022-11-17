@@ -34,7 +34,7 @@ struct SettingsView: View {
                     }
                     Spacer()
                 }
-                BluetoothSettingsRow(title: "Bluetooth", description: "", isDeviceConnected: $bluetoothService.isDeviceConnected, isShowingBluetooth: $viewModel.isShowingBluetooth)
+                BluetoothSettingsRow(title: Strings.bluetoothTitle, description: "", isDeviceConnected: $bluetoothService.isDeviceConnected, isShowingBluetooth: $viewModel.isShowingBluetooth)
                 Spacer()
             }
             .padding()
@@ -85,7 +85,7 @@ struct BluetoothSettingsRow: View {
                         .font(.title2)
                         .lineLimit(1)
                     HStack {
-                        Text(isDeviceConnected ? "Connected" : "Not Connected")
+                        Text(isDeviceConnected ? Strings.connectedTitle : Strings.notConnectedTitle)
                             .font(.callout)
                         Image(systemName: isDeviceConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
                             .foregroundColor(isDeviceConnected ? .senseyeSecondary : .senseyeRed)

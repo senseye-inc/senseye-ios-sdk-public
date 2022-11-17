@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-enum TabType {
-    case imageView
+enum TabType: String, Codable {
+    case affectiveImageView
     case plrView
     case resultsView
     case cameraView
@@ -118,9 +118,9 @@ class TabController: ObservableObject {
         if (areInternalTestingTasksEnabled) {
             Log.info("Internal Tasks are enabled!")
             taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
-            taskTabOrdering.append(TabItem(taskId: "attention_bias_face_1", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
-                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
-                                           isTaskItem: true))
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face_1", tabType: .attentionBiasFaceView, taskTitle: Strings.attentionBiasFaceTaskName,
+                                           taskDescription: Strings.attentionBiasFaceInstructions,
+                                           blockNumber: 26, isTaskItem: true))
             taskTabOrdering.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
             taskTabOrdering.append(TabItem(
                 taskId: "plr_view",
@@ -129,8 +129,8 @@ class TabController: ObservableObject {
                 taskDescription: "Stare at the cross for the duration of the task.",
                 isTaskItem: true))
             taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
-            taskTabOrdering.append(TabItem(taskId: "attention_bias_face_2", tabType: .attentionBiasFaceView, taskTitle: "Attention Bias Face",
-                                           taskDescription: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen",
+            taskTabOrdering.append(TabItem(taskId: "attention_bias_face_2", tabType: .attentionBiasFaceView, taskTitle: Strings.attentionBiasFaceTaskName,
+                                           taskDescription: Strings.attentionBiasFaceInstructions, blockNumber: 27,
                                            isTaskItem: true))
         }
         
@@ -225,7 +225,7 @@ class TabController: ObservableObject {
         items.append(TabItem(taskId: "camera_view_affective_image_set_\(blockNumber)", tabType: .cameraView, blockNumber: blockNumber))
         items.append(TabItem(
             taskId: "affective_image_set_\(blockNumber)",
-            tabType: .imageView,
+            tabType: .affectiveImageView,
             taskTitle: String(format: "Image Set - Block %d".localizedString, blockNumber),
             taskDescription: Strings.affectiveImageTaskDescription,
             blockNumber: blockNumber,

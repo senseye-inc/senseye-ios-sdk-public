@@ -19,56 +19,32 @@ class AttentionBiasFaceViewModel: ObservableObject {
     var dotLocation: DotLocation?
     var currentTopImage: UIImage?
     var currentBottomImage: UIImage?
+    var blockNumber: Int?
     
     let fileUploadService: FileUploadAndPredictionServiceProtocol
     let imageService: ImageService
     
     private var images: [SenseyeImage] = []
-    private var currentBlock = 1
     private let fixationDisplayTime = 0.5
     private let facesDisplayTime = 2.0
     private let dotDisplayTime = 0.5
     private var cancellables = Set<AnyCancellable>()
     private var timer: Timer? = nil
     private var timestampsOfStimuli: [Int64] = []
-    private var faceSets: [SenseyeFaceSet] = []
     private var imageInterval = 0
     private var dotInterval = 0
     private var dotLocations: [DotLocation] = [.bottom,.top,.top,.bottom,.bottom,.top, .bottom,.top,.top,.bottom,.bottom,.top, .bottom, .bottom]
-    private var faceSetAndBlockDictionary: [Int: [SenseyeFaceSet]] {
-        [
-            1: Array(faceSets[0...6]),
-            2: Array(faceSets[7...13])
-        ]
-    }
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
         self.imageService = imageService
-        matchFaceIdsAndDotLocation(for: imageService.senseyeFaceIds)
     }
     
     func checkForImages() {
-        guard let currentFaceSet = faceSetAndBlockDictionary[currentBlock] else { return }
-        let imageNames = currentFaceSet.flatMap({ [$0.faces.0, $0.faces.1] })
-        imageService.updateImagesForBlock(imageSetIds: imageNames)
+        Log.info("in check for images ---")
+        guard let blockNumer = self.blockNumber else { return }
+        imageService.checkForImages(at: blockNumer)
         addSubscribers()
-    }
-    
-    /**
-     Iterates through the provided `senseyeFaceIds` to create a `SenseyeFaceSet` for each pair and dot location.
-     - Parameter senseyeFaceIds: The string array of image names used to set the `faces` value for each `SenseyeFaceSet`.
-     */
-    private func matchFaceIdsAndDotLocation(for senseyeFaceIds: [String]) {
-        var imageNames: [(String, String)] = []
-        for id in stride(from: 0, to: senseyeFaceIds.count - 1, by: 2) {
-            let imageNameTuple = (senseyeFaceIds[id], senseyeFaceIds[id + 1])
-            imageNames.append(imageNameTuple)
-        }
-        let newFaceSet = zip(imageNames, dotLocations).map { imageNames, dotLocation -> SenseyeFaceSet in
-            SenseyeFaceSet(faces: imageNames, dotLocation: dotLocation)
-        }
-        faceSets.append(contentsOf: newFaceSet)
     }
     
     private func addSubscribers() {
@@ -105,14 +81,13 @@ class AttentionBiasFaceViewModel: ObservableObject {
     
     private func showDot() {
         isShowingImages = false
-        dotLocation = faceSets[dotInterval].dotLocation
+        dotLocation = dotLocations[dotInterval]
         addCurrentTimeToStimuliTimestamps()
         DispatchQueue.main.asyncAfter(deadline: .now() + dotDisplayTime) {
             if self.imageInterval < self.images.count {
                 self.showFixationPeriod()
                 self.dotInterval += 1
             } else {
-                self.currentBlock += 1
                 self.isFinished = true
                 self.shouldShowConfirmationView = true
             }

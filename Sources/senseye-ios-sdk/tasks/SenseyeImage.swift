@@ -29,7 +29,7 @@ extension Array where Element: Reorderable {
     }
 }
 
-struct SenseyeImage: Reorderable {
+struct SenseyeImage: Reorderable, Codable {
     let imageUrl: String
     let imageName: String
     

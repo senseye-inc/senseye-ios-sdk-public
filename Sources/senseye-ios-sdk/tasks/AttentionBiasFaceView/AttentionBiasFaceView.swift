@@ -29,6 +29,7 @@ struct AttentionBiasFaceView: View {
         .onAppear {
             let taskID = tabController.taskIDForCurrentTab()
             viewModel.taskID = taskID
+            viewModel.blockNumber = tabController.activeTabBlockNumber
             cameraService.startRecordingForTask(taskId: taskID)
             DispatchQueue.main.async {
                 viewModel.checkForImages()

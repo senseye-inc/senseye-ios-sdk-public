@@ -33,7 +33,7 @@ struct SenseyeTabView: View {
                 .gesture(DragGesture())
 
             RotatingImageView(fileUploadService: fileUploadService, imageService: imageService)
-                .tag(TabType.imageView)
+                .tag(TabType.affectiveImageView)
                 .gesture(DragGesture())
 
             PLRView(fileUploadService: fileUploadService)

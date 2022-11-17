@@ -7,7 +7,9 @@
 
 import Foundation
 import UIKit
-extension FileManager {
+class LocalFileManager {
+    
+    private let folderName = "SenseyeImages"
     
     /**
      Saves a UIImage to the FileManager's document directory by first checking if a folder with the current imageName and folderName paremter already exists. If not, a new folder is created.
@@ -16,14 +18,10 @@ extension FileManager {
      - Parameter imageName: The image name to be used as an appending path component within the folder name
      - Parameter folderNames: The names of the folders where the images will be saved within the documents directory
      */
-    func saveImage(image: UIImage, imageName: String, folderName: String) -> String {
-        createFolderIfNeeded(folderName: folderName)
+    func saveImage(image: UIImage, imageName: String) -> String {
+        createFolderIfNeeded()
         
-        guard let data = image.pngData(),
-              let url = getURLForImage(imageName: imageName, folderName: folderName)
-        else {
-            return ""
-        }
+        guard let data = image.pngData(), let url = getURLForImage(imageName: imageName) else { return "" }
         
         do {
             try data.write(to: url)
@@ -39,21 +37,19 @@ extension FileManager {
      - Parameter imageNames: A array of strings used to retrieve images by name
      - Parameter folderName: The folder name as a string where the images are stored
      */
-    func getImages(imageNames: [String], folderNames: [String]) -> [SenseyeImage] {
+    func getImages(imageNames: [String]) -> [SenseyeImage] {
         var senseyeImages: [SenseyeImage] = []
-        for folderName in folderNames {
-            for imageName in imageNames {
-                if let url = getURLForImage(imageName: imageName, folderName: folderName), FileManager.default.fileExists(atPath: url.path) {
-                    let newSenseyeImage = SenseyeImage(imageUrl: url.path, imageName: imageName)
-                    senseyeImages.append(newSenseyeImage)
-                }
+        for imageName in imageNames {
+            if let url = getURLForImage(imageName: imageName), FileManager.default.fileExists(atPath: url.path) {
+                let newSenseyeImage = SenseyeImage(imageUrl: url.path, imageName: imageName)
+                senseyeImages.append(newSenseyeImage)
             }
         }
         return senseyeImages
     }
     
-    private func createFolderIfNeeded(folderName: String) {
-        guard let url = getURLForFolder(folderName: folderName) else { return }
+    private func createFolderIfNeeded() {
+        guard let url = getURLForFolder() else { return }
         if !FileManager.default.fileExists(atPath: url.path) {
             do {
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
@@ -63,13 +59,13 @@ extension FileManager {
         }
     }
     
-    private func getURLForFolder(folderName: String) -> URL? {
+    private func getURLForFolder() -> URL? {
         guard let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
         return url.appendingPathComponent(folderName)
     }
     
-    private func getURLForImage(imageName: String, folderName: String) -> URL? {
-        guard let folderURL = getURLForFolder(folderName: folderName) else { return nil }
+    private func getURLForImage(imageName: String) -> URL? {
+        guard let folderURL = getURLForFolder() else { return nil }
         return folderURL.appendingPathComponent(imageName + ".png")
     }
     

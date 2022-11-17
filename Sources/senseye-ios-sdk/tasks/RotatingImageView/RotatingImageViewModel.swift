@@ -100,8 +100,8 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     
     func checkForImages() {
         Log.info("in check for images ---")
-        guard let currentBlockNumber = self.tabInfo?.taskBlockNumber, let imageSetIDs = imageService.affectiveImageSets[currentBlockNumber]?.imageIds else { return }
-        imageService.updateImagesForBlock(imageSetIds: imageSetIDs)
+        guard let blockNumer = self.tabInfo?.taskBlockNumber else { return }
+        imageService.checkForImages(at: blockNumer)
         addSubscribers()
     }
     

@@ -58,6 +58,8 @@ struct Strings {
     static let heartRateTaskInstructions = NSLocalizedString("heartRateTaskInstructions", value: "Relax and sit still for 3 minutes while we measure your baseline heart rate!", comment: "")
     static let plrTaskInstructions = NSLocalizedString("plrTaskInstructions", value: "Stare at the cross for the duration of the task.", comment: "")
     static let calibrationTaskInstructions = NSLocalizedString("calibrationTaskInstructions", value: "When a ball appears look at it as quickly as possible, and remain staring at it until it disappears.", comment: "")
+    static let attentionBiasFaceInstructions = NSLocalizedString("attentionBiasFaceInstructions", value: "Fixate on the white cross or dot when it appears on the screen. There will be various emotional faces displayed on the screen. Freely view the images on the screen", comment: "")
+    static let attentionBiasFaceTaskName = NSLocalizedString("attentionBiasFaceTaskName", value: "Attention Bias Face", comment: "")
     
     // MARK: - PLR View
     static let plrTaskDescription = NSLocalizedString("plrTaskDescription", value: "PLR", comment: "")

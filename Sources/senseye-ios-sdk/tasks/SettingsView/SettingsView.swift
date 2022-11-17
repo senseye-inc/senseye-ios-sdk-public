@@ -35,6 +35,7 @@ struct SettingsView: View {
                     Spacer()
                 }
                 BluetoothSettingsRow(title: Strings.bluetoothTitle, description: "", isDeviceConnected: $bluetoothService.isDeviceConnected, isShowingBluetooth: $viewModel.isShowingBluetooth)
+                LanguageRowView(title: "Language", selectedLanguage: viewModel.selectedLanguage)
                 Spacer()
             }
             .padding()
@@ -69,6 +70,27 @@ struct SettingsRow: View {
         }
     }
 }
+
+struct LanguageRowView: View {
+    
+    let title: String
+    let selectedLanguage: String
+    
+    var body: some View {
+            Button {
+                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+            } label: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Text(selectedLanguage)
+                }
+                .font(.title2)
+            }
+            .foregroundColor(.senseyeTextColor)
+    }
+}
+
 @available(iOS 14.0, *)
 struct BluetoothSettingsRow: View {
     

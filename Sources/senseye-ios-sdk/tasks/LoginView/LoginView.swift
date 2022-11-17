@@ -97,6 +97,7 @@ extension LoginView {
                 TextField("", text: $vm.username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
+                    .keyboardType(.emailAddress)
                 if !vm.username.isEmpty {
                     Button {
                         vm.username = ""

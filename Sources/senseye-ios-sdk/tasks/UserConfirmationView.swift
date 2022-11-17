@@ -28,6 +28,7 @@ struct UserConfirmationView: View {
                 Spacer()
                 
                 Text(String(format: "Was this a good recording for %@".localizedString, tabController.titleForCurrentTab()))
+                    .padding()
                     .font(.title)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)

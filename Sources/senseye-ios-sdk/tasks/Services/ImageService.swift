@@ -8,9 +8,11 @@
 import SwiftUI
 import Combine
 import Amplify
+import Alamofire
 
 class ImageService: ObservableObject {
     private var authenticationService: AuthenticationService?
+    private let baseURLString: String = "https://download.senseye.co/app/"
     
     init(authenticationService: AuthenticationService) {
         self.authenticationService = authenticationService
@@ -20,6 +22,7 @@ class ImageService: ObservableObject {
     @Published var imagesForBlock: [SenseyeImage] = []
     @Published var finishedDownloadingAllImages = false
     @Published var currentDownloadCount: String  = ""
+    @Published var imageError: AlertItem? = nil
     
     private let fileManager = LocalFileManager()
     private var cancellables = Set<AnyCancellable>()
@@ -51,19 +54,24 @@ class ImageService: ObservableObject {
     
     private func downloadImageSetConfigJSON() {
         let jsonKey = "ptsd_image_sets/SenseyeImageSets.json"
-        Amplify.Storage.downloadData(key: jsonKey).resultPublisher
+        guard let requestURL = URL(string: baseURLString + jsonKey) else {
+            Log.error("Error getting JSON URL")
+            return
+        }
+        
+        let jsonOperation = AF.request(requestURL).publishDecodable(type: [SenseyeImageSet].self).value()
+        
+        jsonOperation
             .sink(receiveCompletion: {
+                if case let .failure(error) = $0 {
+                    Log.error("Failed: \(error.localizedDescription).", userInfo: ["errorDescription": error.localizedDescription])
+                    self.imageError = AlertContext.imageDownloadError
+                }
                 Log.info("JSON Completion: \($0)")
                 self.getImages()
-            }, receiveValue: { data in
-                let decoder = JSONDecoder()
-                do {
-                    let senseyeImageSets = try decoder.decode([SenseyeImageSet].self, from: data)
-                    self.senseyeImageSets = senseyeImageSets
-                    self.allImageNames = senseyeImageSets.flatMap({ $0.senseyeImages.compactMap({ $0.imageName}) })
-                } catch {
-                    Log.error("Error decoding JSON")
-                }
+            }, receiveValue: { senseyeImageSets in
+                self.senseyeImageSets = senseyeImageSets
+                self.allImageNames = senseyeImageSets.flatMap({ $0.senseyeImages.compactMap({ $0.imageName}) })
             })
             .store(in: &cancellables)
     }
@@ -74,11 +82,11 @@ class ImageService: ObservableObject {
         let fullImageNameSet = Set(allImageNames)
         
         self.fullImageSet = allPreviouslyDownloadedSenseyeImages
-        let additionalImageIds = fullImageNameSet.subtracting(allPreviouslyDownloadedSenseyeImageNames)
-        if (!additionalImageIds.isEmpty) {
-            additionalImageIds.forEach({ self.downloadImageToFileManager(s3ImageId: $0)})
-            Log.info("Need to download images -> \(additionalImageIds)")
-            Log.info("Additional Images Count: \(additionalImageIds.count)")
+        let additionalImageNames = fullImageNameSet.subtracting(allPreviouslyDownloadedSenseyeImageNames)
+        if (!additionalImageNames.isEmpty) {
+            additionalImageNames.forEach({ self.downloadImageToFileManager(imageName: $0)})
+            Log.info("Need to download images -> \(additionalImageNames)")
+            Log.info("Additional Images Count: \(additionalImageNames.count)")
         } else {
             Log.info("All downloads finished previously")
             DispatchQueue.main.async {
@@ -87,36 +95,37 @@ class ImageService: ObservableObject {
         }
     }
     
-    private func downloadImageToFileManager(s3ImageId: String) {
-        guard let imageSet = senseyeImageSets.first(where: { $0.imageIds.contains(s3ImageId) }) else {
+    private func downloadImageToFileManager(imageName: String) {
+        guard let imageSet = senseyeImageSets.first(where: { $0.imageIds.contains(imageName) }) else {
             Log.error("Error getting Image Set")
             return
         }
        
-        let s3ImageLocation = imageSet.s3ImageLocation + s3ImageId + ".png"
+        let imageLocation = imageSet.imageDownloadLocation + imageName + ".png"
+        
+        guard let requestURL = URL(string: baseURLString + imageLocation) else {
+            Log.error("Erorr getting Image location for image: \(imageName)")
+            return
+        }
 
-        let downloadImageTask = Amplify.Storage.downloadData(key: s3ImageLocation)
+        let downloadImageTask = AF.download(requestURL).publishData(queue: .global(qos: .userInitiated)).value()
         
         downloadImageTask
-            .progressPublisher
-            .sink { progress in
-                print("Progress: \(progress)")
-            }
-            .store(in: &self.cancellables)
-        
-        downloadImageTask
-            .resultPublisher
             .compactMap({ UIImage(data: $0) })
             .sink {
-                if case let .failure(storageError) = $0 {
-                    Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)", userInfo: ["imageSetError": s3ImageLocation])
+                if case let .failure(error) = $0 {
+                    Log.error("Failed: \(error.localizedDescription).", userInfo: ["imageSetError": imageLocation,
+                                                                                   "errorDescription": error.localizedDescription])
+                    DispatchQueue.main.async {
+                        self.imageError = AlertContext.imageDownloadError
+                    }
                 }
             } receiveValue: { [weak self] image in
                 guard let self = self else { return }
-                Log.info("completed download for image: \(s3ImageId)")
+                Log.info("completed download for image: \(imageName)")
                 let downsizedImage = image.scaleForDevicePreservingAspectRatio()
-                let imageURL = self.fileManager.saveImage(image: downsizedImage, imageName: s3ImageId)
-                let newSenseyeImage = SenseyeImage(imageUrl: imageURL, imageName: s3ImageId)
+                let imageURL = self.fileManager.saveImage(image: downsizedImage, imageName: imageName)
+                let newSenseyeImage = SenseyeImage(imageUrl: imageURL, imageName: imageName)
                 self.fullImageSet.append(newSenseyeImage)
                 Log.info("current count \(self.fullImageSet.count) of \(self.allImageNames.count)")
                 if self.fullImageSet.count == self.allImageNames.count {
@@ -167,10 +176,10 @@ struct SenseyeImageSet: Codable {
     let tabType: String?
     
     var senseyeImages: [SenseyeImage] {
-        imageIds.map({ SenseyeImage(imageUrl: s3ImageLocation + $0, imageName: $0)})
+        imageIds.map({ SenseyeImage(imageUrl: imageDownloadLocation + $0, imageName: $0)})
     }
     
-    var s3ImageLocation: String {
+    var imageDownloadLocation: String {
         guard let tabType = TabType(rawValue: self.tabType ?? "") else { return "" }
         switch tabType {
         case .affectiveImageView:

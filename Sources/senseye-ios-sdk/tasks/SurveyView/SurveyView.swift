@@ -94,6 +94,11 @@ struct SurveyView: View {
                 }
             }
         }
+        .alert(viewModel.alertItem?.title ?? "", isPresented: $viewModel.isShowingAlert) {
+            Button(viewModel.alertItem?.alertButtonText ?? "") { }
+        } message: {
+            Text(viewModel.alertItem?.message ?? "")
+        }
         .onAppear {
             viewModel.onAppear()
             tabController.areInternalTestingTasksEnabled = viewModel.isInternalTestingGroup

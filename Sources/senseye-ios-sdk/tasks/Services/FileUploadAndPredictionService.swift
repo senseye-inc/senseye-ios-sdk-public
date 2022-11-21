@@ -69,7 +69,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private var s3FolderName: String = ""
     private var jsonMetadataURL: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
-    private let s3HostBucketUrl = "s3://senseyeiossdk98d50aa77c5143cc84a829482001110f111246-dev/public/"
+    private let s3HostBucketUrl = "s3://senseye-ptsd/diagnostic-app/"
     
     var isDebugModeEnabled: Bool = false
     var isCensorModeEnabled: Bool = false

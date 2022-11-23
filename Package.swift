@@ -17,7 +17,8 @@ let package = Package(
         .package(name: "Alamofire", url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.5.0")),
         .package(name: "CocoaLumberjack", url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.7.4"),
         .package(name: "Firebase", url: "https://github.com/firebase/firebase-ios-sdk.git", .upToNextMajor(from: "8.10.0")),
-        .package(name: "SwiftyJSON", url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "4.0.0")
+        .package(name: "SwiftyJSON", url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "4.0.0"),
+        .package(url: "https://github.com/apple/swift-algorithms", from: "1.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -33,7 +34,8 @@ let package = Package(
                 .product(name: "Alamofire", package: "Alamofire", condition: nil),
                 .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack", condition: nil),
                 .product(name: "FirebaseCrashlytics", package: "Firebase", condition: nil),
-                .product(name: "SwiftyJSON", package: "SwiftyJSON", condition: nil)
+                .product(name: "SwiftyJSON", package: "SwiftyJSON", condition: nil),
+                .product(name: "Algorithms", package: "swift-algorithms")
             ],
             resources: [
                 .process("Resources/amplifyconfiguration.json"),

@@ -70,6 +70,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     
     private func showFaces() {
         currentTopImage = UIImage(contentsOfFile: images[imageInterval].imageUrl)
+        Log.info("Setting Imagess -- Top: \(images[imageInterval].imageName) -- Bottom: \(images[imageInterval + 1].imageName)")
         currentBottomImage = UIImage(contentsOfFile: images[imageInterval + 1].imageUrl)
         isShowingImages = true
         addCurrentTimeToStimuliTimestamps()
@@ -117,6 +118,8 @@ class AttentionBiasFaceViewModel: ObservableObject {
         currentBottomImage = nil
         timer = nil
         timestampsOfStimuli.removeAll()
+        cancellables.removeAll()
+        images.removeAll()
     }
 }
 

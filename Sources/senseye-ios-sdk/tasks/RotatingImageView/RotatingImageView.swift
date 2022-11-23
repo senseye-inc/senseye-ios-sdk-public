@@ -48,7 +48,6 @@ struct RotatingImageView: View {
                 tabController.proceedToNextTab()
             }, noAction: {
                 cameraService.clearLatestFileRecording()
-                viewModel.removeLastImageSet()
                 tabController.refreshSameTab()
             })
         }

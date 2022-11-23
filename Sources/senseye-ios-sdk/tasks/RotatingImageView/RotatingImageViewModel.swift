@@ -43,12 +43,7 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
     private var eventImageID: [String] = []
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
     
-    var numberOfImagesShown = 0
     var currentImage: UIImage?
-
-    var finishedAllTasks: Bool {
-        numberOfImagesShown >= images.count
-    }
     
     private var rotatingImageTimer: Timer? = nil
     
@@ -64,7 +59,6 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
             Log.info("RotatingImageViewModel creating timer")
             addTimestampOfImageDisplay()
             rotatingImageTimer = Timer.scheduledTimer(withTimeInterval: taskTiming, repeats: true) { [self] timer in
-                numberOfImagesShown += 1
                 if currentImageIndex < images.count - 1 {
                     currentImageIndex += 1
                     addTimestampOfImageDisplay()
@@ -92,10 +86,6 @@ class RotatingImageViewModel: ObservableObject, TaskViewModelProtocol {
         let currentImage = images[currentImageIndex]
         eventImageID.append(currentImage.imageName)
         Log.info("Adding Image: \(currentImage.imageName) swap event timestamp \(currentImageIndex) --- \(timestamp)")
-    }
-    
-    func removeLastImageSet() {
-        numberOfImagesShown -= (images.count)
     }
     
     func checkForImages() {

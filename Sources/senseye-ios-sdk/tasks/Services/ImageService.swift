@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import Amplify
 import Alamofire
+import Algorithms
 
 class ImageService: ObservableObject {
     private var authenticationService: AuthenticationService?
@@ -29,11 +30,14 @@ class ImageService: ObservableObject {
     private var startedInitialDownload = false
     private var fullImageSet: [SenseyeImage] = []
     private var allImageNames: [String] = []
+    private var uniqueImageNameCount: Int {
+        Array(allImageNames.uniqued()).count
+    }
     
     var senseyeImageSets: [SenseyeImageSet] = []
     
     var allDownloadsFinished: Bool {
-        fullImageSet.count >= allImageNames.count
+        fullImageSet.count >= uniqueImageNameCount
     }
     
     private func addSubscribers() {
@@ -71,13 +75,14 @@ class ImageService: ObservableObject {
                 self.getImages()
             }, receiveValue: { senseyeImageSets in
                 self.senseyeImageSets = senseyeImageSets
-                self.allImageNames = senseyeImageSets.flatMap({ $0.senseyeImages.compactMap({ $0.imageName}) })
+                self.allImageNames = senseyeImageSets.flatMap({ $0.imageIds })
             })
             .store(in: &cancellables)
     }
     
     private func getImages() {
-        let allPreviouslyDownloadedSenseyeImages = fileManager.getImages(imageNames: allImageNames)
+        let uniqueImageNames = Array(allImageNames.uniqued())
+        let allPreviouslyDownloadedSenseyeImages = fileManager.getImages(imageNames: uniqueImageNames)
         let allPreviouslyDownloadedSenseyeImageNames = Set(allPreviouslyDownloadedSenseyeImages.map { $0.imageName })
         let fullImageNameSet = Set(allImageNames)
         
@@ -127,8 +132,8 @@ class ImageService: ObservableObject {
                 let imageURL = self.fileManager.saveImage(image: downsizedImage, imageName: imageName)
                 let newSenseyeImage = SenseyeImage(imageUrl: imageURL, imageName: imageName)
                 self.fullImageSet.append(newSenseyeImage)
-                Log.info("current count \(self.fullImageSet.count) of \(self.allImageNames.count)")
-                if self.fullImageSet.count == self.allImageNames.count {
+                Log.info("current count \(self.fullImageSet.count) of \(self.uniqueImageNameCount)")
+                if self.fullImageSet.count == self.uniqueImageNameCount {
                     self.handleCompletedImageSetDownload()
                 } else {
                     self.handleUpdatedImageDownload(latestCount: self.fullImageSet.count)
@@ -137,13 +142,18 @@ class ImageService: ObservableObject {
     }
     
     func checkForImages(at blockNumber: Int) {
+        imagesForBlock.removeAll()
         guard let currentImageSet = senseyeImageSets.first(where: { $0.blockNumber == blockNumber }) else { return }
-        let imageSetIDs = currentImageSet.senseyeImages.map({ $0.imageName })
+        let imageSetIDs = currentImageSet.imageIds
         updateImagesForBlock(imageSetIds: imageSetIDs)
     }
 
     private func updateImagesForBlock(imageSetIds: [String]) {
-        self.imagesForBlock = fullImageSet.filter { imageSetIds.contains($0.imageName) }
+        for imageSetId in imageSetIds {
+            if let senseyeImage = fullImageSet.first(where: { $0.imageName == imageSetId }) {
+                self.imagesForBlock.append(senseyeImage)
+            }
+        }
     }
     
     private func handleCompletedImageSetDownload() {
@@ -158,7 +168,7 @@ class ImageService: ObservableObject {
     
     private func handleUpdatedImageDownload(latestCount: Int) {
         DispatchQueue.main.async {
-            self.currentDownloadCount = "\(latestCount) of \(self.allImageNames.count)"
+            self.currentDownloadCount = "\(latestCount) of \(self.uniqueImageNameCount)"
         }
     }
 

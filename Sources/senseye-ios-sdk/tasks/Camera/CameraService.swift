@@ -220,7 +220,7 @@ class CameraService: NSObject, ObservableObject {
     
     func uploadLatestFile() {
         if latestFileUrl != nil {
-            fileUploadService.uploadData(fileUrl: latestFileUrl!)
+            fileUploadService.uploadData(localFileUrl: latestFileUrl!)
             latestFileUrl = nil
             frameTimestampsForTask = []
         }

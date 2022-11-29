@@ -63,14 +63,19 @@ struct ResultsView: View {
                                 .frame(width: 91, height: 91)
                                 .padding()
 
-                            Text(Strings.resultsProcessing)
+                            Text(viewModel.hasResultCompleteTimerElapsed ? Strings.resultsDelayed : Strings.resultsProcessing)
                                 .foregroundColor(.senseyeTextColor)
                                 .multilineTextAlignment(.center)
-                                .padding()
+                                .padding([.leading, .trailing], 20)
                         }
                     }
                 }
                 .frame(width: 350, height: 450)
+                .onAppear {
+                    DispatchQueue.main.async {
+                        viewModel.onAppear()
+                    }
+                }
 
                 Spacer()
             }

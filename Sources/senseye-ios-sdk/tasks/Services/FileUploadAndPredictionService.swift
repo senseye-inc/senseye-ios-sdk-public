@@ -20,7 +20,7 @@ protocol FileUploadAndPredictionServiceProtocol {
     var isFinishedPublisher: Published<Bool>.Publisher { get }
     
     var taskCount: Int { get }
-    func uploadData(fileUrl: URL)
+    func uploadData(localFileUrl: URL)
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String])
     func addTaskRelatedInfo(for taskInfo: SenseyeTask)
     func setLatestFrameTimestampArray(frameTimestamps: [Int64]?)
@@ -54,7 +54,7 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published private(set) var isFinished: Bool = false
     @AppStorage(AppStorageKeys.username()) var username: String?
 
-    private var numberOfUploadsComplete: Int = 0
+    @Published private var numberOfUploadsComplete: Int = 0
     
     weak var delegate: FileUploadAndPredictionServiceDelegate?
 
@@ -65,11 +65,11 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentSessionUploadFileKeys: [String] = []
     private var currentTaskFrameTimestamps: [Int64]? = []
     private var sessionInfo: SessionInfo? = nil
-    private var currentVideoPath: String? = nil
+    private var currentS3VideoPath: String? = nil
     private var s3FolderName: String = ""
     private var jsonMetadataURL: String = ""
     private let hostApi =  "https://rem.api.senseye.co/"
-    private let s3HostBucketUrl = "s3://senseye-ptsd/diagnostic-app/"
+    private let s3HostBucketUrl = "s3://senseye-ptsd/public/"
     
     var isDebugModeEnabled: Bool = false
     var isCensorModeEnabled: Bool = false
@@ -78,6 +78,8 @@ class FileUploadAndPredictionService: ObservableObject {
     var isFinalUpload: Bool {
         numberOfTasksCompleted == (taskCount)
     }
+
+    private let uploadOperationQueue = OperationQueue()
 
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
@@ -101,18 +103,28 @@ class FileUploadAndPredictionService: ObservableObject {
      - Parameters:
      - fileUrl: URL of the video file to upload
      */
-    func uploadData(fileUrl: URL) {
-        let fileNameKey = "\(s3FolderName)/\(fileUrl.lastPathComponent)"
-        currentVideoPath = "\(s3HostBucketUrl)\(fileNameKey)"
-        let filename = fileUrl
+    func uploadData(localFileUrl: URL) {
+        let fileNameKey = "\(s3FolderName)/\(localFileUrl.lastPathComponent)"
+        currentS3VideoPath = "\(s3HostBucketUrl)\(fileNameKey)"
         
         guard let _ = self.hostApiKey else {
             Log.info("Skipping data upload - hostApiKey is empty")
             return
         }
-
         numberOfTasksCompleted += 1
-        self.uploadFile(fileNameKey: fileNameKey, filename: filename)
+        self.enqueue(uploadItem: UploadItem(localFileUrl: localFileUrl, s3UriKey: fileNameKey))
+    }
+
+    /**
+     Enqueues uploads into an operation queue. This is the abstraction function where we will swap private upload functions as needed.
+     */
+    private func enqueue(uploadItem: UploadItem) {
+        Log.debug("Enqueueing - localurl: \(String(describing: uploadItem.localFileUrl)) s3 target: \(String(describing: uploadItem.s3UriKey))")
+        if let s3UriKey = uploadItem.s3UriKey, let localFileUrl = uploadItem.localFileUrl{
+            uploadOperationQueue.addOperation {
+                self.uploadFile(s3UriKey: s3UriKey, localFileUrl: localFileUrl)
+            }
+        }
     }
 
     private func addSubscribers() {
@@ -141,39 +153,63 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        $numberOfUploadsComplete
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] numberOfUploadsComplete in
+                guard let self = self else {
+                    Log.error("Unable to capture self")
+                    return
+                }
+                if (self.numberOfUploadsComplete == self.taskCount) {
+                    self.uploadSessionJsonFile()
+                }
+            }
+            .store(in: &cancellables)
     }
 
-    private func uploadFile(fileNameKey: String, filename: URL) {
-        Log.debug("About to upload - video url: \(filename)")
+    private func uploadFile(s3UriKey: String, localFileUrl: URL) {
+        Log.debug("About to upload - video url: \(localFileUrl)")
 
-        let storageOperation = Amplify.Storage.uploadFile(key: fileNameKey, local: filename)
+        let storageOperation = Amplify.Storage.uploadFile(key: s3UriKey, local: localFileUrl)
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { newProgressValue in
                 let latestProgressValue = Double(self.numberOfUploadsComplete) + newProgressValue.fractionCompleted
                 let previousProgressValue = self.uploadProgress
                 self.uploadProgress = max(previousProgressValue, latestProgressValue)
-                Log.info("latestProgress -- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
+                Log.info("latestProgress for \(s3UriKey)-- \(newProgressValue.fractionCompleted) - \(self.numberOfUploadsComplete) -- \(self.uploadProgress)")
             }
             .store(in: &self.cancellables)
+
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
             .retry(2)
             .sink {
-            if case let .failure(storageError) = $0 {
-                Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). File: \(#file), line: \(#line), video url: \(filename)", userInfo: self.sessionInfo?.asDictionary)
+                if case let .failure(storageError) = $0 {
+                    Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). video url: \(localFileUrl)",
+                              shouldLogContext: true,
+                              userInfo: [
+                                "error": storageError.errorDescription,
+                                "localFileUrl": localFileUrl,
+                                "s3UriKey": s3UriKey,
+                                "sessionInfo": self.sessionInfo?.asDictionary
+                              ]
+                    )
+                    self.enqueue(uploadItem: UploadItem(localFileUrl: localFileUrl, s3UriKey: s3UriKey))
+                }
+            } receiveValue: { [weak self] data in
+                guard let self = self else {
+                    Log.info("Unable to capture self.", shouldLogContext: true)
+                    return
+                }
+                Log.info("Completed: \(data)")
+                self.currentSessionUploadFileKeys.append(s3UriKey)
+                self.numberOfUploadsComplete += 1
+                self.uploadProgress = Double(self.numberOfUploadsComplete)
             }
-        } receiveValue: { data in
-            Log.info("Completed: \(data)")
-            self.currentSessionUploadFileKeys.append(fileNameKey)
-            self.numberOfUploadsComplete += 1
-            self.uploadProgress = Double(self.numberOfUploadsComplete)
-            if (self.numberOfUploadsComplete == self.taskCount) {
-                self.uploadSessionJsonFile()
-            }
-        }
-        .store(in: &self.cancellables)
-        
+            .store(in: &cancellables)
+
         storageOperation.start()
     }
     
@@ -270,7 +306,7 @@ class FileUploadAndPredictionService: ObservableObject {
     }
     
     func getVideoPath() -> String {
-        return currentVideoPath ?? ""
+        return currentS3VideoPath ?? ""
     }
     
     func setAverageExifBrightness(to averageExifBrightness: Double?) {
@@ -295,6 +331,8 @@ class FileUploadAndPredictionService: ObservableObject {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .withoutEscapingSlashes
             let encodedData = try encoder.encode(sessionInfo)
+
+            // TODO: remove unused uploadS3URLs
             var uploadS3URLs: [String] = []
             for localFileNameKey in currentSessionUploadFileKeys {
                 uploadS3URLs.append(s3HostBucketUrl+localFileNameKey)
@@ -367,13 +405,14 @@ class FileUploadAndPredictionService: ObservableObject {
         isFinished = false
         shouldStopBluetooth = false
         jsonMetadataURL = ""
-        currentVideoPath = ""
+        currentS3VideoPath = ""
         uploadProgress = 0
         numberOfUploadsComplete = 0
         numberOfTasksCompleted = 0
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
         UserDefaults.standard.resetUser()
+        uploadOperationQueue.cancelAllOperations()
     }
     
 }
@@ -381,4 +420,12 @@ class FileUploadAndPredictionService: ObservableObject {
 extension FileUploadAndPredictionService: FileUploadAndPredictionServiceProtocol {
     var uploadProgressPublisher: Published<Double>.Publisher { $uploadProgress }
     var isFinishedPublisher: Published<Bool>.Publisher { $isFinished }
+}
+
+
+extension FileUploadAndPredictionService {
+    struct UploadItem {
+        let localFileUrl: URL?
+        let s3UriKey: String?
+    }
 }

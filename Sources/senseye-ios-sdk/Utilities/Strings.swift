@@ -81,6 +81,7 @@ struct Strings {
     
     // MARK: - ResultsView
     static let resultsProcessing = NSLocalizedString("resultsProcessing", value: "Please wait. Results processing.", comment: "")
+    static let resultsDelayed = NSLocalizedString("resultsDelayed", value: "Sorry, this is taking longer than expected. Please allow the session to complete by staying on this screen. This may take up to 30 minutes.", comment: "")
     static let resultsViewDescription = NSLocalizedString("resultsViewdescription", value: "You have completed the diagnostic, please speak with your health care provider for further information.", comment: "")
     static let completionSessionButtonTitle = NSLocalizedString("completionSessionButtonTitle", value: "COMPLETE SESSION", comment: "")
     

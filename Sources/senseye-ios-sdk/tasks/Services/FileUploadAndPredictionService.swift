@@ -185,7 +185,7 @@ class FileUploadAndPredictionService: ObservableObject {
         storageOperation.resultPublisher
             .receive(on: DispatchQueue.main)
             .retry(2)
-            .sink {
+            .sink { [weak self] in
                 if case let .failure(storageError) = $0 {
                     Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion). video url: \(localFileUrl)",
                               shouldLogContext: true,
@@ -193,10 +193,10 @@ class FileUploadAndPredictionService: ObservableObject {
                                 "error": storageError.errorDescription,
                                 "localFileUrl": localFileUrl,
                                 "s3UriKey": s3UriKey,
-                                "sessionInfo": self.sessionInfo?.asDictionary
+                                "sessionInfo": self?.sessionInfo?.asDictionary
                               ]
                     )
-                    self.enqueue(uploadItem: UploadItem(localFileUrl: localFileUrl, s3UriKey: s3UriKey))
+                    self?.enqueue(uploadItem: UploadItem(localFileUrl: localFileUrl, s3UriKey: s3UriKey))
                 }
             } receiveValue: { [weak self] data in
                 guard let self = self else {
@@ -352,10 +352,10 @@ class FileUploadAndPredictionService: ObservableObject {
                 .sink {
                     if case let .failure(storageError) = $0 {
                         Log.error("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)",
-                                  userInfo: ["username": sessionInfo?.username,
-                                             "versionCode": sessionInfo?.versionCode,
-                                             "predictionJobId": sessionInfo?.predictionJobID
-                                             "s3FolderName": sessionInfo?.folderName
+                                  userInfo: ["username": self.sessionInfo?.username,
+                                             "versionCode": self.sessionInfo?.versionCode,
+                                             "predictionJobId": self.sessionInfo?.predictionJobID,
+                                             "s3FolderName": self.sessionInfo?.folderName
                                             ])
                     }
                 } receiveValue: { data in
@@ -373,11 +373,12 @@ class FileUploadAndPredictionService: ObservableObject {
     private func submitPredictionRequest() {
         
         guard let apiKey = hostApiKey else {
-            Log.error("Skipping the PTSD request but it's here", userInfo: ["username": sessionInfo?.username,
-                                                                            "versionCode": sessionInfo?.versionCode,
-                                                                            "predictionJobId": sessionInfo?.predictionJobID
-                                                                            "s3FolderName": sessionInfo?.folderName
-                                                                           ])
+            Log.error("Skipping the PTSD request but it's here",
+                      userInfo: ["username": sessionInfo?.username,
+                                 "versionCode": sessionInfo?.versionCode,
+                                 "predictionJobId": sessionInfo?.predictionJobID,
+                                 "s3FolderName": sessionInfo?.folderName
+                                ])
             return
         }
         

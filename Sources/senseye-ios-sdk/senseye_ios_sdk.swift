@@ -15,11 +15,22 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 
 public class SenseyeSDK {
     
+    public enum SenseyeSdkTaskId: String {
+        case firstCalibration
+        case affectiveImageSets
+        case finalCalibration
+        case attentionBiasTest
+    }
+    
     weak var delegate: SenseyeTaskCompletionDelegate?
+    private var initializedTaskIdList: [String] = []
+    private var userId: String
 
-    public init() {
+    public init(userId: String, taskIds: [SenseyeSdkTaskId]) {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
+        self.userId = userId
+        self.initializedTaskIdList = taskIds.map { $0.rawValue }
         initializeSDK()
     }
     
@@ -48,7 +59,7 @@ public class SenseyeSDK {
         let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         let imageService = ImageService(authenticationService: authenticationService)
-        return SenseyeTabView()
+        return SenseyeTabView(taskIds: initializedTaskIdList)
             .environmentObject(authenticationService)
             .environmentObject(fileUploadService)
             .environmentObject(imageService)

@@ -57,8 +57,10 @@ class TabController: ObservableObject {
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
+    private var taskListToDisplay: [SenseyeSdkTaskId] = []
     
-    init() {
+    init(taskIds: [SenseyeSdkTaskId]) {
+        taskListToDisplay = taskIds
         updateCurrentTabSet()
     }
     

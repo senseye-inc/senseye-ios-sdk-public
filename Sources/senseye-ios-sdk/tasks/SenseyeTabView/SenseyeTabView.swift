@@ -14,8 +14,8 @@ struct SenseyeTabView: View {
     @EnvironmentObject var cameraService: CameraService
     @StateObject var tabController: TabController
     
-    init(taskIds: [String]) {
-       _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds)
+    init(taskIds: [SenseyeSDK.TaskId]) {
+       _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds))
     }
 
     var body: some View {

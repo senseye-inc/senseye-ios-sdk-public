@@ -15,7 +15,8 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 
 public class SenseyeSDK {
     
-    public enum SenseyeSdkTaskId: String {
+    public enum TaskId: String {
+        case hrCalibration
         case firstCalibration
         case affectiveImageSets
         case finalCalibration
@@ -23,14 +24,14 @@ public class SenseyeSDK {
     }
     
     weak var delegate: SenseyeTaskCompletionDelegate?
-    private var initializedTaskIdList: [String] = []
+    private var initializedTaskIdList: [TaskId] = []
     private var userId: String
 
-    public init(userId: String, taskIds: [SenseyeSdkTaskId]) {
+    public init(userId: String, taskIds: [TaskId]) {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
         self.userId = userId
-        self.initializedTaskIdList = taskIds.map { $0.rawValue }
+        self.initializedTaskIdList = taskIds
         initializeSDK()
     }
     

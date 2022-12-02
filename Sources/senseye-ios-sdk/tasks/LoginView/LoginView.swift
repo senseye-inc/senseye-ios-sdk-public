@@ -20,35 +20,33 @@ struct LoginView: View {
             VStack(spacing: 20) {
                 headerView
                 
-                VStack {
-                    usernameField
-                    
-                    passwordField
-                }
-                .padding()
+                loginOptionsView
                 
+                Spacer()
+                Spacer()
+
                 Button {
                     vm.isShowingSafari.toggle()
                 } label: {
                     Text(Strings.loginHelp)
+                        .underline()
                         .foregroundColor(.senseyeTextColor)
                 }
-                
+
                 Button {
                     vm.login()
                 } label: {
                     SenseyeButton(text: Strings.loginButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                         .padding()
                 }
-                .disabled(vm.username.isEmpty || vm.password.isEmpty || vm.isFetchingAuthorization)
+                .disabled(((vm.username.isEmpty || vm.password.isEmpty) && vm.token.isEmpty) || vm.isFetchingAuthorization)
                 .alert(vm.alertItem?.title ?? "", isPresented: $vm.isShowingAlert) {
                     Button(vm.alertItem?.alertButtonText ?? "") { }
                 } message: {
                     Text(vm.alertItem?.message ?? "")
                 }
                 
-                Spacer()
-                
+
                 HStack {
                     Spacer()
                     Text(vm.versionAndBuildNumber)
@@ -76,25 +74,38 @@ extension LoginView {
     init(authenticationService: AuthenticationService) {
         _vm = StateObject(wrappedValue: ViewModel(authenticationService: authenticationService))
     }
-    
-    var passwordField: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(Strings.passwordTitle)
-                .foregroundColor(.senseyeTextColor)
-            SecureField("", text: $vm.password)
-                .foregroundColor(.senseyeTextColor)
-            Divider()
-                .background(Color.senseyeTextColor)
+
+    var loginOptionsView: some View {
+        VStack {
+            if !vm.isUsingToken {
+                VStack {
+                    usernameField
+
+                    passwordField
+                }
+                .padding()
+            } else {
+                VStack {
+                    tokenField
+                }
+                .padding()
+            }
+
+            Spacer()
+
+            tokenToggle
+                .padding()
         }
-        .padding(.horizontal, 35)
     }
-    
+
     var usernameField: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(Strings.usernameTitle)
                 .foregroundColor(.senseyeTextColor)
             HStack {
-                TextField("", text: $vm.username)
+                TextField("", text: $vm.username, onEditingChanged: { isEditingUsernameField in
+                    vm.token = ""
+                })
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
@@ -110,6 +121,45 @@ extension LoginView {
                 .background(Color.senseyeTextColor)
         }
         .padding(.horizontal, 35)
+    }
+
+    var passwordField: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(Strings.passwordTitle)
+                .foregroundColor(.senseyeTextColor)
+            SecureField("", text: $vm.password)
+                .foregroundColor(.senseyeTextColor)
+            Divider()
+                .background(Color.senseyeTextColor)
+        }
+        .padding(.horizontal, 35)
+    }
+
+    var tokenField: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(Strings.tokenTitle)
+                .foregroundColor(.senseyeTextColor)
+            TextField("", text: $vm.token, onEditingChanged: { isEditingTokenField in
+                if isEditingTokenField {
+                    vm.username = ""
+                    vm.password = ""
+                }
+            })
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+            Divider()
+                .background(Color.senseyeTextColor)
+        }
+        .padding(.horizontal, 35)
+    }
+
+    var tokenToggle: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Toggle(Strings.tokenCallToAction, isOn: $vm.isUsingToken.animation())
+                .foregroundColor(.senseyeTextColor)
+        }
+        .padding(.horizontal, 35)
+
     }
     
     var headerView: some View {

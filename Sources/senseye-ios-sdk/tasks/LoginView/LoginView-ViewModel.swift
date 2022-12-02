@@ -15,10 +15,12 @@ extension LoginView {
     class ViewModel: ObservableObject {
         @AppStorage(AppStorageKeys.username()) var username: String = ""
         @Published var password: String = ""
+        @Published var token: String = ""
         @Published var isUserSignedIn = false
         @Published var isShowingAlert = false
         @Published var isFetchingAuthorization: Bool = false
         @Published var isShowingSafari: Bool = false
+        @Published var isUsingToken: Bool = false
         
         var alertItem: AlertItem?
         let supportURL: URL = URL(string: "https://support.senseye.co/")!

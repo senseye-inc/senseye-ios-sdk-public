@@ -15,6 +15,8 @@ struct Strings {
     static let loginCallToAction = NSLocalizedString("loginCallToAction", value: "Login to get started", comment: "")
     static let passwordTitle = NSLocalizedString("passwordTitle", value: "PASSWORD", comment: "")
     static let usernameTitle = NSLocalizedString("usernameTitle", value: "USERNAME", comment: "")
+    static let tokenCallToAction = NSLocalizedString("tokenCallToAction", value: "Use one-time token", comment: "")
+    static let tokenTitle = NSLocalizedString("tokenTitle", value: "ONE-TIME TOKEN", comment: "")
 
     // MARK: - SurveyView
     static let blueColor = NSLocalizedString("blueColor", value: "Blue", comment: "")

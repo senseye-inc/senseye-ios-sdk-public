@@ -198,11 +198,10 @@ public class AuthenticationService: ObservableObject {
                 guard let error = error as? AuthError else { return }
                 DispatchQueue.main.async {
                     switch error {
-                    case .notAuthorized(_, _, _):
+                    case .notAuthorized(_, _, _), .service(_, _, _):
                         self.authError = AlertContext.invalidLogin
                     case
                     .configuration(_, _, _),
-                    .service(_, _, _),
                     .unknown(_, _),
                     .validation(_, _, _, _),
                     .invalidState(_, _, _),

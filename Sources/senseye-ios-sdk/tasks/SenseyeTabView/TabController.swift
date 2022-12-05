@@ -128,13 +128,6 @@ class TabController: ObservableObject {
             taskTabOrdering.append(TabItem(taskId: "attention_bias_face_1", tabType: .attentionBiasFaceView, taskTitle: Strings.attentionBiasFaceTaskName,
                                            taskDescription: Strings.attentionBiasFaceInstructions,
                                            blockNumber: 26, isTaskItem: true))
-            taskTabOrdering.append(TabItem(taskId: "camera_view_plr", tabType: .cameraView))
-            taskTabOrdering.append(TabItem(
-                taskId: "plr_view",
-                tabType: .plrView,
-                taskTitle: "PLR",
-                taskDescription: "Stare at the cross for the duration of the task.",
-                isTaskItem: true))
             taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
             taskTabOrdering.append(TabItem(taskId: "attention_bias_face_2", tabType: .attentionBiasFaceView, taskTitle: Strings.attentionBiasFaceTaskName,
                                            taskDescription: Strings.attentionBiasFaceInstructions, blockNumber: 27,

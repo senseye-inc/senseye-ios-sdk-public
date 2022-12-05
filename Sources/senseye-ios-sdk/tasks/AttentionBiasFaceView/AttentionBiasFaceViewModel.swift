@@ -31,9 +31,11 @@ class AttentionBiasFaceViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var timer: Timer? = nil
     private var timestampsOfStimuli: [Int64] = []
+    private var eventImageID: [String] = []
     private var imageInterval = 0
     private var dotInterval = 0
-    private var dotLocations: [DotLocation] = [.bottom,.top,.top,.bottom,.bottom,.top, .bottom,.top,.top,.bottom,.bottom,.top, .bottom, .bottom]
+    private var dotLocations: [DotLocation] = [.bottom,.top,.top,.bottom,.bottom,.top, .bottom,.top,.top,.bottom,.bottom,.top, .bottom]
+    private var dotLocationsMapped: [String] { dotLocations.map({ $0.rawValue })}
     
     init(fileUploadService: FileUploadAndPredictionServiceProtocol, imageService: ImageService) {
         self.fileUploadService = fileUploadService
@@ -69,9 +71,12 @@ class AttentionBiasFaceViewModel: ObservableObject {
     }
     
     private func showFaces() {
-        currentTopImage = UIImage(contentsOfFile: images[imageInterval].imageUrl)
-        Log.info("Setting Imagess -- Top: \(images[imageInterval].imageName) -- Bottom: \(images[imageInterval + 1].imageName)")
-        currentBottomImage = UIImage(contentsOfFile: images[imageInterval + 1].imageUrl)
+        let currentTopSenseyeImage = images[imageInterval]
+        let currentBottomSenseyeImage = images[imageInterval + 1]
+        currentTopImage = UIImage(contentsOfFile: currentTopSenseyeImage.imageUrl)
+        currentBottomImage = UIImage(contentsOfFile: currentBottomSenseyeImage.imageUrl)
+        Log.info("Setting Imagess -- Top: \(currentTopSenseyeImage.imageName) -- Bottom: \(currentBottomSenseyeImage.imageName)")
+        eventImageID.append(contentsOf: [currentTopSenseyeImage.imageName, currentBottomSenseyeImage.imageName])
         isShowingImages = true
         addCurrentTimeToStimuliTimestamps()
         DispatchQueue.main.asyncAfter(deadline: .now() + facesDisplayTime) {
@@ -101,7 +106,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
     }
     
     func addTaskInfoToJson() {
-        let taskInfo = SenseyeTask(taskID: taskID, frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, videoPath: fileUploadService.getVideoPath())
+        let taskInfo = SenseyeTask(taskID: taskID, frameTimestamps: fileUploadService.getLatestFrameTimestampArray(), timestamps: timestampsOfStimuli, eventImageID: eventImageID, eventDotLocation: dotLocationsMapped, videoPath: fileUploadService.getVideoPath())
         fileUploadService.addTaskRelatedInfo(for: taskInfo)
     }
     
@@ -117,6 +122,7 @@ class AttentionBiasFaceViewModel: ObservableObject {
         currentTopImage = nil
         currentBottomImage = nil
         timer = nil
+        eventImageID.removeAll()
         timestampsOfStimuli.removeAll()
         cancellables.removeAll()
         images.removeAll()

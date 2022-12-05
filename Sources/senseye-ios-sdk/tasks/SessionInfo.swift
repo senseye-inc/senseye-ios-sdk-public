@@ -56,6 +56,7 @@ struct SenseyeTask: Codable {
     let eventXLOC, eventYLOC: [CGFloat]?
     let eventImageID: [String]?
     let eventBackgroundColor: [String]?
+    let eventDotLocation: [String]?
     let frameTimestamps: [Int64]?
     let blockNumber: Int?
     let category: TaskBlockCategory?
@@ -72,6 +73,7 @@ struct SenseyeTask: Codable {
         case eventYLOC = "event_y_loc"
         case eventImageID = "event_image_id"
         case eventBackgroundColor = "event_background_color"
+        case eventDotLocation = "event_dot_location"
         case frameTimestamps
         case blockNumber = "blockNumber"
         case category = "category"
@@ -91,6 +93,7 @@ struct SenseyeTask: Codable {
         eventYLOC: [CGFloat]? = nil,
         eventImageID: [String]? = nil,
         eventBackgroundColor: [String]? = nil,
+        eventDotLocation: [String]? = nil,
         blockNumber: Int? = nil,
         category: TaskBlockCategory? = nil,
         subcategory: TaskBlockSubcategory? = nil,
@@ -105,6 +108,7 @@ struct SenseyeTask: Codable {
         self.eventYLOC = eventYLOC
         self.eventImageID = eventImageID
         self.eventBackgroundColor = eventBackgroundColor
+        self.eventDotLocation = eventDotLocation
         self.frameTimestamps = frameTimestamps
         self.blockNumber = blockNumber
         self.category = category

@@ -223,6 +223,6 @@ struct SenseyeFaceSet: Codable {
     let dotLocation: DotLocation
 }
 
-enum DotLocation: Codable {
+enum DotLocation: String, Codable {
     case top, bottom
 }

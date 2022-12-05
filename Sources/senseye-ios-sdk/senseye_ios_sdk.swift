@@ -15,7 +15,7 @@ protocol SenseyeTaskCompletionDelegate: AnyObject {
 
 public class SenseyeSDK {
     
-    public enum TaskId: String {
+    public enum TaskId: String, CaseIterable {
         case hrCalibration
         case firstCalibration
         case affectiveImageSets
@@ -27,7 +27,7 @@ public class SenseyeSDK {
     private var initializedTaskIdList: [TaskId] = []
     private var userId: String
 
-    public init(userId: String, taskIds: [TaskId]) {
+    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases) {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
         self.userId = userId

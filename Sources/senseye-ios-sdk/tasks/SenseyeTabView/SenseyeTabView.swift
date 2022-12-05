@@ -12,7 +12,11 @@ struct SenseyeTabView: View {
     @EnvironmentObject var fileUploadService: FileUploadAndPredictionService
     @EnvironmentObject var imageService: ImageService
     @EnvironmentObject var cameraService: CameraService
-    @StateObject var tabController: TabController = TabController()
+    @StateObject var tabController: TabController
+    
+    init(taskIds: [SenseyeSDK.TaskId]) {
+       _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds))
+    }
 
     var body: some View {
         TabView(selection: $tabController.activeTabType) {

@@ -307,7 +307,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
-            if videoWriterInput.isReadyForMoreMediaData {
+            if videoWriterInput.isReadyForMoreMediaData && captureSession.isRunning {
                 videoBufferQueue.async { [weak self] in
                     guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
                         return

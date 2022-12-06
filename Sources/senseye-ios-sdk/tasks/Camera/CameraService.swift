@@ -290,7 +290,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             let ciImage = CIImage(cvPixelBuffer: imageBuffer)
             let context = CIContext()
             DispatchQueue.main.async {
-                self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+                self.frame = context.createCGImage(ciImage.oriented(.upMirrored), from: ciImage.extent)
             }
             if (fileUploadService.isDebugModeEnabled) {
                 cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)

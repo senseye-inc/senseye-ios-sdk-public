@@ -65,8 +65,6 @@ class TabController: ObservableObject {
         taskListToDisplay = taskIds
         self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
         self.requiresAuth = requiresAuth
-        Log.info("Requires Auth: \(requiresAuth)")
-        Log.info("shouldCollectSurveyInfo: \(shouldCollectSurveyInfo)")
         updateCurrentTabSet()
     }
     

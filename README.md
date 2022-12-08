@@ -16,7 +16,7 @@ To install the Senseye iOS SDK, follow these steps:
 #Usage
 
 Once the SDK is properly imported to your hosting view, you can initialize it with the following:
-1) var senseyeSDK = SenseyeSDK()
+1) `var senseyeSDK = SenseyeSDK()` or `var senseyeSDK = SenseyeSDK(userID: String, taskIDs [SenseyeSDK.TaskID])`
 
    The initialization takes the following optional parameters:
    userId: String -> Used to map session recording to post-processed reports. If required, please pass in a value that is unique for each participant completing a test session.
@@ -27,18 +27,22 @@ Once the SDK is properly imported to your hosting view, you can initialize it wi
             4) finalCalibration -> A repeat of the previous task in firstCalibration, if required an additonal time.
             5) attentionBiasTest -> A participant is first shown a small cross for 0.5 sec. The screen will then switch to display two images for 2 sec. Finally a small dot will be shown for 0.5 sec. This process of small cross, 2 Images, small dot will repeat for 26 times for a total of 1.3 min. 
 2) Following initilization of the SDK variable, display the UI container with the following block in your hosting view:
-   senseyeSDK.senseyeTabView()
-3) Once the view is diplayed the SDK will complete all required tasks, upload test session recordings, and trigger post-processing. Following upload of recordings the user will see a "Complete Session" button at which point it will be safe to close the hosting view.
+   `senseyeSDK.senseyeTabView()`
+3) Once the view is diplayed the SDK will complete all required tasks, upload test session recordings, and trigger post-processing. Following upload of recordings the user will see a "Complete Session" button at which point it will be safe to close the hosting view. See the screenshot below:
+<img width="346" alt="Complete Session screenshot" src="https://user-images.githubusercontent.com/5391849/206341149-d0025c14-f157-4c6c-8576-373aa649809b.png">
 
 # Example
 
-todo --> add some screenshots and examples here for a calibration only app
+The below is a simple app that initializes the SDK and displayed the UI in a hosting Swift UI view. From the initialization constructor, we define a single Calibration task to be completed. 
+
+<img width="346" alt="Screen Shot 2022-12-07 at 4 54 45 PM" src="https://user-images.githubusercontent.com/5391849/206329854-f377c12b-e202-490d-a5db-4688b9ed40f0.png">
+<img width="783" alt="Screen Shot 2022-12-07 at 4 54 30 PM" src="https://user-images.githubusercontent.com/5391849/206329858-a2422386-4fed-47ca-9d54-929ec66b80d8.png">
 
 # Requirements
 
-iOS 15.0 or later
-Xcode 13.0 or later
-Fully supported devices for post-processing -> iPhone 11 Pro Max or later            
+- iOS 15.0 or later
+- Xcode 13.0 or later
+- Fully supported devices for post-processing -> iPhone 11 Pro Max or later            
     
 # Unit Tests
 

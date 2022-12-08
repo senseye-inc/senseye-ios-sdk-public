@@ -13,7 +13,7 @@ To install the Senseye iOS SDK, follow these steps:
 1) Add the Senseye iOS SDK Swift package dependency to your app. You can find it at File > Swift Packages > Add Package Dependency > enter "https://github.com/senseye-inc/senseye-ios-sdk"
 2) Import the SDK in your hosting view: import senseye_ios_sdk
 
-#Usage
+# Usage
 
 Once the SDK is properly imported to your hosting view, you can initialize it with the following:
 1) `var senseyeSDK = SenseyeSDK()` or `var senseyeSDK = SenseyeSDK(userID: String, taskIDs [SenseyeSDK.TaskID])`

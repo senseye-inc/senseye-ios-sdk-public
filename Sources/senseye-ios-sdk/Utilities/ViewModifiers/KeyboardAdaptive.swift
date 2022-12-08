@@ -16,6 +16,7 @@ struct KeyboardAdaptive: ViewModifier {
         content
             .padding(.bottom, keyboardHeight)
             .onReceive(Publishers.keyboardHeight) { self.keyboardHeight = $0 }
+            .animation(.easeInOut)
     }
 }
 
@@ -23,19 +24,21 @@ extension View {
     func keyboardAdaptive() -> some View {
         ModifiedContent(content: self, modifier: KeyboardAdaptive())
     }
+    
+    func hideKeyboard() {
+        let resign = #selector(UIResponder.resignFirstResponder)
+        UIApplication.shared.sendAction(resign, to: nil, from: nil, for: nil)
+    }
 }
 
 extension Publishers {
-    // 1.
     static var keyboardHeight: AnyPublisher<CGFloat, Never> {
-        // 2.
         let willShow = NotificationCenter.default.publisher(for: UIApplication.keyboardWillShowNotification)
             .map { $0.keyboardHeight }
 
         let willHide = NotificationCenter.default.publisher(for: UIApplication.keyboardWillHideNotification)
             .map { _ in CGFloat(0) }
 
-        // 3.
         return MergeMany(willShow, willHide)
             .eraseToAnyPublisher()
     }

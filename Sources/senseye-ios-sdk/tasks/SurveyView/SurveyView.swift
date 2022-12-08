@@ -135,7 +135,7 @@ extension SurveyView {
                 }
             }
         } label: {
-            SenseyePicker(title: Strings.ageTitle, currentValue: "\(viewModel.selectedGender ?? "N/A")")
+            SenseyePicker(title: Strings.genderTitle, currentValue: "\(viewModel.selectedGender ?? "N/A")")
         }
     }
 

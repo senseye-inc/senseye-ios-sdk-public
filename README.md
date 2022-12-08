@@ -1,11 +1,12 @@
 # Senseye iOS SDK
 
 
-#Overview
+# Overview
 
-    The SDK for iOS allows patients to complete a series of ocular tests using the front facing camera on their iOS device. The SDK records video of the tests and uploads the videos to Amazon S3 for storage and analysis.
+The Senseye SDK allows patients to complete a series of ocular tests using the front facing camera on their iOS device. The SDK records video of the tests and uploads the videos to secure Amazon S3 for storage and analysis. 
+
     
-#Installation
+# Installation
 
 To install the Senseye iOS SDK, follow these steps:
 
@@ -29,11 +30,11 @@ Once the SDK is properly imported to your hosting view, you can initialize it wi
    senseyeSDK.senseyeTabView()
 3) Once the view is diplayed the SDK will complete all required tasks, upload test session recordings, and trigger post-processing. Following upload of recordings the user will see a "Complete Session" button at which point it will be safe to close the hosting view.
 
-#Example
+# Example
 
 todo --> add some screenshots and examples here for a calibration only app
 
-#Requirements
+# Requirements
 
 iOS 15.0 or later
 Xcode 13.0 or later

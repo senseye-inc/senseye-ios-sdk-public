@@ -49,9 +49,6 @@ struct CameraView: View {
                 vm.onAppear()
                 Log.info("displayed cameraview")
             }
-            .onDisappear {
-                vm.onDisappear()
-            }
             .onChange(of: vm.shouldProceedToNextTab) { shouldProceedToNextTab in
                 if shouldProceedToNextTab {
                     tabController.proceedToNextTab()

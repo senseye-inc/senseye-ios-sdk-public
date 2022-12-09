@@ -31,13 +31,15 @@ Once the SDK is properly imported to your hosting view, you can initialize it wi
    
    - `userId: String` -> Used to map session recording to post-processed reports. If required by your app, pass in a value that is unique to each participant completing a test session.
    
-   - `taskIds: [SenseyeSDK.TaskId]` -> A list of tasks you will want a participant to complete in each test session. The following tasks are supported:
+   - `taskIds: [SenseyeSDK.TaskId]` -> A list of tasks you will want a participant to complete in each test session. 
+   
+      The following tasks are supported:
 
-1) `hrCalibration` -> 3 minute baseline recording of the participants Heart Rate using an external BerryMed Pulse Oximeter Device.
-2) `firstCalibration` -> A participant is instructed to follow a small dot that will be displayed at 10 different locations. Each dot is displayed for 2.5 sec, for a total task time of 25 sec.  
-3) `affectiveImageSets` -> A participant is first shown a set of 8 images for 2.5 sec each. They are allowed to look anywhere within the images being displayed. Following the set of images, they are instructed to view a screen with cross fixation point. This process of the 8 Image Set and Alternating Black-White screen is repeated 25 times, for a total task time of 12.5 min.
-4) `finalCalibration` -> A repeat of the previous task in firstCalibration, if required an additional time.
-5) `attentionBiasTest` -> A participant is instructed to view a cross fixation point for 0.5 sec. The screen will then switch to display two vertically stacked images for 2 sec, after which a small dot will be shown for 0.5 sec. This process of the fixation point, two images, and small dot will repeat 26 times for a total of 1.3 min. 
+      1) `hrCalibration` -> 3 minute baseline recording of the participant's Heart Rate using an external BerryMed Pulse Oximeter Device.
+      2) `firstCalibration` -> A participant is instructed to follow a small dot that will be displayed at 10 different locations. Each dot is displayed  for 2.5 sec, for a total task time of 25 sec.  
+      3) `affectiveImageSets` -> A participant is first shown a set of 8 images for 2.5 sec each. They are allowed to look anywhere within the images being displayed. Following the set of images, they are instructed to view a screen with cross fixation point. This process of the 8 Image Set and Alternating Black-White screen is repeated 25 times, for a total task time of 12.5 min.
+      4) `finalCalibration` -> A repeat of the previous task in firstCalibration, if required an additional time.
+      5) `attentionBiasTest` -> A participant is instructed to view a cross fixation point for 0.5 sec. The screen will then switch to display two vertically stacked images for 2 sec, after which a small dot will be shown for 0.5 sec. This process of the fixation point, two images, and small dot will repeat 26 times for a total of 1.3 min. 
 
 ## 2. Display Container
 Following initilization of the SDK variable, display the UI container with the following block in your hosting view:

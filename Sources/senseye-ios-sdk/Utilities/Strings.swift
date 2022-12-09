@@ -44,9 +44,8 @@ struct Strings {
     static let bluetoothTitle = NSLocalizedString("bluetoothTitle", value: "Bluetooth", comment: "")
     static let connectedTitle = NSLocalizedString("connectedTitle", value: "Connected", comment: "")
     static let notConnectedTitle = NSLocalizedString("notConnectedTitle", value: "Not Connected", comment: "")
-    static let searchingForDevices = NSLocalizedString("searchingForDevices", value: "Searching for devices…", comment: "")
     static let bluetoothConnectedDescription = NSLocalizedString("bluetoothConnectedDescription", value: "Connected", comment: "")
-    static let bluetoothSearchingText = NSLocalizedString("bluetoothSearchingText", value: "Searching for devices…", comment: "")
+    static let bluetoothSearchingText = NSLocalizedString("bluetoothSearchingText", value: "Searching for devices...", comment: "")
     static let language = NSLocalizedString("langauge", value: "Language", comment: "")
     
     // MARK: - TabController

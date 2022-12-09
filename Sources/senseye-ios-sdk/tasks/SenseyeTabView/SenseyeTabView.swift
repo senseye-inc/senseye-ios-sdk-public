@@ -14,8 +14,8 @@ struct SenseyeTabView: View {
     @EnvironmentObject var cameraService: CameraService
     @StateObject var tabController: TabController
     
-    init(taskIds: [SenseyeSDK.TaskId]) {
-       _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds))
+    init(taskIds: [SenseyeSDK.TaskId], shouldCollectSurveyInfo: Bool, requiresAuth: Bool) {
+        _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds, shouldCollectSurveyInfo: shouldCollectSurveyInfo, requiresAuth: requiresAuth))
     }
 
     var body: some View {

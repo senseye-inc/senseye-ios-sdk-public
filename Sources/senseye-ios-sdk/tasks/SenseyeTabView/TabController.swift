@@ -58,9 +58,13 @@ class TabController: ObservableObject {
     private var nextTab: TabItem?
     private var currentTabIndex = 0
     private var taskListToDisplay: [SenseyeSDK.TaskId] = []
+    private var shouldCollectSurveyInfo: Bool
+    private var requiresAuth: Bool
     
-    init(taskIds: [SenseyeSDK.TaskId]) {
+    init(taskIds: [SenseyeSDK.TaskId], shouldCollectSurveyInfo: Bool, requiresAuth: Bool) {
         taskListToDisplay = taskIds
+        self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
+        self.requiresAuth = requiresAuth
         updateCurrentTabSet()
     }
     
@@ -68,8 +72,8 @@ class TabController: ObservableObject {
         taskTabOrdering.removeAll()
         
         //Initial Tabs
-        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
-                            TabItem(taskId: "survey_view", tabType: .surveyView)]
+        if requiresAuth { taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView)] }
+        if shouldCollectSurveyInfo { taskTabOrdering += [TabItem(taskId: "survey_view", tabType: .surveyView)] }
         
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.hrCalibration)) {
             //HR Calibration
@@ -147,7 +151,13 @@ class TabController: ObservableObject {
                 )]
         }
         taskTabOrdering.append(TabItem(taskId: "results_view", tabType: .resultsView))
-            
+        setActiveTab()
+    }
+    
+    private func setActiveTab() {
+        guard let firstTab = taskTabOrdering.first else { return }
+        let tabType = firstTab.tabType
+        self.open(firstTab)
     }
 
     var areAllTabsComplete: Bool {

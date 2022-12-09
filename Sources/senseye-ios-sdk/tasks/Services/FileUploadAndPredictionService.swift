@@ -161,7 +161,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     Log.error("Unable to capture self")
                     return
                 }
-                if (self.numberOfUploadsComplete == self.taskCount) {
+                if (self.taskCount != 0 && self.numberOfUploadsComplete == self.taskCount) {
                     self.uploadSessionJsonFile()
                 }
             }
@@ -232,12 +232,27 @@ class FileUploadAndPredictionService: ObservableObject {
     }
     
     private func parseProccesingInfoFromLocalConfig() {
-        guard let backendConfig = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
+        guard let backendConfig = Bundle.module.path(forResource: "amplifyconfiguration", ofType: "json") else {
             Log.error("Unable to load amplifyconfiguration.")
             return
         }
-        let data = Data(contentsOf: URL(fileURLWithPath: backendConfig))
-        let configJson = JSON(data: data)
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: backendConfig))
+            let configJson = try JSON(data: data)
+            self.hostApi = configJson["apiEnv"].stringValue
+            self.hostApiKey = configJson["processingApiKey"].string
+            
+            let storageDictionary = configJson["storage"].dictionary
+            let pluginsDictionary = storageDictionary?["plugins"]?.dictionary
+            let bucketInfoDictionary = pluginsDictionary?["awsS3StoragePlugin"]?.dictionary
+            let bucketName = bucketInfoDictionary?["bucket"]?.string ?? ""
+            
+            self.s3HostBucketUrl = "s3://\(bucketName)/public"
+            print(self.s3HostBucketUrl)
+            
+        } catch {
+            Log.error("Could not parse local api config")
+        }
     }
     
     /**

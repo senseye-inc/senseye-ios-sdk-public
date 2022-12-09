@@ -68,8 +68,8 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentS3VideoPath: String? = nil
     private var s3FolderName: String = ""
     private var jsonMetadataURL: String = ""
-    private let hostApi =  "https://rem.api.senseye.co/"
-    private let s3HostBucketUrl = "s3://senseye-ptsd/public/"
+    private var hostApi: String =  ""
+    private var s3HostBucketUrl: String = ""
     
     var isDebugModeEnabled: Bool = false
     var isCensorModeEnabled: Bool = false
@@ -166,6 +166,8 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        self.parseProccesingInfoFromLocalConfig()
     }
 
     private func uploadFile(s3UriKey: String, localFileUrl: URL) {
@@ -227,6 +229,15 @@ class FileUploadAndPredictionService: ObservableObject {
                 Log.warn("Fetching user attributes failed: \(authError)")
             }
         }
+    }
+    
+    private func parseProccesingInfoFromLocalConfig() {
+        guard let backendConfig = Bundle.module.url(forResource: "amplifyconfiguration", withExtension: "json") else {
+            Log.error("Unable to load amplifyconfiguration.")
+            return
+        }
+        let data = Data(contentsOf: URL(fileURLWithPath: backendConfig))
+        let configJson = JSON(data: data)
     }
     
     /**

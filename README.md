@@ -3,7 +3,7 @@
 
 # Overview
 
-The Senseye SDK allows patients to complete a series of ocular tests using the front facing camera on their iOS device. The SDK records video of the tests and uploads the videos to secure Amazon S3 for storage and analysis. 
+The Senseye SDK allows participants to complete a series of ocular tasks using the front facing camera on their iOS device. A series of tasks comprises a completed session. The SDK records video of the participant performing the task and uploads the videos to secured Amazon S3 storage for analysis. 
 
     
 # Installation
@@ -11,7 +11,7 @@ The Senseye SDK allows patients to complete a series of ocular tests using the f
 To install the Senseye iOS SDK, follow these steps:
 
 1) Add the Senseye iOS SDK Swift package dependency to your app. You can find it at File > Swift Packages > Add Package Dependency > enter "https://github.com/senseye-inc/senseye-ios-sdk"
-2) Import the SDK in your hosting view: import senseye_ios_sdk
+2) Import the SDK in your hosting view: `import senseye_ios_sdk`
 
 # Usage
 
@@ -19,13 +19,14 @@ Once the SDK is properly imported to your hosting view, you can initialize it wi
 1) `var senseyeSDK = SenseyeSDK()` or `var senseyeSDK = SenseyeSDK(userID: String, taskIDs [SenseyeSDK.TaskID])`
 
    The initialization takes the following optional parameters:
-   userId: String -> Used to map session recording to post-processed reports. If required, please pass in a value that is unique for each participant completing a test session.
-   taskIds: [SenseyeSDK.TaskId] -> A list of tasks you will want a participant to complete in each test session. The following tasks are supported:
+   
+   `userId: String` -> Used to map session recording to post-processed reports. If required by your app, pass in a value that is unique to each participant completing a test session.
+   `taskIds: [SenseyeSDK.TaskId]` -> A list of tasks you will want a participant to complete in each test session. The following tasks are supported:
             1) hrCalibration -> 3 minute baseline recording of the participants Heart Rate using an external BerryMed Pulse Oximeter Device.
-            2) firstCalibration -> A participant is asked to follow a small dot that will be displayed at 10 different locations. Each dot is displayed for 2.5 sec, for a total time of 25 sec.  
-            3) affectiveImageSets -> A participant is first shown a set of 8 images for 2.5 sec each. Following the set of images, they will be shown a black screen for 5 sec, and then a white screen for 5 sec, all while being asked to focus on a cross in the center of the screen for the full duration of the task. This process of the 8 Image Set and Alternating Black-White screen is repeated 25 times, for a total task time of 12.5 min.
-            4) finalCalibration -> A repeat of the previous task in firstCalibration, if required an additonal time.
-            5) attentionBiasTest -> A participant is first shown a small cross for 0.5 sec. The screen will then switch to display two images for 2 sec. Finally a small dot will be shown for 0.5 sec. This process of small cross, 2 Images, small dot will repeat for 26 times for a total of 1.3 min. 
+            2) firstCalibration -> A participant is instructed to follow a small dot that will be displayed at 10 different locations. Each dot is displayed for 2.5 sec, for a total task time of 25 sec.  
+            3) affectiveImageSets -> A participant is first shown a set of 8 images for 2.5 sec each. They are allowed to look anywhere within the images being displayed. Following the set of images, they are instructed to view a screen with cross fixation point. This process of the 8 Image Set and Alternating Black-White screen is repeated 25 times, for a total task time of 12.5 min.
+            4) finalCalibration -> A repeat of the previous task in firstCalibration, if required an additional time.
+            5) attentionBiasTest -> A participant is instructed to view a cross fixation point for 0.5 sec. The screen will then switch to display two vertically stacked images for 2 sec, after which a small dot will be shown for 0.5 sec. This process of the fixation point, two images, and small dot will repeat 26 times for a total of 1.3 min. 
 2) Following initilization of the SDK variable, display the UI container with the following block in your hosting view:
    `senseyeSDK.senseyeTabView()`
 3) Once the view is diplayed the SDK will complete all required tasks, upload test session recordings, and trigger post-processing. Following upload of recordings the user will see a "Complete Session" button at which point it will be safe to close the hosting view. See the screenshot below:
@@ -35,8 +36,58 @@ Once the SDK is properly imported to your hosting view, you can initialize it wi
 
 The below is a simple app that initializes the SDK and displayed the UI in a hosting Swift UI view. From the initialization constructor, we define a single Calibration task to be completed. 
 
-<img width="346" alt="Screen Shot 2022-12-07 at 4 54 45 PM" src="https://user-images.githubusercontent.com/5391849/206329854-f377c12b-e202-490d-a5db-4688b9ed40f0.png">
-<img width="783" alt="Screen Shot 2022-12-07 at 4 54 30 PM" src="https://user-images.githubusercontent.com/5391849/206329858-a2422386-4fed-47ca-9d54-929ec66b80d8.png">
+```
+import SwiftUI
+import senseye_ios_sdk
+
+@available(iOS 15.0, *)
+@main
+struct Senseye_DemoApp: App {
+
+    @Environment(\.scenePhase) var scenePhase
+    var senseyeSDK: SenseyeSDK = SenseyeSDK(userId: "senseye_diagnostic", taskIds: [.firstCalibration])
+    let initialBrightness = UIScreen.main.brightness
+    
+    var body: some Scene {
+        WindowGroup {
+            EntryView(senseyeSDK: senseyeSDK)
+        }
+        .onChange(of: scenePhase) { newScene in
+            if newScene == .active {
+                DispatchQueue.main.async {
+                    UIScreen.main.brightness = 1.0
+                    UIApplication.shared.isIdleTimerDisabled = true
+                }
+            } else {
+                DispatchQueue.main.async {                
+                    UIScreen.main.brightness = initialBrightness
+                    UIApplication.shared.isIdleTimerDisabled = false
+                }
+            }
+        }
+    }
+}
+```
+The SDK instance is injected into the initialization of `EntryView`, which conforms to the View protocol, and its `var body` simply returns `senseyeTabView()`.
+
+```
+import SwiftUI
+import senseye_ios_sdk
+
+
+@available(iOS 15.0, *)
+struct EntryView: View {
+
+    var senseyeSDK: SenseyeSDK
+    init(senseyeSDK: SenseyeSDK) {
+        self.senseyeSDK = senseyeSDK
+    }
+
+    var body: some View {
+        senseyeSDK.senseyeTabView()
+    }
+}
+``
 
 # Requirements
 

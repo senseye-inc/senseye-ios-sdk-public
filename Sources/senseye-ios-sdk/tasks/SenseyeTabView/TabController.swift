@@ -156,7 +156,6 @@ class TabController: ObservableObject {
     
     private func setActiveTab() {
         guard let firstTab = taskTabOrdering.first else { return }
-        let tabType = firstTab.tabType
         self.open(firstTab)
     }
 

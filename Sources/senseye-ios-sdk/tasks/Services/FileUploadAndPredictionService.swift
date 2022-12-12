@@ -86,10 +86,8 @@ class FileUploadAndPredictionService: ObservableObject {
     func configureTaskSession(with tabItems: [TabItem]) {
         self.taskCount = tabItems.filter({ $0.isTaskItem }).count
         if !tabItems.contains(where: { $0.tabType == .surveyView }) {
-            Log.info("Uploading JSON! No SurveyView!!!✅")
             createSessionJsonFileAndStoreCognitoUserAttributes()
         } else {
-            Log.info("Waiting to upload JSON! ✅")
             return
         }
     }

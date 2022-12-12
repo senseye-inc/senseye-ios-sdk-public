@@ -39,7 +39,7 @@ struct BluetoothDiscoveryView: View {
                         .foregroundColor(.senseyeSecondary)
                     }
                 } else if viewModel.discoveredPeripheral == nil {
-                    ProgressView(Strings.searchingForDevices)
+                    ProgressView(Strings.bluetoothSearchingText)
                         .progressViewStyle(.circular)
                         .foregroundColor(.senseyeSecondary)
                         .tint(.senseyeSecondary)

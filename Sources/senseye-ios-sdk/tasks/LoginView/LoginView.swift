@@ -8,22 +8,25 @@ import SwiftUI
 
 struct LoginView: View {
     
+    enum FocusedField {
+        case username, password, tokenField
+    }
+    
     // ViewModel class is extension of LoginView
     @StateObject private var vm: ViewModel
     @EnvironmentObject var tabController: TabController
+    @FocusState private var focusField: FocusedField?
     
     var body: some View {
         ZStack {
             Color.senseyePrimary
                 .edgesIgnoringSafeArea(.all)
+                .onTapGesture { hideKeyboard() }
             
-            VStack(spacing: 20) {
+            VStack(spacing: focusField == nil ? 20 : 0) {
                 headerView
                 
                 loginOptionsView
-                
-                Spacer()
-                Spacer()
 
                 Button {
                     vm.isShowingSafari.toggle()
@@ -35,6 +38,7 @@ struct LoginView: View {
 
                 Button {
                     vm.login()
+                    hideKeyboard()
                 } label: {
                     SenseyeButton(text: Strings.loginButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                         .padding()
@@ -45,7 +49,6 @@ struct LoginView: View {
                 } message: {
                     Text(vm.alertItem?.message ?? "")
                 }
-                
 
                 HStack {
                     Spacer()
@@ -54,6 +57,7 @@ struct LoginView: View {
                         .padding(.trailing)
                 }
             }
+            .keyboardAdaptive()
         }
         .fullScreenCover(isPresented: $vm.isShowingSafari, content: {
             SFSafariViewWrapper(url: vm.supportURL)
@@ -109,6 +113,9 @@ extension LoginView {
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
+                    .submitLabel(.continue)
+                    .focused($focusField, equals: .username)
+                    .onSubmit { focusField = .password }
                 if !vm.username.isEmpty {
                     Button {
                         vm.username = ""
@@ -129,6 +136,12 @@ extension LoginView {
                 .foregroundColor(.senseyeTextColor)
             SecureField("", text: $vm.password)
                 .foregroundColor(.senseyeTextColor)
+                .submitLabel(.go)
+                .focused($focusField, equals: .password)
+                .onSubmit {
+                    vm.login()
+                    hideKeyboard()
+                }
             Divider()
                 .background(Color.senseyeTextColor)
         }
@@ -147,6 +160,8 @@ extension LoginView {
             })
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .submitLabel(.go)
+                .focused($focusField, equals: .tokenField)
             Divider()
                 .background(Color.senseyeTextColor)
         }

@@ -37,7 +37,6 @@ class CameraService: NSObject, ObservableObject {
     @Published var isCompliantInCurrentFrame: Bool = false
     @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle", statusBackgroundColor: .red)
     
-    @AppStorage(AppStorageKeys.username()) var username: String?
     @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
 
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
@@ -192,7 +191,7 @@ class CameraService: NSObject, ObservableObject {
 
     func startRecordingForTask(taskId: String) {
         let currentTimeStamp = Date().currentTimeMillis()
-        let username = self.username ?? "unknown"
+        let username = authenticationService.userId
         guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
             return
         }
@@ -290,7 +289,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             let ciImage = CIImage(cvPixelBuffer: imageBuffer)
             let context = CIContext()
             DispatchQueue.main.async {
-                self.frame = context.createCGImage(ciImage, from: ciImage.extent)
+                self.frame = context.createCGImage(ciImage.oriented(.upMirrored), from: ciImage.extent)
             }
             if (fileUploadService.isDebugModeEnabled) {
                 cameraComplianceViewModel.runImageDetection(sampleBuffer: sampleBuffer)
@@ -307,7 +306,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         //Task is ongoing --> start writing buffers to VideoWriter
         if output == captureVideoDataOutput {
-            if videoWriterInput.isReadyForMoreMediaData {
+            if videoWriterInput.isReadyForMoreMediaData && captureSession.isRunning {
                 videoBufferQueue.async { [weak self] in
                     guard let sourceTime = self?.sessionAtSourceTime, let startTaskTime = self?.startOfTaskMillis else {
                         return

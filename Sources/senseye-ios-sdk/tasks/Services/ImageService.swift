@@ -17,7 +17,7 @@ class ImageService: ObservableObject {
     
     init(authenticationService: AuthenticationService) {
         self.authenticationService = authenticationService
-        addSubscribers()
+        self.downloadImageSetConfigJSON()
     }
     
     @Published var imagesForBlock: [SenseyeImage] = []
@@ -27,7 +27,6 @@ class ImageService: ObservableObject {
     
     private let fileManager = LocalFileManager()
     private var cancellables = Set<AnyCancellable>()
-    private var startedInitialDownload = false
     private var fullImageSet: [SenseyeImage] = []
     private var allImageNames: [String] = []
     private var uniqueImageNameCount: Int {
@@ -38,22 +37,6 @@ class ImageService: ObservableObject {
     
     var allDownloadsFinished: Bool {
         fullImageSet.count >= uniqueImageNameCount
-    }
-    
-    private func addSubscribers() {
-        guard let authenticationService = self.authenticationService else { return }
-        
-        authenticationService.$isSignedIn
-            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
-            .receive(on: DispatchQueue.global(qos: .utility))
-            .sink { [weak self] isSignedIn in
-                guard let self = self else {return}
-                if isSignedIn && !self.startedInitialDownload {
-                    self.downloadImageSetConfigJSON()
-                    self.startedInitialDownload = true
-                }
-            }
-            .store(in: &cancellables)
     }
     
     private func downloadImageSetConfigJSON() {

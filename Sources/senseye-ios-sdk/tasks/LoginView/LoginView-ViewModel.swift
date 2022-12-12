@@ -13,8 +13,9 @@ import Combine
 
 extension LoginView {
     class ViewModel: ObservableObject {
-        @AppStorage(AppStorageKeys.username()) var username: String = ""
-        @Published var password: String = "1ssXO_"
+        
+        @Published var username: String = ""
+        @Published var password: String = ""
         @Published var token: String = ""
         @Published var isUserSignedIn = false
         @Published var isShowingAlert = false
@@ -47,7 +48,6 @@ extension LoginView {
         }
         
         func login() {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) // Dismiss keyboard
             isFetchingAuthorization = true
             self.authenticationService.signIn(
                 accountUsername: self.username,

@@ -57,15 +57,15 @@ struct SenseyeTabView: View {
                 .gesture(DragGesture())
         }
         .onAppear {
-            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            fileUploadService.configureTaskSession(with: tabController.taskTabOrdering)
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
         })
         .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
             tabController.updateCurrentTabSet()
-            Log.info("task count ---- \(tabController.numberOfTasks())")
-            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            Log.info("task count ---- \(fileUploadService.taskCount)")
+            fileUploadService.configureTaskSession(with: tabController.taskTabOrdering)
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

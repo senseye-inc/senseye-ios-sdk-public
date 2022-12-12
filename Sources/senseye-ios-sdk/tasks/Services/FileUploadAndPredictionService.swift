@@ -84,8 +84,13 @@ class FileUploadAndPredictionService: ObservableObject {
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
 
-    func setTaskCount(to taskCount: Int) {
-        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
+    func configureTaskSession(with tabItems: [TabItem]) {
+        self.taskCount = tabItems.filter({ $0.isTaskItem }).count - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
+        if tabItems.contains(where: { $0.tabType == .surveyView }) {
+            createSessionJsonFileAndStoreCognitoUserAttributes()
+        } else {
+            return
+        }
     }
     
     init(authenticationService: AuthenticationService) {
@@ -235,7 +240,7 @@ class FileUploadAndPredictionService: ObservableObject {
      - Parameters:
      - surveyInput: Array of responses from demographic survey
      */
-    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
+    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String] = [:]) {
         let sessionTimeStamp = Date().currentTimeMillis()
         let username = self.username ?? "unknown"
         self.s3FolderName = "\(username)_\(sessionTimeStamp)"

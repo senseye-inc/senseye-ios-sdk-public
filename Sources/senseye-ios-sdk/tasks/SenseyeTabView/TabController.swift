@@ -50,10 +50,10 @@ struct TabItem: Hashable {
 @MainActor
 class TabController: ObservableObject {
 
-    private var taskTabOrdering: [TabItem] = []
     
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
+    var taskTabOrdering: [TabItem] = []
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
@@ -210,10 +210,6 @@ class TabController: ObservableObject {
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
-    }
-    
-    func numberOfTasks() -> Int {
-        taskTabOrdering.filter({ $0.isTaskItem }).count
     }
     
     func reset() {

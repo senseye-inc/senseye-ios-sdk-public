@@ -13,7 +13,6 @@ import Combine
 
 extension LoginView {
     class ViewModel: ObservableObject {
-        
         @Published var username: String = ""
         @Published var password: String = ""
         @Published var token: String = ""

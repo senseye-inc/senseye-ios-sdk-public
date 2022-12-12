@@ -28,7 +28,7 @@ class HRCalibrationViewModel: ObservableObject, TaskViewModelProtocol {
             if (fileUploadService.isDebugModeEnabled) {
                 return 5
             } else {
-                return 10
+                return 180
             }
         }
     }

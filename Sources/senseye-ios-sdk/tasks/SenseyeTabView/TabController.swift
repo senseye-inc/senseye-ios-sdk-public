@@ -72,8 +72,8 @@ class TabController: ObservableObject {
         taskTabOrdering.removeAll()
         
         //Initial Tabs
-        if requiresAuth { taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView)] }
-        if shouldCollectSurveyInfo { taskTabOrdering += [TabItem(taskId: "survey_view", tabType: .surveyView)] }
+        if requiresAuth { taskTabOrdering.append(TabItem(taskId: "login_view", tabType: .loginView)) }
+        if shouldCollectSurveyInfo { taskTabOrdering.append(TabItem(taskId: "survey_view", tabType: .surveyView)) }
         
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.hrCalibration)) {
             //HR Calibration

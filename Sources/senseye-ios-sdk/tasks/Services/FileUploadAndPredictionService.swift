@@ -161,7 +161,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     Log.error("Unable to capture self")
                     return
                 }
-                if (self.numberOfUploadsComplete == self.taskCount) {
+                if (self.taskCount != 0 && self.numberOfUploadsComplete == self.taskCount) {
                     self.uploadSessionJsonFile()
                 }
             }

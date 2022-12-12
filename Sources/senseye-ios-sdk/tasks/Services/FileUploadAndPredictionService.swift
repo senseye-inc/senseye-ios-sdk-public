@@ -75,6 +75,7 @@ class FileUploadAndPredictionService: ObservableObject {
     var isCensorModeEnabled: Bool = false
     let debugModeTaskTiming = 0.5
     var taskCount: Int = 0
+    var databaseLocation: String
     var isFinalUpload: Bool {
         numberOfTasksCompleted == (taskCount)
     }
@@ -88,10 +89,11 @@ class FileUploadAndPredictionService: ObservableObject {
         self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
     }
     
-    init(authenticationService: AuthenticationService) {
+    init(authenticationService: AuthenticationService, databaseLocation: String) {
         self.fileManager = FileManager.default
         self.authenticationService = authenticationService
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+        self.databaseLocation = databaseLocation
         addSubscribers()
     }
     
@@ -418,7 +420,7 @@ class FileUploadAndPredictionService: ObservableObject {
         
         let filePathLister = FilePathLister(s3Paths: s3Paths, includes: ["**.mp4"], excludes: nil, batchSize: 1)
         let sqsDeadLetterQueue = SQSDeadLetterQueue(arn: sqsDeadLetterQueueARN, maxReceiveCount: 2)
-        let params = PredictionRequest(workers: workers, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL])
+        let params = PredictionRequest(workers: workers, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL, "database_name": databaseLocation])
         let headers: HTTPHeaders = [
             "x-api-key": apiKey,
             "Accept": "application/json"

@@ -21,6 +21,7 @@ protocol AuthenticationServiceProtocol {
     var authError: AlertItem? { get }
     var authErrorPublished: Published<AlertItem?> { get}
     var authErrorPublisher: Published<AlertItem?>.Publisher { get }
+    var userId: String { get }
 }
 
 protocol AuthenticationServiceDelegate: AnyObject {
@@ -44,8 +45,13 @@ public class AuthenticationService: ObservableObject {
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
     
+    var userId: String
     var accountUserGroups: [CognitoUserGroup] = []
     private let userGroupConfig = CognitoUserGroupConfig()
+    
+    init(userId: String) {
+        self.userId = userId
+    }
 
     /**
      Authenticates the user session and handles subsequent all sign in flows.
@@ -107,6 +113,7 @@ public class AuthenticationService: ObservableObject {
      Convenience function.
      */
     private func setCredentials(accountUsername: String, accountPassword: String) {
+        self.userId = accountUsername
         self.accountUsername = accountUsername
         self.accountPassword = accountPassword
     }
@@ -249,6 +256,10 @@ public class AuthenticationService: ObservableObject {
                 Log.error("Fetch session failed with error \(error)")
             }
         }
+    }
+    
+    func reset() {
+        userId = ""
     }
 }
 

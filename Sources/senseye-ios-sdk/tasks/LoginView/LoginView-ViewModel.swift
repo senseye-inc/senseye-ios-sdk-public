@@ -13,7 +13,7 @@ import Combine
 
 extension LoginView {
     class ViewModel: ObservableObject {
-        @AppStorage(AppStorageKeys.username()) var username: String = ""
+        @Published var username: String = ""
         @Published var password: String = ""
         @Published var token: String = ""
         @Published var isUserSignedIn = false

@@ -37,7 +37,6 @@ class CameraService: NSObject, ObservableObject {
     @Published var isCompliantInCurrentFrame: Bool = false
     @Published var currentComplianceInfo: FacialComplianceStatus = FacialComplianceStatus(statusMessage: "Uh oh not quite, move your face into the frame.", statusIcon: "xmark.circle", statusBackgroundColor: .red)
     
-    @AppStorage(AppStorageKeys.username()) var username: String?
     @AppStorage(AppStorageKeys.cameraType()) var cameraType: String?
 
     private let fileDestUrl: URL? = FileManager.default.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
@@ -192,7 +191,7 @@ class CameraService: NSObject, ObservableObject {
 
     func startRecordingForTask(taskId: String) {
         let currentTimeStamp = Date().currentTimeMillis()
-        let username = self.username ?? "unknown"
+        let username = authenticationService.userId
         guard let fileUrl = fileDestUrl?.appendingPathComponent("\(username)_\(currentTimeStamp)_\(taskId).mp4") else {
             return
         }

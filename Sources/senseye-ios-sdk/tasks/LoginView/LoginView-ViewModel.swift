@@ -64,7 +64,7 @@ extension LoginView {
         func onAppear() {
             authenticationService.delegate = self
             self.authenticationService.signOut(completeSignOut: nil)
-            username = "frank.oftring@senseye.co"
+            username = ""
             Log.info("isSignedIn is \(self.isUserSignedIn)", shouldLogContext: true)
         }
         

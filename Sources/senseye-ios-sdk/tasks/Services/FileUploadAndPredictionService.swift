@@ -85,7 +85,7 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published var shouldStopBluetooth: Bool = false
 
     func configureTaskSession(with tabItems: [TabItem]) {
-        self.taskCount = tabItems.filter({ $0.isTaskItem }).count - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
+        self.taskCount = tabItems.filter({ $0.isTaskItem }).count
         if tabItems.contains(where: { $0.tabType == .surveyView }) {
             createSessionJsonFileAndStoreCognitoUserAttributes()
         } else {

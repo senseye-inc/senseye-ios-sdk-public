@@ -82,7 +82,7 @@ class TabController: ObservableObject {
                         tabType: .hrCalibrationView,
                         taskTitle: Strings.heartRateCalibrationTaskName,
                         taskDescription: Strings.heartRateTaskInstructions,
-                        isTaskItem: true)]
+                        isTaskItem: false)]
         }
 
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.firstCalibration)) {

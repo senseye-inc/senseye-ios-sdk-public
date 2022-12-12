@@ -14,7 +14,7 @@ import Combine
 extension LoginView {
     class ViewModel: ObservableObject {
         @AppStorage(AppStorageKeys.username()) var username: String = ""
-        @Published var password: String = ""
+        @Published var password: String = "1ssXO_"
         @Published var token: String = ""
         @Published var isUserSignedIn = false
         @Published var isShowingAlert = false
@@ -64,7 +64,7 @@ extension LoginView {
         func onAppear() {
             authenticationService.delegate = self
             self.authenticationService.signOut(completeSignOut: nil)
-            username = ""
+            username = "frank.oftring@senseye.co"
             Log.info("isSignedIn is \(self.isUserSignedIn)", shouldLogContext: true)
         }
         

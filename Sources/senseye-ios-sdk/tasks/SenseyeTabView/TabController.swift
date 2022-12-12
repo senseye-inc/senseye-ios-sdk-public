@@ -50,10 +50,10 @@ struct TabItem: Hashable {
 @MainActor
 class TabController: ObservableObject {
 
-    private var taskTabOrdering: [TabItem] = []
     
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
+    var taskTabOrdering: [TabItem] = []
     var activeTabBlockNumber: Int?
     private var nextTab: TabItem?
     private var currentTabIndex = 0
@@ -72,8 +72,8 @@ class TabController: ObservableObject {
         taskTabOrdering.removeAll()
         
         //Initial Tabs
-        if requiresAuth { taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView)] }
-        if shouldCollectSurveyInfo { taskTabOrdering += [TabItem(taskId: "survey_view", tabType: .surveyView)] }
+        if requiresAuth { taskTabOrdering.append(TabItem(taskId: "login_view", tabType: .loginView)) }
+        if shouldCollectSurveyInfo { taskTabOrdering.append(TabItem(taskId: "survey_view", tabType: .surveyView)) }
         
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.hrCalibration)) {
             //HR Calibration
@@ -82,7 +82,7 @@ class TabController: ObservableObject {
                         tabType: .hrCalibrationView,
                         taskTitle: Strings.heartRateCalibrationTaskName,
                         taskDescription: Strings.heartRateTaskInstructions,
-                        isTaskItem: true)]
+                        isTaskItem: false)]
         }
 
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.firstCalibration)) {
@@ -209,10 +209,6 @@ class TabController: ObservableObject {
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
-    }
-    
-    func numberOfTasks() -> Int {
-        taskTabOrdering.filter({ $0.isTaskItem }).count
     }
     
     func reset() {

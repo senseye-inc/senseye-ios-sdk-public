@@ -52,7 +52,6 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published private(set) var uploadProgress: Double = 0.0
     @Published private(set) var numberOfTasksCompleted: Int = 0
     @Published private(set) var isFinished: Bool = false
-    @AppStorage(AppStorageKeys.username()) var username: String?
 
     @Published private var numberOfUploadsComplete: Int = 0
     
@@ -85,8 +84,13 @@ class FileUploadAndPredictionService: ObservableObject {
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
 
-    func setTaskCount(to taskCount: Int) {
-        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
+    func configureTaskSession(with tabItems: [TabItem]) {
+        self.taskCount = tabItems.filter({ $0.isTaskItem }).count
+        if !tabItems.contains(where: { $0.tabType == .surveyView }) {
+            createSessionJsonFileAndStoreCognitoUserAttributes()
+        } else {
+            return
+        }
     }
     
     init(authenticationService: AuthenticationService, databaseLocation: String) {
@@ -109,10 +113,6 @@ class FileUploadAndPredictionService: ObservableObject {
         let fileNameKey = "\(s3FolderName)/\(localFileUrl.lastPathComponent)"
         currentS3VideoPath = "\(s3HostBucketUrl)\(fileNameKey)"
         
-        guard let _ = self.hostApiKey else {
-            Log.info("Skipping data upload - hostApiKey is empty")
-            return
-        }
         numberOfTasksCompleted += 1
         self.enqueue(uploadItem: UploadItem(localFileUrl: localFileUrl, s3UriKey: fileNameKey))
     }
@@ -139,6 +139,8 @@ class FileUploadAndPredictionService: ObservableObject {
                 guard let self = self else {return}
                 if isSignedIn {
                     self.setUserAttributes()
+                } else {
+                    Log.info("No user signed in, using default")
                 }
             }
             .store(in: &cancellables)
@@ -176,6 +178,7 @@ class FileUploadAndPredictionService: ObservableObject {
         Log.debug("About to upload - video url: \(localFileUrl)")
 
         let storageOperation = Amplify.Storage.uploadFile(key: s3UriKey, local: localFileUrl)
+
         storageOperation.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { newProgressValue in
@@ -263,9 +266,9 @@ class FileUploadAndPredictionService: ObservableObject {
      - Parameters:
      - surveyInput: Array of responses from demographic survey
      */
-    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
+    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String] = [:]) {
         let sessionTimeStamp = Date().currentTimeMillis()
-        let username = self.username ?? "unknown"
+        let username = authenticationService?.userId ?? "unknown"
         self.s3FolderName = "\(username)_\(sessionTimeStamp)"
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
@@ -351,7 +354,7 @@ class FileUploadAndPredictionService: ObservableObject {
     private func uploadSessionJsonFile() {
         
         let currentTimeStamp = Date().currentTimeMillis()
-        let username = self.username ?? "unknown"
+        let username = authenticationService?.userId ?? "unknown"
         let jsonFileName = "\(s3FolderName)/\(username)_\(currentTimeStamp)_ios_input.json"
         self.jsonMetadataURL = s3HostBucketUrl + jsonFileName
 
@@ -401,12 +404,13 @@ class FileUploadAndPredictionService: ObservableObject {
     private func submitPredictionRequest() {
         
         guard let apiKey = hostApiKey else {
-            Log.error("Skipping the PTSD request but it's here",
+            Log.error("API key is nil. Skipping the PTSD request but it's here",
                       userInfo: ["username": sessionInfo?.username,
                                  "versionCode": sessionInfo?.versionCode,
                                  "predictionJobId": sessionInfo?.predictionJobID,
                                  "s3FolderName": sessionInfo?.folderName
                                 ])
+            self.isFinished = true
             return
         }
         
@@ -449,6 +453,7 @@ class FileUploadAndPredictionService: ObservableObject {
         currentTaskFrameTimestamps?.removeAll()
         currentSessionUploadFileKeys.removeAll()
         UserDefaults.standard.resetUser()
+        authenticationService?.reset()
         uploadOperationQueue.cancelAllOperations()
     }
     

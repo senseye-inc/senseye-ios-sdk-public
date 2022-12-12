@@ -26,18 +26,12 @@ class CameraViewModel: ObservableObject {
 
     init(fileUploadService: FileUploadAndPredictionServiceProtocol) {
         self.fileUploadService = fileUploadService
-        addSubscribers()
     }
     
     func onAppear() {
-        currentOverlayInterval = Timing.instructionTimeout
-        currentCameraPreviewTimeInterval = Timing.cameraPreviewTimeout
         shouldProceedToNextTab = false
         isShowingOverlay = true
-        cameraPreviewTimer = nil
-        overlayTimer = nil
-        startOverlayTimerCountdown()
-        callToActionText =  String(format: "Task starts in %ds".localizedString, currentCameraPreviewTimeInterval)
+        callToActionText =  String(format: "Double tap to start".localizedString)
     }
 
     func onDisappear() {
@@ -60,6 +54,14 @@ class CameraViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func onAppearInitializeTimers() {
+        currentOverlayInterval = Timing.instructionTimeout
+        currentCameraPreviewTimeInterval = Timing.cameraPreviewTimeout
+        cameraPreviewTimer = nil
+        overlayTimer = nil
+        startOverlayTimerCountdown()
     }
 
     private func startOverlayTimerCountdown() {

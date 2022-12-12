@@ -61,7 +61,7 @@ public class SenseyeSDK {
     }
 
     @MainActor public func senseyeTabView() -> some View {
-        let authenticationService = AuthenticationService()
+        let authenticationService = AuthenticationService(userId: userId)
         let bluetoothService = BluetoothService()
         let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService, databaseLocation: databaseLocation)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)

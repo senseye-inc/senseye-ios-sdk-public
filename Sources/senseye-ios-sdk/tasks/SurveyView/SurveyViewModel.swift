@@ -10,7 +10,6 @@ import Combine
 
 class SurveyViewModel: ObservableObject {
 
-    @AppStorage(AppStorageKeys.username()) var username: String?
     @Published var isShowingDebugToggle: Bool?
     @Published var selectedAge: Int?
     @Published var selectedEyeColor: String?

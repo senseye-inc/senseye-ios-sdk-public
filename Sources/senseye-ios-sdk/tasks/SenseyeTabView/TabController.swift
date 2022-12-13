@@ -125,7 +125,7 @@ class TabController: ObservableObject {
             taskTabOrdering.append(contentsOf: tasksForImageSetBlock(blockNumber: 25, category: .facialExpression, subcategory: .negative))
         }
         
-        if (taskListToDisplay.contains(SenseyeSDK.TaskId.attentionBiasTest)) {
+        if (taskListToDisplay.contains(SenseyeSDK.TaskId.attentionBiasTest)) && areInternalTestingTasksEnabled {
             Log.info("Internal Tasks are enabled!")
             taskTabOrdering.append(TabItem(taskId: "camera_view_attention_bias_face", tabType: .cameraView))
             taskTabOrdering.append(TabItem(taskId: "attention_bias_face_1", tabType: .attentionBiasFaceView, taskTitle: Strings.attentionBiasFaceTaskName,

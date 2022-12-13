@@ -252,7 +252,7 @@ class FileUploadAndPredictionService: ObservableObject {
             let bucketInfoDictionary = pluginsDictionary?["awsS3StoragePlugin"]?.dictionary
             let bucketName = bucketInfoDictionary?["bucket"]?.string ?? ""
             
-            self.s3HostBucketUrl = "s3://\(bucketName)/public"
+            self.s3HostBucketUrl = "s3://\(bucketName)/public/\(databaseLocation)"
             print(self.s3HostBucketUrl)
             
         } catch {
@@ -269,7 +269,7 @@ class FileUploadAndPredictionService: ObservableObject {
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String] = [:]) {
         let sessionTimeStamp = Date().currentTimeMillis()
         let username = authenticationService?.userId ?? "unknown"
-        self.s3FolderName = "\(username)_\(sessionTimeStamp)"
+        self.s3FolderName = "\(databaseLocation)/\(username)_\(sessionTimeStamp)"
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
         let eyeColor = surveyInput["eyeColor"]

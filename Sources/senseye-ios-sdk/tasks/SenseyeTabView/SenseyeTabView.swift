@@ -20,12 +20,13 @@ struct SenseyeTabView: View {
 
     var body: some View {
         TabView(selection: $tabController.activeTabType) {
-            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService, authenticationService: authenticationService)
-                .tag(TabType.surveyView)
-                .gesture(DragGesture())
             
             LoginView(authenticationService: authenticationService)
                 .tag(TabType.loginView)
+                .gesture(DragGesture())
+            
+            SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService, authenticationService: authenticationService)
+                .tag(TabType.surveyView)
                 .gesture(DragGesture())
             
             HRCalibrationView(fileUploadService: fileUploadService)
@@ -58,6 +59,7 @@ struct SenseyeTabView: View {
         }
         .onAppear {
             fileUploadService.configureTaskSession(with: tabController.taskTabOrdering)
+            tabController.refreshForInitialTab()
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()

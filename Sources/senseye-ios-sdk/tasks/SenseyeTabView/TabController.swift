@@ -151,10 +151,9 @@ class TabController: ObservableObject {
                 )]
         }
         taskTabOrdering.append(TabItem(taskId: "results_view", tabType: .resultsView))
-        setActiveTab()
     }
     
-    private func setActiveTab() {
+    func refreshForInitialTab() {
         guard let firstTab = taskTabOrdering.first else { return }
         self.open(firstTab)
     }

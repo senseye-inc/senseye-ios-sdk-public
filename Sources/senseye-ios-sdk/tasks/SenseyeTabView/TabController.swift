@@ -49,12 +49,12 @@ struct TabItem: Hashable {
 
 @MainActor
 class TabController: ObservableObject {
-
     
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
     var taskTabOrdering: [TabItem] = []
     var activeTabBlockNumber: Int?
+    private var taskTabOrdering: [TabItem] = []
     private var nextTab: TabItem?
     private var currentTabIndex = 0
     private var taskListToDisplay: [SenseyeSDK.TaskId] = []
@@ -198,6 +198,12 @@ class TabController: ObservableObject {
     func titleForCurrentTab() -> String {
         let currentTab = taskTabOrdering[currentTabIndex]
         return currentTab.taskTitle
+    }
+    
+    func getSessionInfo() -> (Int, Bool) {
+        let numberOfTasks = taskTabOrdering.filter({ $0.isTaskItem }).count
+        let shouldGenerateSessionJson = !shouldCollectSurveyInfo
+        return (numberOfTasks, shouldGenerateSessionJson)
     }
     
     func descriptionForCurrentTab() -> String {

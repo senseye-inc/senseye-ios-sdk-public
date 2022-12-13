@@ -83,14 +83,12 @@ class FileUploadAndPredictionService: ObservableObject {
 
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
-
-    func configureTaskSession(with tabItems: [TabItem]) {
-        self.taskCount = tabItems.filter({ $0.isTaskItem }).count
-        if !tabItems.contains(where: { $0.tabType == .surveyView }) {
-            createSessionJsonFileAndStoreCognitoUserAttributes()
-        } else {
-            return
-        }
+    
+    func configureTaskSession(taskCount: Int, shouldGenerateSessionJson: Bool) {
+       self.taskCount = taskCount
+       if (shouldGenerateSessionJson) {
+          createSessionJsonFileAndStoreCognitoUserAttributes()
+       }
     }
     
     init(authenticationService: AuthenticationService, databaseLocation: String) {

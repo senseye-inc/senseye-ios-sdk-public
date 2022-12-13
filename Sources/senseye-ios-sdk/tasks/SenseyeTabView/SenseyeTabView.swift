@@ -58,7 +58,8 @@ struct SenseyeTabView: View {
                 .gesture(DragGesture())
         }
         .onAppear {
-            fileUploadService.configureTaskSession(with: tabController.taskTabOrdering)
+            let sessionInfo = tabController.getSessionInfo()
+            fileUploadService.configureTaskSession(taskCount: sessionInfo.0, shouldGenerateSessionJson: sessionInfo.1)
             tabController.refreshForInitialTab()
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
@@ -67,7 +68,8 @@ struct SenseyeTabView: View {
         .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
             tabController.updateCurrentTabSet()
             Log.info("task count ---- \(fileUploadService.taskCount)")
-            fileUploadService.configureTaskSession(with: tabController.taskTabOrdering)
+            let sessionInfo = tabController.getSessionInfo()
+            fileUploadService.configureTaskSession(taskCount: sessionInfo.0, shouldGenerateSessionJson: sessionInfo.1)
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

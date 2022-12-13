@@ -250,7 +250,7 @@ class FileUploadAndPredictionService: ObservableObject {
             let bucketInfoDictionary = pluginsDictionary?["awsS3StoragePlugin"]?.dictionary
             let bucketName = bucketInfoDictionary?["bucket"]?.string ?? ""
             
-            self.s3HostBucketUrl = "s3://\(bucketName)/public/\(databaseLocation)"
+            self.s3HostBucketUrl = "s3://\(bucketName)/public/"
             print(self.s3HostBucketUrl)
             
         } catch {
@@ -268,6 +268,7 @@ class FileUploadAndPredictionService: ObservableObject {
         let sessionTimeStamp = Date().currentTimeMillis()
         let username = authenticationService?.userId ?? "unknown"
         self.s3FolderName = "\(databaseLocation)/\(username)_\(sessionTimeStamp)"
+        print(s3FolderName)
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
         let eyeColor = surveyInput["eyeColor"]
@@ -428,10 +429,18 @@ class FileUploadAndPredictionService: ObservableObject {
             "Accept": "application/json"
         ]
         
-        AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers).responseDecodable(of: PredictionResponse.self, completionHandler: { response in
+        AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: PredictionResponse.self, completionHandler: { response in
+            
+            self.isFinished = true
+            guard response.error == nil else {
+                print("Cortex request error -- \(String(describing: response.error))")
+                return
+            }
+
             Log.info("response received! \(response)")
             let jobID = response.value?.jobID
-            self.isFinished = true
             self.sessionInfo?.predictionJobID = jobID
         })
     }

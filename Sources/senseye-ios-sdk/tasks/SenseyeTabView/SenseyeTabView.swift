@@ -20,12 +20,12 @@ struct SenseyeTabView: View {
 
     var body: some View {
         TabView(selection: $tabController.activeTabType) {
-            LoginView(authenticationService: authenticationService)
-                .tag(TabType.loginView)
-                .gesture(DragGesture())
-
             SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService, authenticationService: authenticationService)
                 .tag(TabType.surveyView)
+                .gesture(DragGesture())
+            
+            LoginView(authenticationService: authenticationService)
+                .tag(TabType.loginView)
                 .gesture(DragGesture())
             
             HRCalibrationView(fileUploadService: fileUploadService)

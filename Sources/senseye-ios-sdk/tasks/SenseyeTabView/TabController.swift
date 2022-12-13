@@ -52,7 +52,6 @@ class TabController: ObservableObject {
     
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
-    var taskTabOrdering: [TabItem] = []
     var activeTabBlockNumber: Int?
     private var taskTabOrdering: [TabItem] = []
     private var nextTab: TabItem?

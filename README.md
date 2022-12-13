@@ -10,7 +10,7 @@ The Senseye SDK allows participants to complete a series of ocular tasks using t
 
 To install the Senseye iOS SDK, follow these steps:
 
-1) Add the Senseye iOS SDK Swift package dependency to your app. You can find it at File > Swift Packages > Add Package Dependency > enter "https://github.com/senseye-inc/senseye-ios-sdk"
+1) Add the Senseye iOS SDK Swift package dependency to your app. You can find it at File > Swift Packages > Add Package Dependency > enter "https://github.com/senseye-inc/senseye-ios-sdk-public"
 2) Import the SDK in your hosting view: `import senseye_ios_sdk`
 
 # Usage

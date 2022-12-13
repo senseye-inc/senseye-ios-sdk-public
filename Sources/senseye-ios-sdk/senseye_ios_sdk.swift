@@ -26,12 +26,16 @@ public class SenseyeSDK {
     weak var delegate: SenseyeTaskCompletionDelegate?
     private var initializedTaskIdList: [TaskId] = []
     private var userId: String
+    private var shouldCollectSurveyInfo: Bool
+    private var requiresAuth: Bool
 
-    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases) {
+    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases, shouldCollectSurveyInfo: Bool = false, requiresAuth: Bool = false) {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
         self.userId = userId
         self.initializedTaskIdList = taskIds
+        self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
+        self.requiresAuth = requiresAuth
         initializeSDK()
     }
     
@@ -60,7 +64,7 @@ public class SenseyeSDK {
         let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         let imageService = ImageService(authenticationService: authenticationService)
-        return SenseyeTabView(taskIds: initializedTaskIdList)
+        return SenseyeTabView(taskIds: initializedTaskIdList, shouldCollectSurveyInfo: shouldCollectSurveyInfo, requiresAuth: requiresAuth)
             .environmentObject(authenticationService)
             .environmentObject(fileUploadService)
             .environmentObject(imageService)

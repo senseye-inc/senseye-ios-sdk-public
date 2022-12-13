@@ -83,8 +83,11 @@ class FileUploadAndPredictionService: ObservableObject {
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
 
-    func setTaskCount(to taskCount: Int) {
-        self.taskCount = taskCount - 1 // subtracting one for HR CalibrationView. isTaskITem is set to true, but we don't upload anything
+    func configureTaskSession(taskCount: Int, shouldGenerateSessionJson: Bool) {
+       self.taskCount = taskCount
+       if (shouldGenerateSessionJson) {
+          createSessionJsonFileAndStoreCognitoUserAttributes()
+       }
     }
     
     init(authenticationService: AuthenticationService) {
@@ -158,7 +161,7 @@ class FileUploadAndPredictionService: ObservableObject {
                     Log.error("Unable to capture self")
                     return
                 }
-                if (self.numberOfUploadsComplete == self.taskCount) {
+                if (self.taskCount != 0 && self.numberOfUploadsComplete == self.taskCount) {
                     self.uploadSessionJsonFile()
                 }
             }
@@ -233,7 +236,7 @@ class FileUploadAndPredictionService: ObservableObject {
      - Parameters:
      - surveyInput: Array of responses from demographic survey
      */
-    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String]) {
+    func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String] = [:]) {
         let sessionTimeStamp = Date().currentTimeMillis()
         let username = authenticationService?.userId ?? "unknown"
         self.s3FolderName = "\(username)_\(sessionTimeStamp)"

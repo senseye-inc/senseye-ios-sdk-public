@@ -50,17 +50,20 @@ struct TabItem: Hashable {
 @MainActor
 class TabController: ObservableObject {
 
-    private var taskTabOrdering: [TabItem] = []
-    
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
     var activeTabBlockNumber: Int?
+    private var taskTabOrdering: [TabItem] = []
     private var nextTab: TabItem?
     private var currentTabIndex = 0
     private var taskListToDisplay: [SenseyeSDK.TaskId] = []
+    private var shouldCollectSurveyInfo: Bool
+    private var requiresAuth: Bool
     
-    init(taskIds: [SenseyeSDK.TaskId]) {
+    init(taskIds: [SenseyeSDK.TaskId], shouldCollectSurveyInfo: Bool, requiresAuth: Bool) {
         taskListToDisplay = taskIds
+        self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
+        self.requiresAuth = requiresAuth
         updateCurrentTabSet()
     }
     
@@ -68,8 +71,8 @@ class TabController: ObservableObject {
         taskTabOrdering.removeAll()
         
         //Initial Tabs
-        taskTabOrdering += [TabItem(taskId: "login_view", tabType: .loginView),
-                            TabItem(taskId: "survey_view", tabType: .surveyView)]
+        if requiresAuth { taskTabOrdering.append(TabItem(taskId: "login_view", tabType: .loginView)) }
+        if shouldCollectSurveyInfo { taskTabOrdering.append(TabItem(taskId: "survey_view", tabType: .surveyView)) }
         
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.hrCalibration)) {
             //HR Calibration
@@ -78,7 +81,7 @@ class TabController: ObservableObject {
                         tabType: .hrCalibrationView,
                         taskTitle: Strings.heartRateCalibrationTaskName,
                         taskDescription: Strings.heartRateTaskInstructions,
-                        isTaskItem: true)]
+                        isTaskItem: false)]
         }
 
         if (taskListToDisplay.contains(SenseyeSDK.TaskId.firstCalibration)) {
@@ -147,7 +150,11 @@ class TabController: ObservableObject {
                 )]
         }
         taskTabOrdering.append(TabItem(taskId: "results_view", tabType: .resultsView))
-            
+    }
+    
+    func refreshForInitialTab() {
+        guard let firstTab = taskTabOrdering.first else { return }
+        self.open(firstTab)
     }
 
     var areAllTabsComplete: Bool {
@@ -192,6 +199,12 @@ class TabController: ObservableObject {
         return currentTab.taskTitle
     }
     
+    func getSessionInfo() -> (Int, Bool) {
+        let numberOfTasks = taskTabOrdering.filter({ $0.isTaskItem }).count
+        let shouldGenerateSessionJson = !shouldCollectSurveyInfo
+        return (numberOfTasks, shouldGenerateSessionJson)
+    }
+    
     func descriptionForCurrentTab() -> String {
         let currentTab = taskTabOrdering[currentTabIndex]
         return currentTab.taskDescription
@@ -200,10 +213,6 @@ class TabController: ObservableObject {
     func cateogryAndSubcategoryForCurrentTab() -> (TaskBlockCategory?, TaskBlockSubcategory?) {
         let currentTab = taskTabOrdering[currentTabIndex]
         return (currentTab.category, currentTab.subcategory)
-    }
-    
-    func numberOfTasks() -> Int {
-        taskTabOrdering.filter({ $0.isTaskItem }).count
     }
     
     func reset() {

@@ -14,8 +14,8 @@ struct SenseyeTabView: View {
     @EnvironmentObject var cameraService: CameraService
     @StateObject var tabController: TabController
     
-    init(taskIds: [SenseyeSDK.TaskId]) {
-       _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds))
+    init(taskIds: [SenseyeSDK.TaskId], shouldCollectSurveyInfo: Bool, requiresAuth: Bool) {
+        _tabController = StateObject(wrappedValue: TabController(taskIds: taskIds, shouldCollectSurveyInfo: shouldCollectSurveyInfo, requiresAuth: requiresAuth))
     }
 
     var body: some View {
@@ -23,7 +23,7 @@ struct SenseyeTabView: View {
             LoginView(authenticationService: authenticationService)
                 .tag(TabType.loginView)
                 .gesture(DragGesture())
-
+            
             SurveyView(fileUploadAndPredictionService: fileUploadService, imageService: imageService, authenticationService: authenticationService)
                 .tag(TabType.surveyView)
                 .gesture(DragGesture())
@@ -57,15 +57,18 @@ struct SenseyeTabView: View {
                 .gesture(DragGesture())
         }
         .onAppear {
-            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            let sessionInfo = tabController.getSessionInfo()
+            fileUploadService.configureTaskSession(taskCount: sessionInfo.0, shouldGenerateSessionJson: sessionInfo.1)
+            tabController.refreshForInitialTab()
         }
         .onChange(of: tabController.areAllTabsComplete, perform: { _ in
             cameraService.stopCaptureSession()
         })
         .onChange(of: tabController.areInternalTestingTasksEnabled, perform: { _ in
             tabController.updateCurrentTabSet()
-            Log.info("task count ---- \(tabController.numberOfTasks())")
-            fileUploadService.setTaskCount(to: tabController.numberOfTasks())
+            Log.info("task count ---- \(fileUploadService.taskCount)")
+            let sessionInfo = tabController.getSessionInfo()
+            fileUploadService.configureTaskSession(taskCount: sessionInfo.0, shouldGenerateSessionJson: sessionInfo.1)
         })
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.all)

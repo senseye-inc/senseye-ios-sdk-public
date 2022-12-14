@@ -38,9 +38,12 @@ enum Log {
             return "\((file as NSString).lastPathComponent):\(line) \(function)"
         }
     }
+    
+    private static var shouldEnableFirebaseLogging = false
 
-    static func enable() {
+    static func enable(addFirebaseLogging: Bool) {
         // TODO: Check that log isn't already added
+        self.shouldEnableFirebaseLogging = addFirebaseLogging
         DDLog.add(DDOSLogger.sharedInstance)
     }
     
@@ -85,7 +88,7 @@ enum Log {
         let context = Context(file: file, function: function, line: line)
         Log.handleLog(level: .error, str: str, shouldLogContext: shouldLogContext, context: context) {
             DDLogError($0)
-            if let userInfo = userInfo {
+            if shouldEnableFirebaseLogging, let userInfo = userInfo {
                 let domain = "\(file)/\(function)"
                 let error = NSError(domain: domain, code: 404, userInfo: userInfo)
                 Crashlytics.crashlytics().record(error: error)

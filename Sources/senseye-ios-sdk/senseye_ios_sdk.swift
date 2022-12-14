@@ -29,15 +29,17 @@ public class SenseyeSDK {
     private var shouldCollectSurveyInfo: Bool
     private var requiresAuth: Bool
     private var databaseLocation: String
+    private var shouldUseFirebaseLogging: Bool
 
-    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases, shouldCollectSurveyInfo: Bool = false, requiresAuth: Bool = false, databaseLocation: String = "ptsd_ios") {
-        Log.enable()
+    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases, shouldCollectSurveyInfo: Bool = false, requiresAuth: Bool = false, databaseLocation: String = "ptsd_ios", shouldUseFirebaseLogging: Bool = false) {
+        Log.enable(addFirebaseLogging: shouldUseFirebaseLogging)
         Log.debug("SDK Object created!", shouldLogContext: false)
         self.userId = userId
         self.initializedTaskIdList = taskIds
         self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
         self.requiresAuth = requiresAuth
         self.databaseLocation = databaseLocation
+        self.shouldUseFirebaseLogging = shouldUseFirebaseLogging
         initializeSDK()
     }
     
@@ -57,7 +59,9 @@ public class SenseyeSDK {
         }
 
         // Use the Firebase library to configure APIs.
-        FirebaseApp.configure()
+        if (shouldUseFirebaseLogging) {
+            FirebaseApp.configure()
+        }
     }
 
     @MainActor public func senseyeTabView() -> some View {

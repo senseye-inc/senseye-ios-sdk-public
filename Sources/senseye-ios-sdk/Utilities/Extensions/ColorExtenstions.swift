@@ -8,10 +8,10 @@
 import SwiftUI
 
 extension Color {
-    static let senseyePrimary = Color("senseyePrimary")
-    static let senseyeSecondary = Color("senseyeSecondary")
-    static let senseyeRed = Color("senseyeRed")
-    static let senseyeTextColor = Color("senseyeTextColor")
+    static let senseyePrimary = Color("senseyePrimary", bundle: .module)
+    static let senseyeSecondary = Color("senseyeSecondary", bundle: .module)
+    static let senseyeRed = Color("senseyeRed", bundle: .module)
+    static let senseyeTextColor = Color("senseyeTextColor", bundle: .module)
 
 
     func toHex() -> String? {

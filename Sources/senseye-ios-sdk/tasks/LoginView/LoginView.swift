@@ -180,7 +180,7 @@ extension LoginView {
     var headerView: some View {
         VStack {
             HeaderView()
-            Image("holding_phone_icon")
+            Image("holding_phone_icon", bundle: .module)
             Text(Strings.loginCallToAction)
                 .foregroundColor(.senseyeTextColor)
                 .padding()

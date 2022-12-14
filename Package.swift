@@ -38,9 +38,7 @@ let package = Package(
                 .product(name: "Algorithms", package: "swift-algorithms")
             ],
             resources: [
-                .process("Resources/amplifyconfiguration.json"),
-                .process("Resources/awsconfiguration.json"),
-                .process("Resources/GoogleService-Info.plist")
+                .process("Resources")
             ]),
         .testTarget(
             name: "senseye-ios-sdkTests",

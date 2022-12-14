@@ -39,8 +39,7 @@ let package = Package(
             ],
             resources: [
                 .process("Resources/amplifyconfiguration.json"),
-                .process("Resources/awsconfiguration.json"),
-                .process("Resources/GoogleService-Info.plist")
+                .process("Resources")
             ]),
         .testTarget(
             name: "senseye-ios-sdkTests",

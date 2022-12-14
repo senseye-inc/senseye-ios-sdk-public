@@ -28,14 +28,16 @@ public class SenseyeSDK {
     private var userId: String
     private var shouldCollectSurveyInfo: Bool
     private var requiresAuth: Bool
+    private var databaseLocation: String
 
-    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases, shouldCollectSurveyInfo: Bool = false, requiresAuth: Bool = false) {
+    public init(userId: String = "default_user_id", taskIds: [TaskId] = TaskId.allCases, shouldCollectSurveyInfo: Bool = false, requiresAuth: Bool = false, databaseLocation: String = "ptsd_ios") {
         Log.enable()
         Log.debug("SDK Object created!", shouldLogContext: false)
         self.userId = userId
         self.initializedTaskIdList = taskIds
         self.shouldCollectSurveyInfo = shouldCollectSurveyInfo
         self.requiresAuth = requiresAuth
+        self.databaseLocation = databaseLocation
         initializeSDK()
     }
     
@@ -61,7 +63,7 @@ public class SenseyeSDK {
     @MainActor public func senseyeTabView() -> some View {
         let authenticationService = AuthenticationService(userId: userId)
         let bluetoothService = BluetoothService()
-        let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService)
+        let fileUploadService = FileUploadAndPredictionService(authenticationService: authenticationService, databaseLocation: databaseLocation)
         let cameraService = CameraService(authenticationService: authenticationService, fileUploadService: fileUploadService)
         let imageService = ImageService(authenticationService: authenticationService)
         return SenseyeTabView(taskIds: initializedTaskIdList, shouldCollectSurveyInfo: shouldCollectSurveyInfo, requiresAuth: requiresAuth)

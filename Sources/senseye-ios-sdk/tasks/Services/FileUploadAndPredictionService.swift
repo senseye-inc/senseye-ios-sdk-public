@@ -59,13 +59,14 @@ class FileUploadAndPredictionService: ObservableObject {
     private var currentS3VideoPath: String? = nil
     private var s3FolderName: String = ""
     private var jsonMetadataURL: String = ""
-    private let hostApi =  "https://rem.api.senseye.co/"
-    private let s3HostBucketUrl = "s3://senseye-ptsd/public/"
+    private var hostApi: String =  ""
+    private var s3HostBucketUrl: String = ""
     
     var isDebugModeEnabled: Bool = false
     var isCensorModeEnabled: Bool = false
     let debugModeTaskTiming = 0.5
     var taskCount: Int = 0
+    var databaseLocation: String
     var isFinalUpload: Bool {
         numberOfTasksCompleted == (taskCount)
     }
@@ -74,7 +75,7 @@ class FileUploadAndPredictionService: ObservableObject {
 
     // TODO: something more agnostic like cancelPeripheralSubscriptions
     @Published var shouldStopBluetooth: Bool = false
-
+    
     func configureTaskSession(taskCount: Int, shouldGenerateSessionJson: Bool) {
        self.taskCount = taskCount
        if (shouldGenerateSessionJson) {
@@ -82,10 +83,11 @@ class FileUploadAndPredictionService: ObservableObject {
        }
     }
     
-    init(authenticationService: AuthenticationService) {
+    init(authenticationService: AuthenticationService, databaseLocation: String) {
         self.fileManager = FileManager.default
         self.authenticationService = authenticationService
         fileDestUrl = fileManager.urls(for: .documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).first
+        self.databaseLocation = databaseLocation
         addSubscribers()
     }
     
@@ -158,6 +160,8 @@ class FileUploadAndPredictionService: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        self.parseProccesingInfoFromLocalConfig()
     }
 
     private func uploadFile(s3UriKey: String, localFileUrl: URL) {
@@ -222,6 +226,30 @@ class FileUploadAndPredictionService: ObservableObject {
         }
     }
     
+    private func parseProccesingInfoFromLocalConfig() {
+        guard let backendConfig = Bundle.module.path(forResource: "amplifyconfiguration", ofType: "json") else {
+            Log.error("Unable to load amplifyconfiguration.")
+            return
+        }
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: backendConfig))
+            let configJson = try JSON(data: data)
+            self.hostApi = configJson["apiEnv"].stringValue
+            self.hostApiKey = configJson["processingApiKey"].string
+            
+            let storageDictionary = configJson["storage"].dictionary
+            let pluginsDictionary = storageDictionary?["plugins"]?.dictionary
+            let bucketInfoDictionary = pluginsDictionary?["awsS3StoragePlugin"]?.dictionary
+            let bucketName = bucketInfoDictionary?["bucket"]?.string ?? ""
+            
+            self.s3HostBucketUrl = "s3://\(bucketName)/public/"
+            print(self.s3HostBucketUrl)
+            
+        } catch {
+            Log.error("Could not parse local api config")
+        }
+    }
+    
     /**
      Generate session json file from survey responses and experiment session tasks.
      
@@ -231,7 +259,8 @@ class FileUploadAndPredictionService: ObservableObject {
     func createSessionJsonFileAndStoreCognitoUserAttributes(surveyInput: [String: String] = [:]) {
         let sessionTimeStamp = Date().currentTimeMillis()
         let username = authenticationService?.userId ?? "unknown"
-        self.s3FolderName = "\(username)_\(sessionTimeStamp)"
+        self.s3FolderName = "\(databaseLocation)/\(username)_\(sessionTimeStamp)"
+        print(s3FolderName)
         let age = surveyInput["age"]
         let gender = surveyInput["gender"]
         let eyeColor = surveyInput["eyeColor"]
@@ -386,16 +415,24 @@ class FileUploadAndPredictionService: ObservableObject {
         
         let filePathLister = FilePathLister(s3Paths: s3Paths, includes: ["**.mp4"], excludes: nil, batchSize: 1)
         let sqsDeadLetterQueue = SQSDeadLetterQueue(arn: sqsDeadLetterQueueARN, maxReceiveCount: 2)
-        let params = PredictionRequest(workers: workers, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL])
+        let params = PredictionRequest(workers: workers, sqsDeadLetterQueue: sqsDeadLetterQueue, filePathLister: filePathLister, config: ["json_metadata_url": jsonMetadataURL, "database_name": databaseLocation])
         let headers: HTTPHeaders = [
             "x-api-key": apiKey,
             "Accept": "application/json"
         ]
         
-        AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers).responseDecodable(of: PredictionResponse.self, completionHandler: { response in
+        AF.request(hostApi+"ptsd", method: .post, parameters: params, encoder: .json, headers: headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: PredictionResponse.self, completionHandler: { response in
+            
+            self.isFinished = true
+            guard response.error == nil else {
+                print("Cortex request error -- \(String(describing: response.error))")
+                return
+            }
+
             Log.info("response received! \(response)")
             let jobID = response.value?.jobID
-            self.isFinished = true
             self.sessionInfo?.predictionJobID = jobID
         })
     }

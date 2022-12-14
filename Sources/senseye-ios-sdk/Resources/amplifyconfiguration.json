@@ -62,5 +62,7 @@
                 "defaultAccessLevel": "guest"
             }
         }
-    }
+    },
+    "processingApiKey": "41rO4VfH448fn0DXcofZR35IcST0nqnx1maQctLJ",
+    "apiEnv": "https://rem.api.senseye.co/"
 }

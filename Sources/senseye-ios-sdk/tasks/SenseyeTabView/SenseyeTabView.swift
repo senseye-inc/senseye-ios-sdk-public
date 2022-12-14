@@ -20,6 +20,7 @@ struct SenseyeTabView: View {
 
     var body: some View {
         TabView(selection: $tabController.activeTabType) {
+            
             LoginView(authenticationService: authenticationService)
                 .tag(TabType.loginView)
                 .gesture(DragGesture())

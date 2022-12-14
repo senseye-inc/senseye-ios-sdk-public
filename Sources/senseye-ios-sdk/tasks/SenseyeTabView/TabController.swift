@@ -49,7 +49,7 @@ struct TabItem: Hashable {
 
 @MainActor
 class TabController: ObservableObject {
-
+    
     @Published var activeTabType: TabType = .loginView
     @Published var areInternalTestingTasksEnabled: Bool = false
     var activeTabBlockNumber: Int?

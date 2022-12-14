@@ -125,3 +125,5 @@ Before emitting a log, 1) enable logging and 2) set a log level within scope. Lo
 
 2) Log levels control which category of logs are emitted. There are two methods to define log levels: The `dynamicLogLevel` variable is changeable at runtime and set inline with code. The level definable at build time is in the `GCC_PREPROCESSOR_DEFINITIONS` build setting. There you can add a `DD_LOG_LEVEL` defined to the desired log level. Both levels have a default of `DDLogLevelAll`.
 
+If you would like to incorporate Firebase crashyltics logs for calls from the SDK, please add your `GoogleService-Info` file to the top level of the project, and set `shouldUseFirebaseLogging = true` in the SDK initialization constructor. 
+

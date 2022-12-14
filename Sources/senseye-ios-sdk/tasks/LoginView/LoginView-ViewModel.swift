@@ -44,6 +44,17 @@ extension LoginView {
                     self.alertItem = alertItem
                 }
                 .store(in: &cancellables)
+            
+            authenticationService.isSignedInPublisher
+                .receive(on: RunLoop.main)
+                .sink(receiveValue: { isSignedIn in
+                    Log.info("Setting isSignedIn: \(isSignedIn)")
+                    self.isUserSignedIn = isSignedIn
+                    if isSignedIn {
+                        self.isFetchingAuthorization = false
+                    }
+                })
+                .store(in: &cancellables)
         }
         
         func login() {
@@ -61,8 +72,7 @@ extension LoginView {
         }
 
         func onAppear() {
-            authenticationService.delegate = self
-            self.authenticationService.signOut(completeSignOut: nil)
+            self.authenticationService.signOut()
             username = ""
             Log.info("isSignedIn is \(self.isUserSignedIn)", shouldLogContext: true)
         }
@@ -70,25 +80,4 @@ extension LoginView {
     }
 
 
-}
-
-extension LoginView.ViewModel: AuthenticationServiceDelegate {
-    func didConfirmNewUser() {
-        Log.info("Attempted sign in for new user")
-    }
-    
-    func didSuccessfullySignIn() {
-        Log.info("Successful sign in", shouldLogContext: true)
-        DispatchQueue.main.async {
-            self.isUserSignedIn = true
-            self.isFetchingAuthorization = false
-        }
-    }
- 
-    func didSuccessfullySignOut() {
-        Log.info("Successful signed out", shouldLogContext: true)
-        DispatchQueue.main.async {
-            self.isUserSignedIn = false
-        }
-    }
 }

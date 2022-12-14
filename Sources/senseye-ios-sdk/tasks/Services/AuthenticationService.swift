@@ -7,27 +7,17 @@
 
 import Amplify
 import SwiftUI
-import Foundation
-import AWSCognitoAuthPlugin
-import AWSDataStorePlugin
-import AWSS3StoragePlugin
+import Combine
 import AWSPluginsCore
 
 protocol AuthenticationServiceProtocol {
-    func signOut(completeSignOut: (()->())? )
+    func signOut()
     func signIn(accountUsername: String, accountPassword: String)
-    func getUsername(completion: @escaping ((String) -> Void))
-    var delegate: AuthenticationServiceDelegate? { get set }
     var authError: AlertItem? { get }
-    var authErrorPublished: Published<AlertItem?> { get}
     var authErrorPublisher: Published<AlertItem?>.Publisher { get }
+    var isSignedIn: Bool { get }
+    var isSignedInPublisher: Published<Bool>.Publisher { get }
     var userId: String { get }
-}
-
-protocol AuthenticationServiceDelegate: AnyObject {
-    func didConfirmNewUser()
-    func didSuccessfullySignIn()
-    func didSuccessfullySignOut()
 }
 
 /**
@@ -35,15 +25,12 @@ protocol AuthenticationServiceDelegate: AnyObject {
  */
 public class AuthenticationService: ObservableObject {
     
-    weak var delegate: AuthenticationServiceDelegate?
     @Published var authError: AlertItem? = nil
-    var authErrorPublished: Published<AlertItem?> { _authError }
-    var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
-
-    @MainActor @Published var isSignedIn: Bool = false
+    @Published var isSignedIn: Bool = false
 
     private var accountUsername: String? = nil
     private var accountPassword: String? = nil
+    private var cancellables = Set<AnyCancellable>()
     
     var userId: String
     var accountUserGroups: [CognitoUserGroup] = []
@@ -68,16 +55,15 @@ public class AuthenticationService: ObservableObject {
             accountPassword: accountPassword
         )
         
-        Amplify.Auth.fetchAuthSession { result in
-            switch result {
-            case .success(let session):
-                self.synchronizeLogin(to: session) {
-                    self._signIn()
+        Amplify.Auth.fetchAuthSession().resultPublisher
+            .sink(receiveCompletion: { authError in
+                if case let .failure(authError) = authError {
+                    Log.error("Fetch session failed with error \(authError)")
                 }
-            case .failure(let error):
-                Log.error("Fetch session failed with error \(error)")
-            }
-        }
+            }, receiveValue: { authSession in
+                self.synchronizeLogin(to: authSession)
+            })
+            .store(in: &cancellables)
     }
     
     /**
@@ -87,26 +73,24 @@ public class AuthenticationService: ObservableObject {
      - Parameters:
      - completeSignOut: Optional completion action
      */
-    public func signOut(completeSignOut: (()->())? = nil ) {
+    public func signOut() {
         guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
             Log.info("No user to signout", shouldLogContext: true)
-            completeSignOut?()
             return
         }
-
-        Amplify.Auth.signOut { result in
-            switch result {
-            case .success():
+        
+        Amplify.Auth.signOut().resultPublisher
+            .sink { authError in
+                if case let .failure(authError) = authError {
+                    Log.warn("Amplify auth signout failed in \(#function) with error \(authError)")
+                }
+            } receiveValue: { _ in
+                Log.info("Signed out currentSignedInUser \(currentSignedInUser)")
                 DispatchQueue.main.async {
                     self.isSignedIn = false
-                    Log.info("Signed out currentSignedInUser \(currentSignedInUser)")
-                    self.delegate?.didSuccessfullySignOut()
-                    completeSignOut?()
                 }
-            case .failure(let error):
-                Log.warn("Amplify auth signout failed in \(#function) with error \(error)")
             }
-        }
+            .store(in: &cancellables)
     }
     
     /**
@@ -122,19 +106,13 @@ public class AuthenticationService: ObservableObject {
      Precheck routine before sign in. If a different previous username is found or any session is signed in, it will be signed out before attempting
      to sign in with assigned credentials.
      */
-    private func synchronizeLogin(to currentSession: AuthSession, completion: @escaping (()->())) {
+    private func synchronizeLogin(to currentSession: AuthSession) {
         let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username
-        Log.debug("current signed in user: \(String(describing: currentSignedInUser))")
-        let doesUserMatchCurrentSignIn = currentSignedInUser == self.accountUsername
         
-        if (currentSession.isSignedIn || !doesUserMatchCurrentSignIn) {
-            DispatchQueue.main.async {
-                self.signOut {
-                    completion()
-                }
-            }
+        if (currentSession.isSignedIn || currentSignedInUser != nil) {
+            self.signOut()
         } else {
-            completion()
+            self._signIn()
         }
     }
     
@@ -147,120 +125,88 @@ public class AuthenticationService: ObservableObject {
             Log.error("No account username or account password set")
             return
         }
-
-        Amplify.Auth.signIn(username: username, password: password) { [self] result in
-            do {
-                let signinResult = try result.get()
-                switch signinResult.nextStep {
-                case .confirmSignInWithSMSMFACode(let deliveryDetails, let info):
-                    Log.debug("SMS code send to \(deliveryDetails.destination)")
-                    Log.debug("Additional info \(String(describing: info))")
-                    // TODO: Prompt the user to enter the SMSMFA code they received
-                    // Then invoke `confirmSignIn` api with the code
-                case .confirmSignInWithCustomChallenge(let info):
-                    Log.debug("Custom challenge, additional info \(String(describing: info))")
-                    // TODO: Prompt the user to enter custom challenge answer
-                    // Then invoke `confirmSignIn` api with the answer
+        
+        Amplify.Auth.signIn(username: username, password: password).resultPublisher
+            .sink(receiveCompletion: { authError in
+                if case let .failure(error) = authError {
+                    Log.error("Sign in failed \(error)")
+                    DispatchQueue.main.async {
+                        switch error {
+                        case .notAuthorized(_, _, _), .service(_, _, _):
+                            self.authError = AlertContext.invalidLogin
+                        default:
+                            Log.error("Error: \(error)", shouldLogContext: true)
+                            self.authError = AlertContext.defaultAlert
+                        }
+                    }
+                }
+            }, receiveValue: { signInResult in
+                switch signInResult.nextStep {
                 case .confirmSignInWithNewPassword(_):
                     // Continue to reuse existing password
                     // Then invoke `confirmSignIn` api with password
-                    self.delegate?.didConfirmNewUser()
+                    Log.info("Calling confirmSignInWithNewPassword!!")
 
                     Amplify.Auth.confirmSignIn(challengeResponse: password, options: nil) { confirmSignInResult in
                         switch confirmSignInResult {
                         case .success(let confirmedResult):
                             Log.debug("Confirmed \(confirmedResult) sign in w existing password.")
-                            self.delegate?.didSuccessfullySignIn()
+                            self.isSignedIn = confirmedResult.isSignedIn
                         case .failure(let authError):
                             Log.error("Sign in with existing password failed \(authError)")
                         }
                     }
-                case .resetPassword(let info):
-                    Log.debug("Reset password additional info \(String(describing: info))")
-                    // Invoke `resetPassword` api to start the reset password
-                    // flow, and once reset password flow completes, invoke
-                    // `signIn` api to trigger signin flow again.
-                case .confirmSignUp(let info):
-                    Log.debug("Confirm signup additional info \(String(describing: info))")
-                    // TODO: User was not confirmed during the signup process.
-                    // Invoke `confirmSignUp` api to confirm the user if
-                    // they have the confirmation code. If they do not have the
-                    // confirmation code, invoke `resendSignUpCode` to send the
-                    // code again.
-                    // After the user is confirmed, invoke the `signIn` api again.
                 case .done:
                     // Use has successfully signed in to the app
                     Log.debug("done")
-                    self.setCurrentUserPool {
-                        DispatchQueue.main.async {
-                            self.isSignedIn = signinResult.isSignedIn
-                        }
-                        self.delegate?.didSuccessfullySignIn()
-                        Log.info("Auth.signIn complete \(signinResult.isSignedIn)")
-                    }
+                    self.setCurrentUserPool(signinResult: signInResult)
+                default:
+                    Log.info("Triggering default case. Auth flow not accounted for")
+                    self.authError = AlertContext.authFlowError
                 }
-            } catch(let error) {
-                // TODO: Insert delegate or completion handler for failed sign in.
-                Log.error("Sign in failed \(error)")
-                guard let error = error as? AuthError else { return }
-                DispatchQueue.main.async {
-                    switch error {
-                    case .notAuthorized(_, _, _), .service(_, _, _):
-                        self.authError = AlertContext.invalidLogin
-                    case
-                    .configuration(_, _, _),
-                    .unknown(_, _),
-                    .validation(_, _, _, _),
-                    .invalidState(_, _, _),
-                    .signedOut(_, _, _),
-                    .sessionExpired(_, _, _):
-                        Log.error("Error: \(error)", shouldLogContext: true)
-                        self.authError = AlertContext.defaultAlert
-                    }
-                }
-            }
-        }
-    }
-
-    func getUsername(completion: @escaping ((String) -> Void)) {
-        guard let currentSignedInUser = Amplify.Auth.getCurrentUser()?.username else {
-            Log.error("Error getting signed in user")
-            return
-        }
-        completion(currentSignedInUser)
+            })
+            .store(in: &cancellables)
     }
     
-    private func setCurrentUserPool(completion: @escaping () -> Void) {
-        Amplify.Auth.fetchAuthSession { result in
-            switch result {
-            case .success(let session):
+    private func setCurrentUserPool(signinResult: AuthSignInResult) {
+        
+        Amplify.Auth.fetchAuthSession().resultPublisher
+            .sink { authError in
+                if case let .failure(authError) = authError {
+                    Log.error("Fetch user pool failed with error \(authError)")
+                }
+            } receiveValue: { authSession in
                 do {
-                    // Get cognito user pool token
-                    if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
+                    if let cognitoTokenProvider = authSession as? AuthCognitoTokensProvider {
                         let tokens = try cognitoTokenProvider.getCognitoTokens().get()
 
                         let tokenClaims = try AWSAuthService().getTokenClaims(tokenString: tokens.idToken).get()
                         
                         if let groups = (tokenClaims["cognito:groups"] as? NSArray) as Array? {
-                            var cognitoGroups: [String] = groups.compactMap({ "\($0)" })
+                            let cognitoGroups: [String] = groups.compactMap({ "\($0)" })
                             self.accountUserGroups = cognitoGroups.compactMap({ groupId in
                                 self.userGroupConfig.userGroupForGroupId(groupId: groupId)
                             })
-                            completion()
+                            DispatchQueue.main.async {
+                                self.isSignedIn = signinResult.isSignedIn
+                                Log.info("Auth.signIn complete \(signinResult.isSignedIn)")
+                            }
                         }
                     }
                 } catch {
                     Log.error("Fetch user pool failed with error \(error)")
                 }
-            case .failure(let error):
-                Log.error("Fetch session failed with error \(error)")
             }
-        }
+            .store(in: &cancellables)
     }
     
     func reset() {
+        cancellables.removeAll()
         userId = ""
     }
 }
 
-extension AuthenticationService: AuthenticationServiceProtocol { }
+extension AuthenticationService: AuthenticationServiceProtocol {
+    var authErrorPublisher: Published<AlertItem?>.Publisher { $authError }
+    var isSignedInPublisher: Published<Bool>.Publisher { $isSignedIn }
+}

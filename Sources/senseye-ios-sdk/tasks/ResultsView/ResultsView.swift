@@ -46,11 +46,7 @@ struct ResultsView: View {
                                 .padding()
                             
                             Button {
-                                authenticationService.signOut {
-                                    Log.info("Sign out complete. Closing app")
-                                    tabController.reset()
-                                    viewModel.reset()
-                                }
+                                authenticationService.signOut()
                             } label: {
                                 SenseyeButton(text: Strings.completionSessionButtonTitle, foregroundColor: .senseyePrimary, fillColor: .senseyeSecondary)
                             }.padding(.top, 40)
@@ -71,13 +67,19 @@ struct ResultsView: View {
                     }
                 }
                 .frame(width: 350, height: 450)
-                .onAppear {
-                    DispatchQueue.main.async {
-                        viewModel.onAppear()
-                    }
-                }
-
                 Spacer()
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.async {
+                viewModel.onAppear()
+            }
+        }
+        .onChange(of: authenticationService.isSignedIn) { isSignedIn in
+            if !isSignedIn && viewModel.isFinished {
+                Log.info("Sign out complete. Closing app")
+                tabController.reset()
+                viewModel.reset()
             }
         }
     }

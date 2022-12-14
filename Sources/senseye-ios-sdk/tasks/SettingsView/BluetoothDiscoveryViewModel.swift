@@ -26,24 +26,33 @@ class BluetoothDiscoveryViewModel: ObservableObject {
         self.bluetoothService = bluetoothService
         self.fileUploadService = fileUploadService
 
-        bluetoothService.onConnected = { [weak self] in
-            self?.startConnectionTimestamp = Date().currentTimeMillis()
-            Log.info("BLE startConnectionTimestamp \(String(describing: self?.startConnectionTimestamp))")
-        }
-        
-        bluetoothService.onDataUpdated = { data in
-            self.receivedBytes.append(data)
-        }
-
-        addBLESubscriber()
+        addSubscribers()
     }
     
-    func addBLESubscriber() {
+    func addSubscribers() {
         bluetoothService.$discoveredPeripherals
             .receive(on: DispatchQueue.main)
             .sink { [weak self] peripherals in
                 guard let self = self, !peripherals.isEmpty else { return }
                 self.discoveredPeripheral = peripherals.sorted(by: {$0.rssi > $1.rssi }).first
+            }
+            .store(in: &cancellables)
+        
+        bluetoothService.$receivedBytes
+            .receive(on: DispatchQueue.main)
+            .compactMap({ $0 })
+            .sink { [weak self] receivedByte in
+                self?.receivedBytes.append(receivedByte)
+            }
+            .store(in: &cancellables)
+        
+        bluetoothService.$isDeviceConnected
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isDeviceConnected in
+                if isDeviceConnected {
+                    self?.startConnectionTimestamp = Date().currentTimeMillis()
+                    Log.info("BLE startConnectionTimestamp \(String(describing: self?.startConnectionTimestamp))")
+                }
             }
             .store(in: &cancellables)
         

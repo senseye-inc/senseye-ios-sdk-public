@@ -15,14 +15,12 @@ class BluetoothService: NSObject, ObservableObject {
     // Local copy of peripherals we want to perform commands on
     @Published private(set) var discoveredPeripherals: [DiscoveredPeripheral] = []
     @Published var isDeviceConnected: Bool = false
+    @Published var bluetoothDiscovered: Bool = false
+    @Published var receivedBytes: Data? = nil
     private var subscribedCharacteristics: [String: [CBCharacteristic]] = [:]
 
     private var lastConnectedPeripheral: CBPeripheral?
     private let decoder = JSONDecoder()
-
-    var onDiscovered: (()->())?
-    var onDataUpdated: ((Data)->())?
-    var onConnected: (()->())?
 
     private let centralManagerOptions: [String: Any] = [
         CBCentralManagerOptionRestoreIdentifierKey: "senseyeBerryMedBLECentralIdentifier"
@@ -114,7 +112,7 @@ extension BluetoothService: CBCentralManagerDelegate {
             discoveredPeripherals.append(discoveredPeripheral)
         }
 
-        onDiscovered?()
+        self.bluetoothDiscovered = true
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -129,7 +127,6 @@ extension BluetoothService: CBCentralManagerDelegate {
         ]
         lastConnectedPeripheral?.discoverServices(targetServices)
         isDeviceConnected = true
-        onConnected?()
     }
 
     // on connection failure events, not including timeout
@@ -211,7 +208,7 @@ extension BluetoothService: CBPeripheralDelegate {
         } else {
 
             if let updatedValue = characteristic.value, characteristic.uuid.description == BLEIdentifiers.berryMedCharacteristic {
-                onDataUpdated?(updatedValue)
+                self.receivedBytes = updatedValue
             }
         }
     }

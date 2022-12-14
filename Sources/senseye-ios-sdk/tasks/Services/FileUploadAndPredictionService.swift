@@ -37,12 +37,6 @@ protocol FileUploadAndPredictionServiceProtocol {
     var isFinalUpload: Bool { get }
 }
 
-protocol FileUploadAndPredictionServiceDelegate: AnyObject {
-    func didFinishUpload()
-    func didFinishPredictionRequest()
-    func didReturnResultForPrediction(status: String)
-}
-
 /**
  FileUploadAndPredictionService is responsible for communicating with backend service.
  */
@@ -54,8 +48,6 @@ class FileUploadAndPredictionService: ObservableObject {
     @Published private(set) var isFinished: Bool = false
 
     @Published private var numberOfUploadsComplete: Int = 0
-    
-    weak var delegate: FileUploadAndPredictionServiceDelegate?
 
     private var cancellables = Set<AnyCancellable>()
     private var fileManager: FileManager

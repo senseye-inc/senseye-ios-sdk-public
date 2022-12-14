@@ -38,7 +38,6 @@ let package = Package(
                 .product(name: "Algorithms", package: "swift-algorithms")
             ],
             resources: [
-                .process("Resources/amplifyconfiguration.json"),
                 .process("Resources")
             ]),
         .testTarget(

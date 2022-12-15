@@ -35,7 +35,7 @@ struct ResultsView: View {
                     
                     if viewModel.isFinished {
                         VStack {
-                            Image("analyze_brain")
+                            Image("analyze_brain", bundle: .module)
                                 .resizable()
                                 .frame(width: 91, height: 91)
                                 .padding()

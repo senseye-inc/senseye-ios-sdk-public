@@ -24,7 +24,7 @@ struct SenseyeInfoOverlay: View {
                     .font(.largeTitle)
                     .foregroundColor(.white)
 
-                Image("person_staring_image")
+                Image("person_staring_image", bundle: .module)
                     .resizable()
                     .frame(width: 150, height: 150)
 

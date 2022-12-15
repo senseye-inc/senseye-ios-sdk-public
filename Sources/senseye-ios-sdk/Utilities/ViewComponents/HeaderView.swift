@@ -9,7 +9,7 @@ import SwiftUI
 struct HeaderView: View {
     var body: some View {
         VStack(alignment: .trailing) {
-            Image("whiteLogo")
+            Image("whiteLogo", bundle: .module)
                 .foregroundColor(.senseyeSecondary)
                 .padding(.leading)
                 .font(.subheadline)

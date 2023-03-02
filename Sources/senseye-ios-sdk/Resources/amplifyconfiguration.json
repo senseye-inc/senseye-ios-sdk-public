@@ -57,9 +57,9 @@
     "storage": {
         "plugins": {
             "awsS3StoragePlugin": {
-                "bucket": "blank",
-                "region": "blank",
-                "defaultAccessLevel": "blank"
+                "bucket": "senseye-ptsd",
+                "region": "us-east-1",
+                "defaultAccessLevel": "guest"
             }
         }
     },
